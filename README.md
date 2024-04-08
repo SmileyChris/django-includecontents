@@ -21,6 +21,17 @@ Will render a `components/Card.html` template which could look something like:
 </div>
 ```
 
+This engine also allows for multi-line template tags. For example:
+
+```html
+{% if 
+  user.is_authenticated
+  and user.is_staff
+%}
+...
+{% endif %}
+```
+
 ## Installation
 
 ```bash
