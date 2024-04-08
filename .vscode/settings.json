@@ -1,0 +1,4 @@
+{
+  "python.testing.pytestArgs": ["-vv"],
+  "python.analysis.typeCheckingMode": "basic"
+}
