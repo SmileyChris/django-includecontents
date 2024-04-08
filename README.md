@@ -1,6 +1,8 @@
-# DjangoX
+# Django IncludeContents tag
 
-DjangoX is a simple Django template engine that provides a simple way to use component based architecture in Django.
+Provides a component-like `{% includecontents %}` tag to Django, also providing
+a simple Django template engine that extends this tag to work like an HTML
+component.
 
 For example:
 
@@ -24,27 +26,65 @@ Will render a `components/Card.html` template which could look something like:
 ## Installation
 
 ```bash
-pip install djangox
+pip install django-includecontents
 ```
 
-Replace the default `DjangoTemplates` backend in your settings with the `DjangoXTemplates` backend:
+To use the custom template engine, replace the default `DjangoTemplates` backend in your settings:
 
 ```python
 TEMPLATES = [
     {
-        'BACKEND': 'djangox.backends.DjangoXTemplates',
+        'BACKEND': 'includecontents.backends.DjangoTemplates',
         ...
     },
 ]
 ```
 
+This engine also adds `includecontents` to the built-in tags so there is no need to load it.
+
+If you don't want the custom engine, just add this app to your `INSTALLED_APPS` and load the tag in your templates:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'includecontents',
+]
+```
+
+```html
+{% load includecontents %}
+
+...
+
+{% includecontents %}...{% endincludecontents %}
+```
+
 ## Usage
 
-Create a `components` directory in your templates directory. This is where you will put your component templates.
-
-Components are normal Django templates which will be rendered with an isolated context. The context is passed to the component via component's attributes.
+Create a `components` directory in your templates directory. This is where you will put your component templates that are used via the HTML component format.
+These components are normal Django templates that will be rendered with an isolated context. The context is passed to the component via component's attributes.
 
 A ``contents`` attribute is always passed to the component which contains the contents of the component.
+
+### Attrs
+
+You can define which attributes should be passed to the component in a comment at the top of the component template, and others that can have a default value.
+
+For example:
+
+```html
+{# def title, large=False #}
+```
+
+This will define that the `title` attribute is required and the `large` attribute is optional with a default value of `False`.
+
+Any other attributes passed to the component will be added to an `attrs` context variable that can render them as HTML attributes.
+You can also provide default values for these attributes via the `default_attrs` filter.
+
+```
+{# def title, large=False #}
+<div {{ attrs|default_attrs:'class="card"' }}>
+```
 
 
 ### Named contents blocks

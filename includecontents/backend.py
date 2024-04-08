@@ -1,10 +1,10 @@
+import django.template.backends.django
 from django.conf import settings
-from django.template.backends.django import DjangoTemplates
 
 from .engine import Engine
 
 
-class DjangoXTemplates(DjangoTemplates):
+class Templates(django.template.backends.django.DjangoTemplates):
     def __init__(self, params):
         # Copy parent init code.
         params = params.copy()
@@ -19,7 +19,7 @@ class DjangoXTemplates(DjangoTemplates):
             builtins = options["builtins"].copy()
         else:
             builtins = []
-        if "djangox.templatetags.includecontents" not in builtins:
-            builtins = ["djangox.templatetags.includecontents"] + builtins
+        if "includecontents.templatetags.includecontents" not in builtins:
+            builtins = ["includecontents.templatetags.includecontents"] + builtins
         options["builtins"] = builtins
         self.engine = Engine(self.dirs, self.app_dirs, **options)

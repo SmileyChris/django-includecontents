@@ -1,6 +1,6 @@
 TEMPLATES = [
     {
-        "BACKEND": "djangox.backend.DjangoXTemplates",
+        "BACKEND": "includecontents.backend.Templates",
         "DIRS": ["tests/templates"],
         "OPTIONS": {},
     }

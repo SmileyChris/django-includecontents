@@ -1,7 +1,7 @@
 [project]
-name = "djangox"
+name = "django-includecontents"
 version = "0.1.0"
-description = "Django templates component engine"
+description = "Django includecontents component-like tag"
 authors = [{ name = "Chris Beaven", email = "smileychris@gmail.com" }]
 dependencies = ["django"]
 requires-python = ">=3.8"

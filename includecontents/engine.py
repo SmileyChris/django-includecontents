@@ -3,7 +3,7 @@ from pathlib import Path
 import django.template.base
 import django.template.engine
 
-from .base import TemplateX
+from .base import Template
 
 
 class Engine(django.template.Engine):
@@ -14,7 +14,7 @@ class Engine(django.template.Engine):
         Return a compiled Template object for the given template code,
         handling template inheritance recursively.
         """
-        return TemplateX(template_code, engine=self)
+        return Template(template_code, engine=self)
 
     def get_template(self, template_name):
         """
@@ -23,8 +23,8 @@ class Engine(django.template.Engine):
         """
         template, origin = self.find_template(template_name)
         if isinstance(template, django.template.base.Template):
-            return TemplateX(template.source, origin, template_name, engine=self)
+            return Template(template.source, origin, template_name, engine=self)
         if not hasattr(template, "render"):
             # template needs to be compiled
-            template = TemplateX(template, origin, template_name, engine=self)
+            template = Template(template, origin, template_name, engine=self)
         return template

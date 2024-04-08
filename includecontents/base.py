@@ -4,7 +4,7 @@ import django.template.base
 from django.utils.text import smart_split
 
 
-class TemplateX(django.template.base.Template):
+class Template(django.template.base.Template):
     first_comment: str | None
 
     def compile_nodelist(self):
