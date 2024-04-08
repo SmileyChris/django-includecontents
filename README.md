@@ -1,8 +1,18 @@
 # Django IncludeContents tag
 
-Provides a component-like `{% includecontents %}` tag to Django, also providing
-a simple Django template engine that extends this tag to work like an HTML
-component.
+Provides a component-like `{% includecontents %}` tag to Django.
+
+For example:
+
+```html
+{% load includecontents %}
+{% includecontents "hello.html" %}
+    <p>World</p>
+{% endincludecontents %}
+```
+
+It also provides a simple Django template engine that extends this tag to work
+like an HTML component.
 
 For example:
 
@@ -10,17 +20,6 @@ For example:
 <Card title="Hello">
   <p>World</p>
 </Card>
-```
-
-Will render a `components/Card.html` template which could look something like:
-
-```html
-<div class="card">
-  <h2>{{ title }}</h2>
-  <div class="content">
-    {{ contents }}
-  </div>
-</div>
 ```
 
 ## Installation
@@ -59,12 +58,67 @@ INSTALLED_APPS = [
 {% includecontents %}...{% endincludecontents %}
 ```
 
-## Usage
+## Template tag usage
+
+The `includecontents` tag works like the `include` tag but the contents is rendered and passed to the included template as a `contents` variable.
+
+```html
+{% includecontents "hello.html" %}
+    <p>World</p>
+{% endincludecontents %}
+```
+
+### Named contents blocks
+
+You can also have named contents blocks within the component content.
+
+For example:
+
+```html
+{% includecontents "hello.html" %}
+    <p>World</p>
+    {% contents footer %}Footer{% endcontents %}
+{% endincludecontents %}
+```
+
+Where `hello.html` template could look something like:
+
+```html
+<div class="card">
+  <div class="content">
+    {{ contents }}
+  </div>
+  {% if contents.footer %}
+  <div class="footer">
+    {{ contents.footer }}
+  </div>
+  {% endif %}
+</div>
+```
+
+## HTML Components Usage
 
 Create a `components` directory in your templates directory. This is where you will put your component templates that are used via the HTML component format.
 These components are normal Django templates that will be rendered with an isolated context. The context is passed to the component via component's attributes.
 
-A ``contents`` attribute is always passed to the component which contains the contents of the component.
+For example, a `components/Card.html` template could look like:
+
+```html
+<div class="card">
+  <h2>{{ title }}</h2>
+  <div class="content">
+    {{ contents }}
+  </div>
+</div>
+```
+
+Which will allow you to use it like this (without the need to load any template library):
+
+```html
+<Card title="Hello">
+  <p>World</p>
+</Card>
+```
 
 ### Attrs
 
@@ -85,7 +139,6 @@ You can also provide default values for these attributes via the `default_attrs`
 {# def title, large=False #}
 <div {{ attrs|default_attrs:'class="card"' }}>
 ```
-
 
 ### Named contents blocks
 
