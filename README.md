@@ -101,6 +101,8 @@ Where `hello.html` template could look something like:
 Create a `components` directory in your templates directory. This is where you will put your component templates that are used via the HTML component format.
 These components are normal Django templates that will be rendered with an isolated context. The context is passed to the component via component's attributes.
 
+Components must be CamelCase and not match any standard HTML tags.
+
 For example, a `components/Card.html` template could look like:
 
 ```html
