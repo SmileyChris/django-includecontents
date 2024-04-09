@@ -1,24 +1,25 @@
-# DjangoX
+# Django IncludeContents tag
 
-DjangoX is a simple Django template engine that provides a simple way to use component based architecture in Django.
+Provides a component-like `{% includecontents %}` tag to Django.
 
 For example:
 
 ```html
-<Card title="Hello">
-  <p>World</p>
-</Card>
+{% load includecontents %}
+{% includecontents "hello.html" %}
+    <p>World</p>
+{% endincludecontents %}
 ```
 
-Will render a `components/Card.html` template which could look something like:
+It also provides a simple Django template engine that extends this tag to work
+like an HTML component.
+
+In this example, it will read include a `components/card.html` template:
 
 ```html
-<div class="card">
-  <h2>{{ title }}</h2>
-  <div class="content">
-    {{ contents }}
-  </div>
-</div>
+<dj:card title="Hello">
+  <p>World</p>
+</dj:card>
 ```
 
 This engine also allows for multi-line template tags. For example:
@@ -35,28 +36,48 @@ This engine also allows for multi-line template tags. For example:
 ## Installation
 
 ```bash
-pip install djangox
+pip install django-includecontents
 ```
 
-Replace the default `DjangoTemplates` backend in your settings with the `DjangoXTemplates` backend:
+To use the custom template engine, replace the default `DjangoTemplates` backend in your settings:
 
 ```python
 TEMPLATES = [
     {
-        'BACKEND': 'djangox.backends.DjangoXTemplates',
+        'BACKEND': 'includecontents.backends.Templates',
         ...
     },
 ]
 ```
 
-## Usage
+This engine also adds `includecontents` to the built-in tags so there is no need to load it.
 
-Create a `components` directory in your templates directory. This is where you will put your component templates.
+If you don't want the custom engine, just add this app to your `INSTALLED_APPS` and load the tag in your templates:
 
-Components are normal Django templates which will be rendered with an isolated context. The context is passed to the component via component's attributes.
+```python
+INSTALLED_APPS = [
+    ...
+    'includecontents',
+]
+```
 
-A ``contents`` attribute is always passed to the component which contains the contents of the component.
+```html
+{% load includecontents %}
 
+...
+
+{% includecontents %}...{% endincludecontents %}
+```
+
+## Template tag usage
+
+The `includecontents` tag works like the `include` tag but the contents is rendered and passed to the included template as a `contents` variable.
+
+```html
+{% includecontents "hello.html" %}
+    <p>World</p>
+{% endincludecontents %}
+```
 
 ### Named contents blocks
 
@@ -65,17 +86,16 @@ You can also have named contents blocks within the component content.
 For example:
 
 ```html
-<Card title="Hello">
-  <p>World</p>
-  {% contents footer %}Footer{% endcontents %}
-</Card>
+{% includecontents "hello.html" %}
+    <p>World</p>
+    {% contents footer %}Footer{% endcontents %}
+{% endincludecontents %}
 ```
 
-Will render a `components/Card.html` template which could look something like:
+Where `hello.html` template could look something like:
 
 ```html
 <div class="card">
-  <h2>{{ title }}</h2>
   <div class="content">
     {{ contents }}
   </div>
@@ -85,4 +105,53 @@ Will render a `components/Card.html` template which could look something like:
   </div>
   {% endif %}
 </div>
+```
+
+## HTML Components Usage
+
+Create a `components` directory in your templates directory. This is where you will put your component templates that are used via the HTML component format.
+These components are normal Django templates that will be rendered with an isolated context. The context is passed to the component via component's attributes.
+
+Components must be CamelCase and not match any standard HTML tags.
+
+For example, a `components/card.html` template could look like:
+
+```html
+<div class="card">
+  <h2>{{ title }}</h2>
+  <div class="content">
+    {{ contents }}
+  </div>
+</div>
+```
+
+Which will allow you to use it like this (without the need to load any template library):
+
+```html
+<dj:card title="Hello">
+  <p>World</p>
+</dj:card>
+```
+
+You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
+
+### Attrs
+
+You can define which attributes should be passed to the component in a comment at the top of the component template, and others that can have a default value.
+
+Any other attributes passed to the component will be added to an `attrs` context variable that can render them as HTML attributes.
+You can also provide default values for these attributes via the `default_attrs` filter.
+
+```html
+{# def title, large=False #}
+<div {{ attrs|default_attrs:'class="card"' }}>
+```
+
+This would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify any other class.
+So the following tags would all be valid:
+
+```html
+<dj:card title="Hello"></dj:card>
+<dj:card title="Hello" large></dj:card>
+<dj:card title="Hello" id="topcard" class="my-card"></dj:card>
 ```

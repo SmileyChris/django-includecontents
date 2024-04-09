@@ -5,7 +5,7 @@ from collections.abc import MutableMapping
 from django import template
 from django.template import TemplateSyntaxError
 from django.template.base import NodeList, Parser, Token, TokenType
-from django.template.context import Context
+from django.template.context import BaseContext, Context
 from django.template.loader_tags import construct_relative_path, do_include
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
@@ -58,16 +58,33 @@ def includecontents(parser, token):
             {% endif %}
         </div>
     """
-    token.contents = re_tag.sub(r"<\1>", token.contents)
-    token_name = token.contents.split(maxsplit=1)[0]
-    if token_name.startswith("<"):
-        if not token_name.endswith(">"):
-            token_name = f"{token_name}>"
+    bits = token.split_contents()
+    # If this was an HTML tag, it's second element is the tag name prefixed with an
+    # underscore.
+    if len(bits) >= 2 and bits[1].startswith("_"):
+        token_name = f"<dj:{bits[1][1:]}>"
+        # Rewrite the token name on the command stack for better error messages.
         parser.command_stack[-1] = (token_name,) + parser.command_stack[-1][1:]
+        # Replace the token contents to use the rewritten token name.
+        bits[1] = token_name
+        del bits[0]
+        # In tag mode, allow boolean attributes to be set without a value.
+        for i, bit in enumerate(bits[3:], start=3):
+            if "=" not in bit:
+                bits[i] = f"{bit}=True"
+        token.contents = " ".join(bits)
+    else:
+        token_name = bits[0]
+    if len(bits) < 2:
+        raise TemplateSyntaxError(
+            f"{token_name} tag takes at least one argument: the name of the template"
+        )
     nodelist, named_nodelists = get_contents_nodelists(parser, token_name)
     include_node = do_include(parser, token)
     include_node.origin = parser.origin
-    isolated_context = include_node.isolated_context
+    isolated_context = (
+        False if token_name.startswith("<") else include_node.isolated_context
+    )
     include_node.isolated_context = False
     return IncludeContentsNode(
         token_name=token_name,
@@ -132,10 +149,10 @@ class IncludeContentsNode(template.Node):
                     used_attrs = self.include_node.extra_context or {}
                     for attr, value in defined_attrs.items():
                         if attr not in used_attrs:
-                            if value is None:
+                            if value is NO_VALUE:
                                 raise TemplateSyntaxError(
-                                    "Missing required attribute in "
-                                    f"{self.token_name}: {attr}"
+                                    f'Missing required attribute "{attr}" in '
+                                    f"{self.token_name}"
                                 )
                             new_context[attr] = value
                     attrs = Attrs()
@@ -229,6 +246,9 @@ def get_contents_nodelists(
     raise Exception
 
 
+NO_VALUE = object()
+
+
 class Attrs(MutableMapping):
     def __init__(self, attr_string: str = ""):
         self._attrs = {}
@@ -236,15 +256,16 @@ class Attrs(MutableMapping):
             self.set_attr(attr_string)
 
     def set_attr(self, value: str, only_if_unset=False):
-        parser = Parser([])
+        parser = Parser("")
+        context = BaseContext()
         for bit in Token(TokenType.COMMENT, value).split_contents():
             if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
                 if only_if_unset and match.group(1) in self:
                     continue
                 self[match.group(1)] = (
-                    parser.compile_filter(match.group(2)).resolve({})
+                    parser.compile_filter(match.group(2)).resolve(context)
                     if match.group(2)
-                    else None
+                    else NO_VALUE
                 )
 
     def __getitem__(self, key):
@@ -265,8 +286,13 @@ class Attrs(MutableMapping):
     def __str__(self):
         return mark_safe(
             " ".join(
-                (f'{key}="{escape(value)}"' if value is not None else key)
+                (
+                    f'{key}="{escape(value)}"'
+                    if value is not NO_VALUE and value is not True
+                    else key
+                )
                 for key, value in self._attrs.items()
+                if value or value == 0
             )
         )
 

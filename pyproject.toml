@@ -1,12 +1,29 @@
 [project]
-name = "djangox"
-version = "0.1.0"
-description = "Django templates component engine"
+name = "django-includecontents"
+version = "0.1.1"
+description = "Django includecontents component-like tag"
 authors = [{ name = "Chris Beaven", email = "smileychris@gmail.com" }]
 dependencies = ["django"]
 requires-python = ">=3.8"
 readme = "README.md"
 license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Repository = "https://github.com/SmileyChris/django-includecontents"
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-django"]
