@@ -36,6 +36,8 @@ class CustomTemplateMixin(django.template.loaders.base.Loader):
                     self.engine,
                 )
 
+        raise TemplateDoesNotExist(template_name, tried=tried)
+
 
 class FilesystemLoader(
     CustomTemplateMixin, django.template.loaders.filesystem.Loader
