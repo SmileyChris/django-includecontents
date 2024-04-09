@@ -73,9 +73,11 @@ def includecontents(parser, token):
             if "=" not in bit:
                 bits[i] = f"{bit}=True"
         token.contents = " ".join(bits)
+    else:
+        token_name = bits[0]
     if len(bits) < 2:
         raise TemplateSyntaxError(
-            f"{bits[0]} tag takes at least one argument: the name of the template"
+            f"{token_name} tag takes at least one argument: the name of the template"
         )
     nodelist, named_nodelists = get_contents_nodelists(parser, token_name)
     include_node = do_include(parser, token)
