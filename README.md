@@ -17,9 +17,9 @@ like an HTML component.
 In this example, it will include and render `components/card.html`:
 
 ```html
-<dj:card title="Hello">
+<include:card title="Hello">
   <p>World</p>
-</dj:card>
+</include:card>
 ```
 
 This engine also allows for multi-line template tags. For example:
@@ -128,9 +128,9 @@ For example, a `components/card.html` template could look like:
 Which will allow you to use it like this (without the need to load any template library):
 
 ```html
-<dj:card title="Hello">
+<include:card title="Hello">
   <p>World</p>
-</dj:card>
+</include:card>
 ```
 
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
@@ -151,7 +151,7 @@ This would require a `title` attribute and allow an optional `large` attribute. 
 So the following tags would all be valid:
 
 ```html
-<dj:card title="Hello"></dj:card>
-<dj:card title="Hello" large></dj:card>
-<dj:card title="Hello" id="topcard" class="my-card"></dj:card>
+<include:card title="Hello"></include:card>
+<include:card title="Hello" large></include:card>
+<include:card title="Hello" id="topcard" class="my-card"></include:card>
 ```

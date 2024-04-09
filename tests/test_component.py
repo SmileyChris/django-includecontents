@@ -33,13 +33,15 @@ def test_attrs():
 
 def test_missing_attr():
     with pytest.raises(
-        TemplateSyntaxError, match='Missing required attribute "title" in <dj:card>'
+        TemplateSyntaxError,
+        match='Missing required attribute "title" in <include:card>',
     ):
         render_to_string("test_component/missing_attr.html")
 
 
 def test_missing_closing_tag():
     with pytest.raises(
-        TemplateSyntaxError, match=re.compile(r"Unclosed tag.*<dj:card>.*</dj:card>")
+        TemplateSyntaxError,
+        match=re.compile(r"Unclosed tag.*<include:card>.*</include:card>"),
     ):
         render_to_string("test_component/missing_closing_tag.html")

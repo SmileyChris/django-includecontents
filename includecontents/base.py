@@ -38,7 +38,7 @@ class Template(django.template.base.Template):
             raise
 
 
-tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#}|</?dj:.*?>)", re.DOTALL)
+tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:.*?>)", re.DOTALL)
 
 
 class Lexer(django.template.base.Lexer):
@@ -62,19 +62,22 @@ class Lexer(django.template.base.Lexer):
         Convert the given token string into a new Token object and return it.
         If in_tag is True, we are processing something that matched a tag,
         otherwise it should be treated as a literal string.
+
+        Extends the default implementation to convert include: tags into
+        includecontents tags.
         """
-        if in_tag and token_string.startswith("</dj:"):
+        if in_tag and token_string.startswith("</include:"):
             return django.template.base.Token(
                 django.template.base.TokenType.BLOCK,
                 token_string,
                 position,
                 lineno,
             )
-        elif in_tag and token_string.startswith("<dj:"):
-            content = token_string[4:-1].strip()
+        elif in_tag and token_string.startswith("<include:"):
+            content = token_string[1:-1].strip()
             # Strip {} from attributes
             bits = list(smart_split(content))
-            template_name = bits.pop(0)
+            tag_name = bits.pop(0)
             attrs = []
             for attr in bits:
                 if group := re.match(r"(\w+)=\{(.+)\}", attr):
@@ -83,11 +86,12 @@ class Lexer(django.template.base.Lexer):
             # Build the includecontents tag
             content = [
                 "includecontents",
-                f"_{template_name}",
-                f'"components/{template_name}.html"',
+                f"_{tag_name}",
+                f'"components/{tag_name[8:]}.html"',
             ]
             if attrs:
-                content.append(f"with {' '.join(attrs)}")
+                content.append("with")
+                content.extend(attrs)
             return django.template.base.Token(
                 django.template.base.TokenType.BLOCK,
                 " ".join(content),

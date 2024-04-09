@@ -62,7 +62,7 @@ def includecontents(parser, token):
     # If this was an HTML tag, it's second element is the tag name prefixed with an
     # underscore.
     if len(bits) >= 2 and bits[1].startswith("_"):
-        token_name = f"<dj:{bits[1][1:]}>"
+        token_name = f"<{bits[1][1:]}>"
         # Rewrite the token name on the command stack for better error messages.
         parser.command_stack[-1] = (token_name,) + parser.command_stack[-1][1:]
         # Replace the token contents to use the rewritten token name.
