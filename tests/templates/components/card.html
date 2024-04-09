@@ -1,0 +1,6 @@
+{# def title, large=False #}
+
+<section {{ attrs|default_attr:'class="card"' }}>
+  <h3 {% if large %}class="large"{% endif %}>{{ title }}</h3>
+  <div>{{ contents }}</div>
+</section>

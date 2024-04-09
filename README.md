@@ -14,12 +14,12 @@ For example:
 It also provides a simple Django template engine that extends this tag to work
 like an HTML component.
 
-For example:
+In this example, it will read include a `components/card.html` template:
 
 ```html
-<Card title="Hello">
+<dj:card title="Hello">
   <p>World</p>
-</Card>
+</dj:card>
 ```
 
 ## Installation
@@ -33,7 +33,7 @@ To use the custom template engine, replace the default `DjangoTemplates` backend
 ```python
 TEMPLATES = [
     {
-        'BACKEND': 'includecontents.backends.DjangoTemplates',
+        'BACKEND': 'includecontents.backends.Templates',
         ...
     },
 ]
@@ -103,7 +103,7 @@ These components are normal Django templates that will be rendered with an isola
 
 Components must be CamelCase and not match any standard HTML tags.
 
-For example, a `components/Card.html` template could look like:
+For example, a `components/card.html` template could look like:
 
 ```html
 <div class="card">
@@ -117,56 +117,30 @@ For example, a `components/Card.html` template could look like:
 Which will allow you to use it like this (without the need to load any template library):
 
 ```html
-<Card title="Hello">
+<dj:card title="Hello">
   <p>World</p>
-</Card>
+</dj:card>
 ```
+
+You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
 
 ### Attrs
 
 You can define which attributes should be passed to the component in a comment at the top of the component template, and others that can have a default value.
 
-For example:
-
-```html
-{# def title, large=False #}
-```
-
-This will define that the `title` attribute is required and the `large` attribute is optional with a default value of `False`.
-
 Any other attributes passed to the component will be added to an `attrs` context variable that can render them as HTML attributes.
 You can also provide default values for these attributes via the `default_attrs` filter.
 
-```
+```html
 {# def title, large=False #}
 <div {{ attrs|default_attrs:'class="card"' }}>
 ```
 
-### Named contents blocks
-
-You can also have named contents blocks within the component content.
-
-For example:
+This would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify any other class.
+So the following tags would all be valid:
 
 ```html
-<Card title="Hello">
-  <p>World</p>
-  {% contents footer %}Footer{% endcontents %}
-</Card>
-```
-
-Will render a `components/Card.html` template which could look something like:
-
-```html
-<div class="card">
-  <h2>{{ title }}</h2>
-  <div class="content">
-    {{ contents }}
-  </div>
-  {% if contents.footer %}
-  <div class="footer">
-    {{ contents.footer }}
-  </div>
-  {% endif %}
-</div>
+<dj:card title="Hello"></dj:card>
+<dj:card title="Hello" large></dj:card>
+<dj:card title="Hello" id="topcard" class="my-card"></dj:card>
 ```

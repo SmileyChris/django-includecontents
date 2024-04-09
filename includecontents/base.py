@@ -38,7 +38,7 @@ class Template(django.template.base.Template):
             raise
 
 
-tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#}|</?[A-Z].*?>)")
+tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#}|</?dj:.*?>)")
 
 
 class Lexer(django.template.base.Lexer):
@@ -63,15 +63,15 @@ class Lexer(django.template.base.Lexer):
         If in_tag is True, we are processing something that matched a tag,
         otherwise it should be treated as a literal string.
         """
-        if in_tag and token_string.startswith("<"):
-            content = token_string[1:-1].strip()
-            if content.startswith("/"):
-                return django.template.base.Token(
-                    django.template.base.TokenType.BLOCK,
-                    token_string,
-                    position,
-                    lineno,
-                )
+        if in_tag and token_string.startswith("</dj:"):
+            return django.template.base.Token(
+                django.template.base.TokenType.BLOCK,
+                token_string,
+                position,
+                lineno,
+            )
+        elif in_tag and token_string.startswith("<dj:"):
+            content = token_string[4:-1].strip()
             # Strip {} from attributes
             bits = list(smart_split(content))
             template_name = bits.pop(0)
@@ -80,10 +80,11 @@ class Lexer(django.template.base.Lexer):
                 if group := re.match(r"(\w+)=\{(.+)\}", attr):
                     attr = f"{group[1]}={group[2]}"
                 attrs.append(attr)
+            # Build the includecontents tag
             content = [
-                f"includecontents _{content.split(maxsplit=1)[0]}",
+                "includecontents",
+                f"_{template_name}",
                 f'"components/{template_name}.html"',
-                "only",
             ]
             if attrs:
                 content.append(f"with {' '.join(attrs)}")
