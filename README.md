@@ -14,7 +14,7 @@ For example:
 It also provides a simple Django template engine that extends this tag to work
 like an HTML component.
 
-In this example, it will read include a `components/card.html` template:
+In this example, it will include and render `components/card.html`:
 
 ```html
 <dj:card title="Hello">
