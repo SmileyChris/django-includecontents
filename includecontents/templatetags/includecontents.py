@@ -10,6 +10,8 @@ from django.template.loader_tags import construct_relative_path, do_include
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
+from includecontents.base import Template
+
 register = template.Library()
 
 re_tag = re.compile(r"^includecontents _([A-Z]\w+)")
@@ -143,23 +145,7 @@ class IncludeContentsNode(template.Node):
     def render(self, context):
         new_context = context.new() if self.isolated_context else context
         with new_context.push():
-            if self.token_name.startswith("<"):
-                defined_attrs = self.get_defined_attrs(self.get_template(context))
-                if defined_attrs is not None:
-                    used_attrs = self.include_node.extra_context or {}
-                    for attr, value in defined_attrs.items():
-                        if attr not in used_attrs:
-                            if value is NO_VALUE:
-                                raise TemplateSyntaxError(
-                                    f'Missing required attribute "{attr}" in '
-                                    f"{self.token_name}"
-                                )
-                            new_context[attr] = value
-                    attrs = Attrs()
-                    for key, value in used_attrs.items():
-                        if key not in defined_attrs:
-                            attrs[key] = value.resolve(context)
-                    new_context["attrs"] = attrs
+            self.set_component_attrs(context, new_context)
             new_context["contents"] = RenderedContents(
                 # Contents aren't rendered with isolation, hence the use of context
                 # rather than new_context.
@@ -172,7 +158,7 @@ class IncludeContentsNode(template.Node):
                 rendered = rendered.strip()
         return rendered
 
-    def get_template(self, context):
+    def get_template(self, context) -> Template:
         template = self.include_node.template.resolve(context)
         # Does this quack like a Template?
         if not callable(getattr(template, "render", None)):
@@ -197,10 +183,29 @@ class IncludeContentsNode(template.Node):
             template = template.template
         return template
 
-    def get_defined_attrs(self, template):
+    def set_component_attrs(self, context: Context, new_context: Context):
+        """
+        Set the attributes of the component tag in the new context.
+        """
+        if not self.token_name.startswith("<"):
+            return
+        template = self.get_template(context)
         if not template.first_comment or not template.first_comment.startswith("def "):
             return
-        return Attrs(template.first_comment[4:].strip())
+        used_attrs = self.include_node.extra_context or {}
+        defined_attrs = Attrs(template.first_comment[4:].strip())
+        for attr, value in defined_attrs.items():
+            if attr not in used_attrs:
+                if value is NO_VALUE:
+                    raise TemplateSyntaxError(
+                        f'Missing required attribute "{attr}" in ' f"{self.token_name}"
+                    )
+                new_context[attr] = value
+        attrs = Attrs()
+        for key, value in used_attrs.items():
+            if key not in defined_attrs:
+                attrs[key] = value.resolve(context)
+        new_context["attrs"] = attrs
 
 
 def get_contents_nodelists(
