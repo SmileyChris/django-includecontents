@@ -3,12 +3,13 @@ from collections import abc
 from collections.abc import MutableMapping
 
 from django import template
-from django.template import TemplateSyntaxError
+from django.template import TemplateSyntaxError, Variable
 from django.template.base import NodeList, Parser, Token, TokenType
 from django.template.context import BaseContext, Context
-from django.template.loader_tags import construct_relative_path, do_include
+from django.template.loader_tags import IncludeNode, construct_relative_path, do_include
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
+from django.utils.text import smart_split
 
 from includecontents.base import Template
 
@@ -145,7 +146,6 @@ class IncludeContentsNode(template.Node):
     def render(self, context):
         new_context = context.new() if self.isolated_context else context
         with new_context.push():
-            self.set_component_attrs(context, new_context)
             new_context["contents"] = RenderedContents(
                 # Contents aren't rendered with isolation, hence the use of context
                 # rather than new_context.
@@ -153,10 +153,44 @@ class IncludeContentsNode(template.Node):
                 nodelist=self.nodelist,
                 named_nodelists=self.named_nodelists,
             )
-            rendered = self.include_node.render(new_context)
+            if self.set_component_attrs(context, new_context):
+                # Don't use the extra context for the include tag if it's used for
+                # component attributes.
+                rendered = IncludeNode(self.include_node.template).render(new_context)
+            else:
+                rendered = self.include_node.render(new_context)
             if self.token_name.startswith("<"):
                 rendered = rendered.strip()
         return rendered
+
+    def set_component_attrs(self, context: Context, new_context: Context):
+        """
+        Set the attributes of the component tag in the new context.
+        """
+        if not self.token_name.startswith("<"):
+            return False
+        template = self.get_template(context)
+        if not template.first_comment or not template.first_comment.startswith("def "):
+            return False
+        used_attrs = self.include_node.extra_context or {}
+        defined_attrs = []
+        for bit in smart_split(template.first_comment[4:].strip()):
+            if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
+                attr, value = match.groups()
+                defined_attrs.append(attr)
+                if attr not in used_attrs:
+                    if value is None:
+                        raise TemplateSyntaxError(
+                            f'Missing required attribute "{attr}" in '
+                            f"{self.token_name}"
+                        )
+                    new_context[attr] = Variable(value).resolve(context)
+        attrs = Attrs()
+        for key, value in used_attrs.items():
+            if key not in defined_attrs:
+                attrs[key] = value.resolve(context)
+        new_context["attrs"] = attrs
+        return True
 
     def get_template(self, context) -> Template:
         template = self.include_node.template.resolve(context)
@@ -182,30 +216,6 @@ class IncludeContentsNode(template.Node):
         elif hasattr(template, "template"):
             template = template.template
         return template
-
-    def set_component_attrs(self, context: Context, new_context: Context):
-        """
-        Set the attributes of the component tag in the new context.
-        """
-        if not self.token_name.startswith("<"):
-            return
-        template = self.get_template(context)
-        if not template.first_comment or not template.first_comment.startswith("def "):
-            return
-        used_attrs = self.include_node.extra_context or {}
-        defined_attrs = Attrs(template.first_comment[4:].strip())
-        for attr, value in defined_attrs.items():
-            if attr not in used_attrs:
-                if value is NO_VALUE:
-                    raise TemplateSyntaxError(
-                        f'Missing required attribute "{attr}" in ' f"{self.token_name}"
-                    )
-                new_context[attr] = value
-        attrs = Attrs()
-        for key, value in used_attrs.items():
-            if key not in defined_attrs:
-                attrs[key] = value.resolve(context)
-        new_context["attrs"] = attrs
 
 
 def get_contents_nodelists(
@@ -255,28 +265,23 @@ NO_VALUE = object()
 
 
 class Attrs(MutableMapping):
-    def __init__(self, attr_string: str = ""):
+    def __init__(self, joiners=None):
         self._attrs = {}
-        if attr_string:
-            self.set_attr(attr_string)
-
-    def set_attr(self, value: str, only_if_unset=False):
-        parser = Parser("")
-        context = BaseContext()
-        for bit in Token(TokenType.COMMENT, value).split_contents():
-            if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
-                if only_if_unset and match.group(1) in self:
-                    continue
-                self[match.group(1)] = (
-                    parser.compile_filter(match.group(2)).resolve(context)
-                    if match.group(2)
-                    else NO_VALUE
-                )
+        self._nested_attrs = {}
+        self._joiners = joiners or {}
 
     def __getitem__(self, key):
-        return self._attrs[key]
+        return self._nested_attrs[key]
 
     def __setitem__(self, key, value):
+        if "." in key:
+            nested_key, key = key.split(".", 1)
+            nested_attrs = self._nested_attrs.setdefault(nested_key, Attrs())
+            nested_attrs[key] = value
+            return
+        joiner = self._joiners.get(key)
+        if joiner is not None and self.get(key) is not None:
+            value = f"{self[key]}{joiner}{value}"
         self._attrs[key] = value
 
     def __delitem__(self, key):
@@ -291,18 +296,81 @@ class Attrs(MutableMapping):
     def __str__(self):
         return mark_safe(
             " ".join(
-                (
-                    f'{key}="{escape(value)}"'
-                    if value is not NO_VALUE and value is not True
-                    else key
-                )
+                (f'{key}="{escape(value)}"' if value is not True else key)
                 for key, value in self._attrs.items()
-                if value or value == 0
+                if value is not None
             )
         )
 
 
-@register.filter
-def default_attr(attrs: Attrs, default: str):
-    attrs.set_attr(default, only_if_unset=True)
-    return attrs
+@register.tag
+def attrs(parser, token):
+    """
+    Render a component's undefined attrs as a string of HTML attributes with
+    fallbacks.
+
+    For example::
+
+        {% attrs type="text" %}
+
+    The ``class`` attribute is a special case. If it is defined, it will be
+    prepended to any provided class value.
+
+    ``{% attrs class="field" %}`` with a class attribute set to "special" will
+    render as ``class="field special"``.
+
+    Use ``[attr]:extend=joiner`` to use this behaviour for other attributes too
+    (for example, ``style:extend=";"``) or ``class:extend=None`` to avoid this
+    special behaviour for the class attribute.
+
+    To render a nested set of attributes, add the name of the nested group as a
+    dotted suffix to the tag::
+
+        {% attrs.nested required %}
+    """
+    bits = smart_split(token.contents)
+    tag_name = next(bits)
+    if "." in tag_name:
+        sub_key = tag_name.split(".", 1)[1]
+    else:
+        sub_key = None
+
+    joiners = {"class": " "}
+    fallbacks = {}
+    for bit in bits:
+        if match := re.match(r"^(\w+(:extend)?)(?:=(.+?))?,?$", bit):
+            key, extend, value = match.groups()
+            if extend:
+                if not value:
+                    raise TemplateSyntaxError(
+                        f"Invalid {tag_name!r} tag format: {key} requires a value"
+                    )
+                joiners[key] = parser.compile_filter(value)
+            else:
+                fallbacks[key] = parser.compile_filter(value) if value else NO_VALUE
+    return AttrsNode(sub_key, fallbacks, joiners)
+
+
+class AttrsNode(template.Node):
+    def __init__(self, sub_key, fallbacks, joiners):
+        self.sub_key = sub_key
+        self.fallbacks = fallbacks
+        self.joiners = joiners
+
+    def render(self, context):
+        context_attrs = context.get("attrs")
+        if not isinstance(context_attrs, Attrs):
+            raise TemplateSyntaxError(
+                "The attrs tag requires an attrs variable in the context"
+            )
+        if self.sub_key:
+            context_attrs = context_attrs.get(self.sub_key)
+        attrs = Attrs(
+            joiners={key: value.resolve(context) for key, value in self.joiners.items()}
+        )
+        attrs.update(
+            {key: value.resolve(context) for key, value in self.fallbacks.items()}
+        )
+        if isinstance(context_attrs, Attrs):
+            attrs.update(context_attrs)
+        return str(attrs)

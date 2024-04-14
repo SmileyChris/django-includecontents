@@ -140,14 +140,15 @@ You can use named [`{% contents %}` blocks](#named-contents-blocks), just like w
 You can define which attributes should be passed to the component in a comment at the top of the component template, and others that can have a default value.
 
 Any other attributes passed to the component will be added to an `attrs` context variable that can render them as HTML attributes.
-You can also provide default values for these attributes via the `default_attrs` filter.
+You can also provide fallback values for these attributes via the `{% attrs %}` template tag. `class` is a special case attribute which it will be appended (with a space) even if the attribute is provided.
 
 ```html
 {# def title, large=False #}
-<div {{ attrs|default_attrs:'class="card"' }}>
+
+<div {% attrs class="card" %}>
 ```
 
-This would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify any other class.
+This would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify a class attribute.
 So the following tags would all be valid:
 
 ```html
@@ -155,3 +156,28 @@ So the following tags would all be valid:
 <include:card title="Hello" large></include:card>
 <include:card title="Hello" id="topcard" class="my-card"></include:card>
 ```
+
+If you want to provide multiple groups of undefined attributes, you can use `group.name` as the format.
+Then render them with `{{ attrs.group }}` (or `{% attrs.group %}` if you want fallback values).
+
+For example to call a component like this:
+
+```html
+<include:field label="Name" name="first_name" value="John" input.class="wide"></include:field>
+```
+
+It could be defined like this:
+
+```html
+{# def value, label="" #}
+
+<div {% attrs class="field" %}>
+  {% if label %}{{ '<label>'|safe }}{% endif %}
+  {{ label }}
+  <input {% attrs.input type="text" value=value %}>
+  {% if label %}{{ '</label>'|safe }}{% endif %}
+</div>
+```
+
+Calling the component like this:
+

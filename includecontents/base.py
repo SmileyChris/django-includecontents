@@ -42,7 +42,6 @@ tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:.*?>)", re.DOTALL)
 
 
 class Lexer(django.template.base.Lexer):
-
     def tokenize(self):
         """
         Return a list of tokens from a given template_string.
@@ -102,7 +101,6 @@ class Lexer(django.template.base.Lexer):
 
 
 class DebugLexer(django.template.base.DebugLexer):
-
     def _tag_re_split_positions(self):
         last = 0
         for match in tag_re.finditer(self.template_string):
@@ -116,6 +114,7 @@ class DebugLexer(django.template.base.DebugLexer):
 class Parser(django.template.base.Parser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.tags = TagsDict(self.tags)
         self.first_comment = None
 
     def next_token(self) -> django.template.base.Token:
@@ -125,3 +124,15 @@ class Parser(django.template.base.Parser):
         ):  # TokenType.COMMENT:
             self.first_comment = token.contents.strip()
         return token
+
+
+class TagsDict(dict):
+    """
+    A dictionary that allows access to tags with a dot-separated suffix that the
+    tag could use to change behavior.
+    """
+
+    def __getitem__(self, key):
+        if isinstance(key, str) and "." in key:
+            key = key.split(".", maxsplit=1)[0]
+        return super().__getitem__(key)
