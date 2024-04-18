@@ -135,20 +135,29 @@ Which will allow you to use it like this (without the need to load any template 
 
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
 
-### Attrs
+### Component Props
 
-You can define which attributes should be passed to the component in a comment at the top of the component template, and others that can have a default value.
+You can define the required or default props of the component in a comment at the top of its template that begins with `props `  (or `def ` to match what JinjaX uses). An exception will be raised if a required prop is not provided.
 
-Any other attributes passed to the component will be added to an `attrs` context variable that can render them as HTML attributes.
-You can also provide fallback values for these attributes via the `{% attrs %}` template tag. `class` is a special case attribute which it will be appended (with a space) even if the attribute is provided.
+Any other attributes passed to the component that are not listed in this definition will be added to an `attrs` context variable that can render them as HTML attributes.
 
-```html
-{# def title, large=False #}
-
-<div {% attrs class="card" %}>
+```jinja
+{# props #}
+<div {{ attrs }}>
+  {{ contents }}
+</div>
 ```
 
-This would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify a class attribute.
+You can also provide default values for these attributes via the `{% attrs %}` template tag. `class` is a special case attribute which it will be appended (with a space) even if the attribute is provided.
+
+```jinja
+{# props title, large=False #}
+
+<div {% attrs class="card" %}>
+...
+```
+
+This example component above would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify a class attribute.
 So the following tags would all be valid:
 
 ```html
@@ -169,7 +178,7 @@ For example to call a component like this:
 It could be defined like this:
 
 ```jinja
-{# def value, label="" #}
+{# props value, label="" #}
 
 <div {% attrs class="field" %}>
   {% if label %}{{ '<label>'|safe }}{% endif %}

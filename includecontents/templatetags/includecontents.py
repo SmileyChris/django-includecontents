@@ -170,11 +170,17 @@ class IncludeContentsNode(template.Node):
         if not self.token_name.startswith("<"):
             return False
         template = self.get_template(context)
-        if not template.first_comment or not template.first_comment.startswith("def "):
+        if not template.first_comment:
+            return False
+        if template.first_comment.startswith("props "):
+            first_comment = template.first_comment[6:]
+        elif template.first_comment.startswith("def "):
+            first_comment = template.first_comment[4:]
+        else:
             return False
         used_attrs = self.include_node.extra_context or {}
         defined_attrs = []
-        for bit in smart_split(template.first_comment[4:].strip()):
+        for bit in smart_split(first_comment.strip()):
             if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
                 attr, value = match.groups()
                 defined_attrs.append(attr)
