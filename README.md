@@ -135,7 +135,7 @@ Which will allow you to use it like this (without the need to load any template 
 
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
 
-Some HTML formatters (like prettier) insist on quoting HTML attribute values, you can avoid this by wrapping template values in `{}`:
+Some HTML formatters (like prettier) insist on quoting HTML attribute values, you can avoid this by optionally wrapping template values in `{}`:
 
 ```html
 <include:card title={mytitle}></include:card>
@@ -197,4 +197,18 @@ You can also provide conditional classes for the `class` attribute using the fol
 {% attrs class="lg" %}     {# sets class attribute to "lg" but can be overridden #}
 {% attrs class:lg %}       {# always adds 'lg' class #}
 {% attrs class:lg=large %} {# adds 'lg' class if large prop is truthy #}
+```
+
+You can use this same conditional format on the template tag / component itself too:
+
+```html
+<include:card title="Hello" class:lg={is_large}>
+  <p>World</p>
+</include:card>
+```
+
+```jinja
+{% includecontents "hello.html" class:lg=is_large %}
+  <p>World</p>
+{% endincludecontents %}
 ```
