@@ -4,7 +4,7 @@ Provides a component-like `{% includecontents %}` tag to Django.
 
 For example:
 
-```html
+```jinja
 {% load includecontents %}
 {% includecontents "hello.html" %}
     <p>World</p>
@@ -24,7 +24,7 @@ In this example, it will include and render `components/card.html`:
 
 This engine also allows for multi-line template tags. For example:
 
-```html
+```jinja
 {% if 
   user.is_authenticated
   and user.is_staff
@@ -61,7 +61,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-```html
+```jinja
 {% load includecontents %}
 
 ...
@@ -73,7 +73,7 @@ INSTALLED_APPS = [
 
 The `includecontents` tag works like the `include` tag but the contents is rendered and passed to the included template as a `contents` variable.
 
-```html
+```jinja
 {% includecontents "hello.html" %}
     <p>World</p>
 {% endincludecontents %}
@@ -85,7 +85,7 @@ You can also have named contents blocks within the component content.
 
 For example:
 
-```html
+```jinja
 {% includecontents "hello.html" %}
     <p>World</p>
     {% contents footer %}Footer{% endcontents %}
@@ -94,7 +94,7 @@ For example:
 
 Where `hello.html` template could look something like:
 
-```html
+```jinja
 <div class="card">
   <div class="content">
     {{ contents }}
@@ -168,7 +168,7 @@ For example to call a component like this:
 
 It could be defined like this:
 
-```html
+```jinja
 {# def value, label="" #}
 
 <div {% attrs class="field" %}>
@@ -185,7 +185,7 @@ As mentioned earlier, `class` is a special case attribute that will cause a comp
 
 For example:
 
-```html
+```jinja
 {% attrs style:extend="; " style="color: red" %}
 ```
 
