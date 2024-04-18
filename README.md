@@ -179,5 +179,14 @@ It could be defined like this:
 </div>
 ```
 
-Calling the component like this:
+#### Extending attributes
 
+As mentioned earlier, `class` is a special case attribute that will cause a component class attribute to be extended by the default value. You can also make other attributes work the same way by appending the attribute name with `:extend` and providing a string that should be used to append the attribute.
+
+For example:
+
+```html
+{% attrs style:extend="; " style="color: red" %}
+```
+
+Or if you don't want the `class` default to be appended, you can use `class:extend=None`.
