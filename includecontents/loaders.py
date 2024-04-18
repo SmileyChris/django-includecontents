@@ -24,7 +24,7 @@ class CustomTemplateMixin(django.template.loaders.base.Loader):
                 continue
 
             try:
-                contents = self.get_contents(origin)
+                contents = self.get_contents(origin)  # type: ignore
             except TemplateDoesNotExist:
                 tried.append((origin, "Source does not exist"))
                 continue
@@ -32,7 +32,7 @@ class CustomTemplateMixin(django.template.loaders.base.Loader):
                 return Template(
                     contents,
                     origin,
-                    origin.template_name,
+                    origin.template_name,  # type: ignore
                     self.engine,
                 )
 

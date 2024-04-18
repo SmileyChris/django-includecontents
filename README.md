@@ -148,7 +148,7 @@ Any other attributes passed to the component that are not listed in this definit
 </div>
 ```
 
-You can also provide default values for these attributes via the `{% attrs %}` template tag. `class` is a special case attribute which it will be appended (with a space) even if the attribute is provided.
+You can also provide default values for these attributes via the `{% attrs %}` template tag.
 
 ```jinja
 {# props title, large=False #}
@@ -158,13 +158,6 @@ You can also provide default values for these attributes via the `{% attrs %}` t
 ```
 
 This example component above would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify a class attribute.
-So the following tags would all be valid:
-
-```html
-<include:card title="Hello"></include:card>
-<include:card title="Hello" large></include:card>
-<include:card title="Hello" id="topcard" class="my-card"></include:card>
-```
 
 If you want to provide multiple groups of undefined attributes, you can use `group.name` as the format.
 Then render them with `{{ attrs.group }}` (or `{% attrs.group %}` if you want fallback values).
@@ -188,14 +181,14 @@ It could be defined like this:
 </div>
 ```
 
-#### Extending attributes
+#### Conditional classes
 
-As mentioned earlier, `class` is a special case attribute that will cause a component class attribute to be extended by the default value. You can also make other attributes work the same way by appending the attribute name with `:extend` and providing a string that should be used to append the attribute.
-
-For example:
+You can also provide conditional classes for the `class` attribute using the following format:
 
 ```jinja
-{% attrs style:extend="; " style="color: red" %}
-```
+{# props large=False #}
 
-Or if you don't want the `class` default to be appended, you can use `class:extend=None`.
+{% attrs class="lg" %}     {# sets class attribute to "lg" but can be overridden #}
+{% attrs class:lg %}       {# always adds 'lg' class #}
+{% attrs class:lg=large %} {# adds 'lg' class if large prop is truthy #}
+```

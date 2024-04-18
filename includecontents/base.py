@@ -34,7 +34,7 @@ class Template(django.template.base.Template):
             return nodelist
         except Exception as e:
             if self.engine.debug:
-                e.template_debug = self.get_exception_info(e, e.token)
+                e.template_debug = self.get_exception_info(e, e.token)  # type: ignore
             raise
 
 
@@ -79,7 +79,7 @@ class Lexer(django.template.base.Lexer):
             tag_name = bits.pop(0)
             attrs = []
             for attr in bits:
-                if group := re.match(r"(\w+)=\{(.+)\}", attr):
+                if group := re.match(r"([-:.\w]+)=\{(.+)\}", attr):
                     attr = f"{group[1]}={group[2]}"
                 attrs.append(attr)
             # Build the includecontents tag

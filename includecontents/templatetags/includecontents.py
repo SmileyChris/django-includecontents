@@ -1,11 +1,12 @@
 import re
 from collections import abc
 from collections.abc import MutableMapping
+from typing import Any, Literal
 
 from django import template
 from django.template import TemplateSyntaxError, Variable
-from django.template.base import NodeList, Parser, Token, TokenType
-from django.template.context import BaseContext, Context
+from django.template.base import FilterExpression, NodeList, Parser, TokenType
+from django.template.context import Context
 from django.template.loader_tags import IncludeNode, construct_relative_path, do_include
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
@@ -75,9 +76,20 @@ def includecontents(parser, token):
         for i, bit in enumerate(bits[3:], start=3):
             if "=" not in bit:
                 bits[i] = f"{bit}=True"
+        # Split out nested attributes (those with a dot in the name).
+        new_bits = []
+        nested_attrs = {}
+        for bit in bits:
+            if match := re.match(r"(^\w+\.[-\w:]+)(?:=(.+))?", bit):
+                attr, value = match.groups()
+                nested_attrs[attr] = parser.compile_filter(value or "True")
+            else:
+                new_bits.append(bit)
+        bits = new_bits
         token.contents = " ".join(bits)
     else:
         token_name = bits[0]
+        nested_attrs = {}
     if len(bits) < 2:
         raise TemplateSyntaxError(
             f"{token_name} tag takes at least one argument: the name of the template"
@@ -91,6 +103,7 @@ def includecontents(parser, token):
     include_node.isolated_context = False
     return IncludeContentsNode(
         token_name=token_name,
+        nested_attrs=nested_attrs,
         include_node=include_node,
         nodelist=nodelist,
         named_nodelists=named_nodelists,
@@ -132,12 +145,14 @@ class IncludeContentsNode(template.Node):
     def __init__(
         self,
         token_name,
+        nested_attrs,
         include_node,
         nodelist,
         named_nodelists,
         isolated_context,
     ):
         self.token_name = token_name
+        self.nested_attrs = nested_attrs
         self.include_node = include_node
         self.nodelist = nodelist
         self.named_nodelists = named_nodelists
@@ -154,9 +169,11 @@ class IncludeContentsNode(template.Node):
                 named_nodelists=self.named_nodelists,
             )
             if self.set_component_attrs(context, new_context):
-                # Don't use the extra context for the include tag if it's used for
-                # component attributes.
-                rendered = IncludeNode(self.include_node.template).render(new_context)
+                # Don't use the extra context for the include tag if it's a component
+                # with defined props.
+                node = IncludeNode(self.include_node.template)
+                node.origin = self.origin
+                rendered = node.render(new_context)
             else:
                 rendered = self.include_node.render(new_context)
             if self.token_name.startswith("<"):
@@ -195,6 +212,10 @@ class IncludeContentsNode(template.Node):
         for key, value in used_attrs.items():
             if key not in defined_attrs:
                 attrs[key] = value.resolve(context)
+            else:
+                new_context[key] = value.resolve(context)
+        for key, value in self.nested_attrs.items():
+            attrs[key] = value.resolve(context)
         new_context["attrs"] = attrs
         return True
 
@@ -207,7 +228,7 @@ class IncludeContentsNode(template.Node):
             if isinstance(template_name, str):
                 template_name = (
                     construct_relative_path(
-                        self.origin.template_name,
+                        self.origin.template_name,  # type: ignore
                         template_name,
                     ),
                 )
@@ -271,13 +292,16 @@ NO_VALUE = object()
 
 
 class Attrs(MutableMapping):
-    def __init__(self, joiners=None):
-        self._attrs = {}
-        self._nested_attrs = {}
-        self._joiners = joiners or {}
+    def __init__(self):
+        self._attrs: dict[str, Any] = {}
+        self._nested_attrs: dict[str, Attrs] = {}
+        self._extended: dict[str, list[str]] = {}
+
+    def __getattr__(self, key):
+        return self._nested_attrs[key]
 
     def __getitem__(self, key):
-        return self._nested_attrs[key]
+        return self._attrs[key]
 
     def __setitem__(self, key, value):
         if "." in key:
@@ -285,9 +309,16 @@ class Attrs(MutableMapping):
             nested_attrs = self._nested_attrs.setdefault(nested_key, Attrs())
             nested_attrs[key] = value
             return
-        joiner = self._joiners.get(key)
-        if joiner is not None and self.get(key) is not None:
-            value = f"{self[key]}{joiner}{value}"
+        if ":" in key:
+            key, extend = key.split(":", 1)
+            extended = self._extended.setdefault(key, [])
+            if value:
+                if extend not in extended:
+                    extended.append(extend)
+            else:
+                if extend in extended:
+                    extended.remove(extend)
+            return
         self._attrs[key] = value
 
     def __delitem__(self, key):
@@ -303,34 +334,51 @@ class Attrs(MutableMapping):
         return mark_safe(
             " ".join(
                 (f'{key}="{escape(value)}"' if value is not True else key)
-                for key, value in self._attrs.items()
+                for key, value in self.all_attrs()
                 if value is not None
             )
         )
 
+    def all_attrs(self):
+        for key, value in self._attrs.items():
+            if key in self._extended:
+                if value is True or not value:
+                    value_parts = []
+                else:
+                    value_parts = str(value).split(" ")
+                for part in self._extended[key]:
+                    if part not in value_parts:
+                        value_parts.append(part)
+                value = " ".join(value_parts)
+            yield key, value or None
+        for key, parts in self._extended.items():
+            if key not in self._attrs:
+                yield key, " ".join(parts) or None
+
+    def update(self, attrs):
+        super().update(attrs)
+        if isinstance(attrs, Attrs):
+            self._extended.update(attrs._extended)
+            for key, nested_attrs in attrs._nested_attrs.items():
+                self._nested_attrs.setdefault(key, Attrs()).update(nested_attrs)
+
 
 @register.tag
-def attrs(parser, token):
+def attrs(parser: Parser, token):
     """
-    Render a component's undefined attrs as a string of HTML attributes with
-    fallbacks.
+    Render a component's undefined attrs as a string of HTML attributes with fallbacks.
 
     For example::
 
         {% attrs type="text" %}
 
-    The ``class`` attribute is a special case. If it is defined, it will be
-    prepended to any provided class value.
+    The ``class`` attribute can be extended in a specific way:
 
-    ``{% attrs class="field" %}`` with a class attribute set to "special" will
-    render as ``class="field special"``.
+    ``{% attrs class:field=value %}`` if value is truthy (or if no `=value` is used),
+    will ensure the `field` class always part of the ``class`` attribute.
 
-    Use ``[attr]:extend=joiner`` to use this behaviour for other attributes too
-    (for example, ``style:extend=";"``) or ``class:extend=None`` to avoid this
-    special behaviour for the class attribute.
-
-    To render a nested set of attributes, add the name of the nested group as a
-    dotted suffix to the tag::
+    To render a nested set of attributes, add the name of the nested group as a dotted
+    suffix to the tag::
 
         {% attrs.nested required %}
     """
@@ -341,27 +389,20 @@ def attrs(parser, token):
     else:
         sub_key = None
 
-    joiners = {"class": " "}
     fallbacks = {}
     for bit in bits:
-        if match := re.match(r"^(\w+(:extend)?)(?:=(.+?))?,?$", bit):
-            key, extend, value = match.groups()
-            if extend:
-                if not value:
-                    raise TemplateSyntaxError(
-                        f"Invalid {tag_name!r} tag format: {key} requires a value"
-                    )
-                joiners[key] = parser.compile_filter(value)
-            else:
-                fallbacks[key] = parser.compile_filter(value) if value else NO_VALUE
-    return AttrsNode(sub_key, fallbacks, joiners)
+        match = re.match(r"^(\w+(?::[-\w]+)?)(?:=(.+?))?$", bit)
+        if not match:
+            raise TemplateSyntaxError(f"Invalid {tag_name!r} tag attribute: {bit!r}")
+        key, value = match.groups()
+        fallbacks[key] = parser.compile_filter(value) if value else NO_VALUE
+    return AttrsNode(sub_key, fallbacks)
 
 
 class AttrsNode(template.Node):
-    def __init__(self, sub_key, fallbacks, joiners):
+    def __init__(self, sub_key, fallbacks):
         self.sub_key = sub_key
         self.fallbacks = fallbacks
-        self.joiners = joiners
 
     def render(self, context):
         context_attrs = context.get("attrs")
@@ -371,11 +412,16 @@ class AttrsNode(template.Node):
             )
         if self.sub_key:
             context_attrs = context_attrs.get(self.sub_key)
-        attrs = Attrs(
-            joiners={key: value.resolve(context) for key, value in self.joiners.items()}
-        )
+        attrs = Attrs()
         attrs.update(
-            {key: value.resolve(context) for key, value in self.fallbacks.items()}
+            {
+                key: (
+                    value.resolve(context)  # type: ignore
+                    if isinstance(value, FilterExpression)
+                    else value
+                )
+                for key, value in self.fallbacks.items()
+            }
         )
         if isinstance(context_attrs, Attrs):
             attrs.update(context_attrs)

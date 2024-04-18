@@ -20,7 +20,7 @@ def test_basic():
 def test_attrs():
     assert render_to_string("test_component/attrs.html") == (
         """<main>
-  <section id="topcard" class="mycard">
+  <section class="mycard" id="topcard">
   <h3 class="large">hello</h3>
   <div>
     some content
@@ -45,3 +45,29 @@ def test_missing_closing_tag():
         match=re.compile(r"Unclosed tag.*<include:card>.*</include:card>"),
     ):
         render_to_string("test_component/missing_closing_tag.html")
+
+
+def test_extend_class():
+    assert render_to_string("test_component/extend_class.html") == (
+        """<main>
+  <section class="mycard card lg">
+  <h3 >hello</h3>
+  <div>
+    some content
+  </div>
+</section>
+</main>
+"""
+    )
+
+    assert render_to_string("test_component/extend_class.html", {"red": True}) == (
+        """<main>
+  <section class="mycard card lg">
+  <h3 class="text-red">hello</h3>
+  <div>
+    some content
+  </div>
+</section>
+</main>
+"""
+    )
