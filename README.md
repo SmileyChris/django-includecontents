@@ -135,6 +135,12 @@ Which will allow you to use it like this (without the need to load any template 
 
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
 
+Some HTML formatters (like prettier) insist on quoting HTML attribute values, you can avoid this by wrapping template values in `{}`:
+
+```html
+<include:card title={mytitle}></include:card>
+``` 
+
 ### Component Props
 
 You can define the required or default props of the component in a comment at the top of its template that begins with `props `  (or `def ` to match what JinjaX uses). An exception will be raised if a required prop is not provided.
