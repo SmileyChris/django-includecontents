@@ -1,7 +1,7 @@
 import re
 from collections import abc
 from collections.abc import MutableMapping
-from typing import Any, Literal
+from typing import Any
 
 from django import template
 from django.template import TemplateSyntaxError, Variable
