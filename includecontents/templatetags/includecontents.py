@@ -80,7 +80,7 @@ def includecontents(parser, token):
         new_bits = []
         nested_attrs = {}
         for bit in bits:
-            if match := re.match(r"(^\w+\.[-\w:]+)(?:=(.+))?", bit):
+            if match := re.match(r"(^\w+[.:][-.\w:]+)(?:=(.+))?", bit):
                 attr, value = match.groups()
                 nested_attrs[attr] = parser.compile_filter(value or "True")
             else:
@@ -295,7 +295,7 @@ class Attrs(MutableMapping):
     def __init__(self):
         self._attrs: dict[str, Any] = {}
         self._nested_attrs: dict[str, Attrs] = {}
-        self._extended: dict[str, list[str]] = {}
+        self._extended: dict[str, dict[str, bool]] = {}
 
     def __getattr__(self, key):
         return self._nested_attrs[key]
@@ -311,13 +311,13 @@ class Attrs(MutableMapping):
             return
         if ":" in key:
             key, extend = key.split(":", 1)
-            extended = self._extended.setdefault(key, [])
-            if value:
-                if extend not in extended:
-                    extended.append(extend)
-            else:
-                if extend in extended:
-                    extended.remove(extend)
+            extended = self._extended.setdefault(key, {})
+            extended[extend] = value
+            return
+        if key == "class" and value.startswith("& "):
+            extended = self._extended.setdefault(key, {})
+            for bit in value[2:].split(" "):
+                extended[bit] = True
             return
         self._attrs[key] = value
 
@@ -340,25 +340,31 @@ class Attrs(MutableMapping):
         )
 
     def all_attrs(self):
+        extended = {}
+        for key, parts in self._extended.items():
+            parts = [key for key, value in parts.items() if value]
+            if parts:
+                extended[key] = parts
         for key, value in self._attrs.items():
-            if key in self._extended:
+            if key in extended:
                 if value is True or not value:
                     value_parts = []
                 else:
                     value_parts = str(value).split(" ")
-                for part in self._extended[key]:
+                for part in extended[key]:
                     if part not in value_parts:
                         value_parts.append(part)
                 value = " ".join(value_parts)
             yield key, value or None
-        for key, parts in self._extended.items():
+        for key, parts in extended.items():
             if key not in self._attrs:
                 yield key, " ".join(parts) or None
 
     def update(self, attrs):
         super().update(attrs)
         if isinstance(attrs, Attrs):
-            self._extended.update(attrs._extended)
+            for key, extended in attrs._extended.items():
+                self._extended.setdefault(key, {}).update(extended)
             for key, nested_attrs in attrs._nested_attrs.items():
                 self._nested_attrs.setdefault(key, Attrs()).update(nested_attrs)
 

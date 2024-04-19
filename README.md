@@ -187,28 +187,28 @@ It could be defined like this:
 </div>
 ```
 
-#### Conditional classes
+#### Extended / conditional classes
 
-You can also provide conditional classes for the `class` attribute using the following format:
+Prepend your class list with `"& "` to have it extended rather than replaced:
+
+```jinja
+{% attrs class="lg" %}        {# sets default class attribute to "lg" but can be overridden #}
+{% attrs class="& lg p-3" %}  {# always add 'lg p-3' classes #}
+```
+
+You can provide conditional classes for the `class` attribute using the svelte class directive format:
 
 ```jinja
 {# props large=False #}
 
-{% attrs class="lg" %}     {# sets class attribute to "lg" but can be overridden #}
-{% attrs class:lg %}       {# always adds 'lg' class #}
 {% attrs class:lg=large %} {# adds 'lg' class if large prop is truthy #}
+{% attrs class:lg %}       {# always adds 'lg' class #}
 ```
 
-You can use this same conditional format on the template tag / component itself too:
+You can use this same conditional format on the component attributes directly:
 
 ```html
 <include:card title="Hello" class:lg={is_large}>
   <p>World</p>
 </include:card>
-```
-
-```jinja
-{% includecontents "hello.html" class:lg=is_large %}
-  <p>World</p>
-{% endincludecontents %}
 ```

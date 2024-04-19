@@ -1,6 +1,6 @@
 [project]
 name = "django-includecontents"
-version = "0.5.1"
+version = "0.6"
 description = "Django includecontents component-like tag"
 authors = [{ name = "Chris Beaven", email = "smileychris@gmail.com" }]
 dependencies = ["django"]
