@@ -1,9 +1,11 @@
 import re
 
 import pytest
-from django.template import TemplateSyntaxError
+from django.template import Context, TemplateSyntaxError
 from django.template.loader import render_to_string
 from django.test import override_settings
+
+from includecontents.base import Template
 
 
 def test_basic():
@@ -77,3 +79,10 @@ def test_extend_class():
 </main>
 """
     )
+
+
+def test_empty_props():
+    output = Template(
+        "Attrs: <include:empty_props id='1' hello></include:empty_props>"
+    ).render(Context())
+    assert output == 'Attrs: id="1" hello'

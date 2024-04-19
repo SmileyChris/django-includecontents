@@ -189,9 +189,14 @@ class IncludeContentsNode(template.Node):
         template = self.get_template(context)
         if not template.first_comment:
             return False
-        if template.first_comment.startswith("props "):
+        if (
+            template.first_comment.startswith("props ")
+            or template.first_comment == "props"
+        ):
             first_comment = template.first_comment[6:]
-        elif template.first_comment.startswith("def "):
+        elif (
+            template.first_comment.startswith("def ") or template.first_comment == "def"
+        ):
             first_comment = template.first_comment[4:]
         else:
             return False
