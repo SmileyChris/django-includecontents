@@ -100,7 +100,7 @@ class Lexer(django.template.base.Lexer):
         return super().create_token(token_string, position, lineno, in_tag)
 
 
-class DebugLexer(django.template.base.DebugLexer):
+class DebugLexer(django.template.base.DebugLexer, Lexer):
     def _tag_re_split_positions(self):
         last = 0
         for match in tag_re.finditer(self.template_string):

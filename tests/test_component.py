@@ -3,6 +3,7 @@ import re
 import pytest
 from django.template import TemplateSyntaxError
 from django.template.loader import render_to_string
+from django.test import override_settings
 
 
 def test_basic():
@@ -15,6 +16,11 @@ def test_basic():
 </main>
 """
     )
+
+
+@override_settings(DEBUG=True)
+def test_debug_mode():
+    render_to_string("test_component/index.html")
 
 
 def test_attrs():
