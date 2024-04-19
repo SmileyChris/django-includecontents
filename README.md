@@ -44,7 +44,7 @@ To use the custom template engine, replace the default `DjangoTemplates` backend
 ```python
 TEMPLATES = [
     {
-        'BACKEND': 'includecontents.backends.Templates',
+        'BACKEND': 'includecontents.backend.Templates',
         ...
     },
 ]
