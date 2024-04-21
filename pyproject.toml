@@ -1,12 +1,11 @@
 [project]
 name = "django-includecontents"
-version = "0.6.1"
+version = "0.6.2"
 description = "Django includecontents component-like tag"
 authors = [{ name = "Chris Beaven", email = "smileychris@gmail.com" }]
 dependencies = ["django"]
 requires-python = ">=3.8"
 readme = "README.md"
-license = { text = "MIT" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Web Environment",
@@ -22,6 +21,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+[project.license]
+text = "MIT"
+
 [project.urls]
 Repository = "https://github.com/SmileyChris/django-includecontents"
 
@@ -31,7 +33,6 @@ test = ["pytest", "pytest-django"]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
-
 
 [tool.pdm]
 distribution = true
