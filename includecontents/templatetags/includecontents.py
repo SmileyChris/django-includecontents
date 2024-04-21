@@ -305,7 +305,7 @@ class Attrs(MutableMapping):
         self._extended: dict[str, dict[str, bool]] = {}
 
     def __getattr__(self, key):
-        if "key" not in self._nested_attrs:
+        if key not in self._nested_attrs:
             raise AttributeError(key)
         return self._nested_attrs[key]
 
