@@ -85,4 +85,11 @@ def test_empty_props():
     output = Template(
         "Attrs: <include:empty_props id='1' hello></include:empty_props>"
     ).render(Context())
-    assert output == 'Attrs: id="1" hello'
+    assert output == 'Attrs: id="1" hello/'
+
+
+def test_only_advanced_props():
+    output = Template(
+        "Attrs: <include:empty_props inner.id='1'></include:empty_props>"
+    ).render(Context())
+    assert output == 'Attrs: /id="1"'

@@ -85,6 +85,8 @@ def includecontents(parser, token):
                 nested_attrs[attr] = parser.compile_filter(value or "True")
             else:
                 new_bits.append(bit)
+        if new_bits and new_bits[-1] == "with":
+            new_bits = new_bits[:-1]
         bits = new_bits
         token.contents = " ".join(bits)
     else:
@@ -303,6 +305,8 @@ class Attrs(MutableMapping):
         self._extended: dict[str, dict[str, bool]] = {}
 
     def __getattr__(self, key):
+        if "key" not in self._nested_attrs:
+            raise AttributeError(key)
         return self._nested_attrs[key]
 
     def __getitem__(self, key):
