@@ -426,7 +426,7 @@ class AttrsNode(template.Node):
                 "The attrs tag requires an attrs variable in the context"
             )
         if self.sub_key:
-            context_attrs = context_attrs.get(self.sub_key)
+            context_attrs = getattr(context_attrs, self.sub_key, None)
         attrs = Attrs()
         attrs.update(
             {

@@ -93,3 +93,15 @@ def test_only_advanced_props():
         "Attrs: <include:empty_props inner.id='1'></include:empty_props>"
     ).render(Context())
     assert output == 'Attrs: /id="1"'
+
+
+def test_nested_attrs():
+    output = Template(
+        "<include:nested_attrs inner.class='2' class='1'></include:nested_attrs>"
+    ).render(Context())
+    assert (
+        output
+        == """\
+<div class="1 main"></div>
+<div class="2 inner"></div>"""
+    )
