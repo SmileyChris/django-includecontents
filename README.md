@@ -11,8 +11,8 @@ For example:
 {% endincludecontents %}
 ```
 
-It also provides a simple Django template engine that extends this tag to work
-like an HTML component.
+It also provides an optional Django template engine that extends this tag to
+work like an HTML component.
 
 In this example, it will include and render `components/card.html`:
 
@@ -39,7 +39,11 @@ This engine also allows for multi-line template tags. For example:
 pip install django-includecontents
 ```
 
-To use the custom template engine, replace the default `DjangoTemplates` backend in your settings:
+Either install the custom template engine or just add this app to your `INSTALLED_APPS`.
+
+### Template engine installation
+
+Replace the default `DjangoTemplates` backend in your settings:
 
 ```python
 TEMPLATES = [
@@ -50,23 +54,17 @@ TEMPLATES = [
 ]
 ```
 
-This engine also adds `includecontents` to the built-in tags so there is no need to load it.
+This engine also adds `includecontents` to the built-in tag libraries so there is no need to load it in your templates.
 
-If you don't want the custom engine, just add this app to your `INSTALLED_APPS` and load the tag in your templates:
+### Basic installation
+
+Add this app to your `INSTALLED_APPS` and use `{% load includecontents %}` in your templates:
 
 ```python
 INSTALLED_APPS = [
     ...
     'includecontents',
 ]
-```
-
-```jinja
-{% load includecontents %}
-
-...
-
-{% includecontents %}...{% endincludecontents %}
 ```
 
 ## Template tag usage
@@ -108,6 +106,8 @@ Where `hello.html` template could look something like:
 ```
 
 ## HTML Components Usage
+
+This requires the custom template engine to be installed.
 
 Create a `components` directory in your templates directory. This is where you will put your component templates that are used via the HTML component format.
 These components are normal Django templates that will be rendered with an isolated context. The context is passed to the component via component's attributes.
