@@ -212,3 +212,21 @@ You can use this same conditional format on the component attributes directly:
   <p>World</p>
 </include:card>
 ```
+
+#### Conditional classes in tailwindcss
+
+Add this transform in your `tailwind.config.js` so that Tailwind picks up the
+Svelte-like class directives:
+
+```js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: {
+    files: ["**/*.{html,js}", "!node_modules"],
+    transform: {
+      // Also handle Svelte-like class:class-name directives
+      html: (content) => content.replace(/(\w):([-\w]+)/g, '$1 "$2" '),
+    },
+  },
+  ...
+```
