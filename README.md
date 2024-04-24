@@ -58,7 +58,7 @@ This engine also adds `includecontents` to the built-in tag libraries so there i
 
 ### Basic installation
 
-Add this app to your `INSTALLED_APPS` and use `{% load includecontents %}` in your templates:
+Alternatively, add this app to your `INSTALLED_APPS` and use `{% load includecontents %}` in your templates:
 
 ```python
 INSTALLED_APPS = [
