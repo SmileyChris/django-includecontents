@@ -14,12 +14,12 @@ For example:
 It also provides an optional Django template engine that extends this tag to
 work like an HTML component.
 
-In this example, it will include and render `components/card.html`:
+In this example, it will include and render `components/pretty-card.html`:
 
 ```html
-<include:my-card title="Hello">
+<include:pretty-card title="Hello">
   <p>World</p>
-</include:my-card>
+</include:pretty-card>
 ```
 
 This engine also allows for multi-line template tags. For example:
