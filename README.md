@@ -230,3 +230,45 @@ module.exports = {
   },
   ...
 ```
+
+## Prettier formatting
+
+While not part of this package, `django-includecontents` plays very well with the [`prettier-plugin-jinja-template` plugin](https://www.npmjs.com/package/prettier-plugin-jinja-template) for Prettier.
+This plugin can provide consistent formatting for your Django (and Jinja, obviously) templates.
+
+First install it with `npm install --save-dev prettier-plugin-jinja-template`.
+
+Then create a `.prettierrc` file in your project root with the following content:
+
+```json
+{
+  "plugins": ["prettier-plugin-jinja-template"],
+  "overrides": [
+    {
+      "files": ["**/{templates,jinja2}/**/*.html"],
+      "options": {
+        "parser": "jinja-template",
+        "quoteAttributes": false
+      }
+    }
+  ]
+}
+```
+
+### VScode formatting
+
+To use this Prettier formatting within VScode, use the following two extensions:
+
+* [Django](https://marketplace.visualstudio.com/items?itemName=batisteo.vscode-django)
+* [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+
+Add this to your settings (`Ctrl-P`, paste `>Preferences: Open User Settings (JSON)`):
+
+```json
+{
+  "[django-html]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+}
+```
