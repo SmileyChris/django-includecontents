@@ -17,9 +17,9 @@ work like an HTML component.
 In this example, it will include and render `components/card.html`:
 
 ```html
-<include:card title="Hello">
+<include:my-card title="Hello">
   <p>World</p>
-</include:card>
+</include:my-card>
 ```
 
 This engine also allows for multi-line template tags. For example:
@@ -112,9 +112,9 @@ This requires the custom template engine to be installed.
 Create a `components` directory in your templates directory. This is where you will put your component templates that are used via the HTML component format.
 These components are normal Django templates that will be rendered with an isolated context. The context is passed to the component via component's attributes.
 
-Components must be CamelCase and not match any standard HTML tags.
+Components not match any standard HTML tags. Actually, it's best practice to name them as HTML custom elements (1 or more ASCII letters; a hyphen; 1 or more more ASCII letters, digits or hyphens).
 
-For example, a `components/card.html` template could look like:
+For example, a `components/my-card.html` template could look like:
 
 ```html
 <div class="card">
@@ -128,9 +128,9 @@ For example, a `components/card.html` template could look like:
 Which will allow you to use it like this (without the need to load any template library):
 
 ```html
-<include:card title="Hello">
+<include:my-card title="Hello">
   <p>World</p>
-</include:card>
+</include:my-card>
 ```
 
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
@@ -138,7 +138,7 @@ You can use named [`{% contents %}` blocks](#named-contents-blocks), just like w
 Some HTML formatters (like prettier) insist on quoting HTML attribute values, you can avoid this by optionally wrapping template values in `{}`:
 
 ```html
-<include:card title={mytitle}></include:card>
+<include:my-card title={mytitle}></include:my-card>
 ``` 
 
 ### Component Props
@@ -171,7 +171,7 @@ Then render them with `{{ attrs.group }}` (or `{% attrs.group %}` if you want fa
 For example to call a component like this:
 
 ```html
-<include:field label="Name" name="first_name" value="John" input.class="wide"></include:field>
+<include:form-field label="Name" name="first_name" value="John" input.class="wide"></include:form-field>
 ```
 
 It could be defined like this:
@@ -208,9 +208,9 @@ You can provide conditional classes for the `class` attribute using the svelte c
 You can use this same conditional format on the component attributes directly:
 
 ```html
-<include:card title="Hello" class:lg={is_large}>
+<include:my-card title="Hello" class:lg={is_large}>
   <p>World</p>
-</include:card>
+</include:my-card>
 ```
 
 #### Conditional classes in tailwindcss

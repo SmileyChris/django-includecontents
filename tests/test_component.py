@@ -83,21 +83,21 @@ def test_extend_class():
 
 def test_empty_props():
     output = Template(
-        "Attrs: <include:empty_props id='1' hello></include:empty_props>"
+        "Attrs: <include:empty-props id='1' hello></include:empty-props>"
     ).render(Context())
     assert output == 'Attrs: id="1" hello/'
 
 
 def test_only_advanced_props():
     output = Template(
-        "Attrs: <include:empty_props inner.id='1'></include:empty_props>"
+        "Attrs: <include:empty-props inner.id='1'></include:empty-props>"
     ).render(Context())
     assert output == 'Attrs: /id="1"'
 
 
 def test_nested_attrs():
     output = Template(
-        "<include:nested_attrs inner.class='2' class='1'></include:nested_attrs>"
+        "<include:nested-attrs inner.class='2' class='1'></include:nested-attrs>"
     ).render(Context())
     assert (
         output
