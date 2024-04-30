@@ -262,7 +262,7 @@ To use this Prettier formatting within VScode, use the following two extensions:
 * [Django](https://marketplace.visualstudio.com/items?itemName=batisteo.vscode-django)
 * [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
-Add this to your settings (`Ctrl-P`, paste `>Preferences: Open User Settings (JSON)`):
+Add this to your settings (`Ctrl-P`, paste `>Preferences: Open Workspace Settings (JSON)`):
 
 ```json
 {
