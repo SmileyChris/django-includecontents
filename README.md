@@ -138,7 +138,7 @@ You can use named [`{% contents %}` blocks](#named-contents-blocks), just like w
 Some HTML formatters (like prettier) insist on quoting HTML attribute values, you can avoid this by optionally wrapping template values in `{}`:
 
 ```html
-<include:my-card title={mytitle}></include:my-card>
+<include:my-card title={mytitle} />
 ``` 
 
 ### Component Props

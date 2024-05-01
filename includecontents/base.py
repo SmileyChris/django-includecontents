@@ -76,6 +76,9 @@ class Lexer(django.template.base.Lexer):
             )
         elif in_tag and token_string.startswith("<include:"):
             content = token_string[1:-1].strip()
+            self_closing = content.endswith("/")
+            if self_closing:
+                content = content[:-1].strip()
             # Strip {} from attributes
             bits = list(smart_split(content))
             tag_name = bits.pop(0)
@@ -87,7 +90,7 @@ class Lexer(django.template.base.Lexer):
             # Build the includecontents tag
             content = [
                 "includecontents",
-                f"_{tag_name}",
+                f"_{tag_name}{'/' if self_closing else ''}",
                 f'"components/{tag_name[8:]}.html"',
             ]
             if attrs:

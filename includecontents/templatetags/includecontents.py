@@ -16,7 +16,6 @@ from includecontents.base import Template
 
 register = template.Library()
 
-re_tag = re.compile(r"^includecontents _([A-Z]\w+)")
 re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 
@@ -65,7 +64,7 @@ def includecontents(parser, token):
     """
     bits = token.split_contents()
     # If this was an HTML tag, it's second element is the tag name prefixed with an
-    # underscore.
+    # underscore (and ending with a slash if it's self-closing).
     if len(bits) >= 2 and bits[1].startswith("_"):
         token_name = f"<{bits[1][1:]}>"
         # Rewrite the token name on the command stack for better error messages.
@@ -263,6 +262,8 @@ class IncludeContentsNode(template.Node):
 def get_contents_nodelists(
     parser: Parser, token_name: str
 ) -> tuple[NodeList, dict[str, NodeList]]:
+    if token_name.endswith("/>"):
+        return NodeList(), {}
     end_tag = (
         f"</{token_name[1:]}" if token_name.startswith("<") else f"end{token_name}"
     )

@@ -107,6 +107,11 @@ def test_nested_attrs():
     )
 
 
+def test_self_closing():
+    output = Template("Attrs: <include:empty-props hello />").render(Context())
+    assert output == "Attrs: hello/"
+
+
 def test_kebab_props():
     output = Template(
         "Attrs: "
