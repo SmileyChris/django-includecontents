@@ -1,4 +1,7 @@
+import pytest
 from django.template.loader import render_to_string
+
+from includecontents.templatetags.includecontents import Attrs
 
 
 def test_basic():
@@ -23,3 +26,18 @@ def test_with_attr():
 </div>
 """
     )
+
+
+def test_attrs_class():
+    attrs = Attrs()
+    attrs.update({"test": 1, "me-out": 2})
+    # Unknown keys raise KeyError
+    with pytest.raises(KeyError):
+        attrs["unknown"]
+    # Basic lookup works
+    assert attrs["test"] == 1
+    # Kebab case works
+    assert attrs["me-out"] == 2
+    # Camel case is converted to kebab case
+    assert attrs["meOut"] == 2
+    assert attrs["MeOut"] == 2

@@ -17,6 +17,7 @@ from includecontents.base import Template
 register = template.Library()
 
 re_tag = re.compile(r"^includecontents _([A-Z]\w+)")
+re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 
 @register.tag
@@ -78,11 +79,18 @@ def includecontents(parser, token):
                 bits[i] = f"{bit}=True"
         # Split out nested attributes (those with a dot in the name).
         new_bits = []
-        nested_attrs = {}
-        for bit in bits:
-            if match := re.match(r"(^\w+[.:][-.\w:]+)(?:=(.+))?", bit):
+        advanced_attrs = {}
+        for i, bit in enumerate(bits):
+            if i < 3:
+                new_bits.append(bit)
+            elif match := re.match(r"(^\w+[.:][-.\w:]+)(?:=(.+))?", bit):
+                # Nested attrs can't be handled by the standard include tag.
                 attr, value = match.groups()
-                nested_attrs[attr] = parser.compile_filter(value or "True")
+                advanced_attrs[attr] = parser.compile_filter(value or "True")
+            elif "-" in bit.split("=", 1)[0]:
+                # Attributes with a dash also can't be handled by the standard include.
+                attr, value = bit.split("=", 1)
+                advanced_attrs[attr] = parser.compile_filter(value)
             else:
                 new_bits.append(bit)
         if new_bits and new_bits[-1] == "with":
@@ -91,7 +99,7 @@ def includecontents(parser, token):
         token.contents = " ".join(bits)
     else:
         token_name = bits[0]
-        nested_attrs = {}
+        advanced_attrs = {}
     if len(bits) < 2:
         raise TemplateSyntaxError(
             f"{token_name} tag takes at least one argument: the name of the template"
@@ -105,7 +113,7 @@ def includecontents(parser, token):
     include_node.isolated_context = False
     return IncludeContentsNode(
         token_name=token_name,
-        nested_attrs=nested_attrs,
+        nested_attrs=advanced_attrs,
         include_node=include_node,
         nodelist=nodelist,
         named_nodelists=named_nodelists,
@@ -310,6 +318,8 @@ class Attrs(MutableMapping):
         return self._nested_attrs[key]
 
     def __getitem__(self, key):
+        if key not in self._attrs:
+            key = re_camel_case.sub(r"-\1", key).lower()
         return self._attrs[key]
 
     def __setitem__(self, key, value):

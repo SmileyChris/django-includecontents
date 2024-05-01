@@ -105,3 +105,12 @@ def test_nested_attrs():
 <div class="1 main"></div>
 <div class="2 inner"></div>"""
     )
+
+
+def test_kebab_props():
+    output = Template(
+        "Attrs: "
+        '<include:empty-props x-data="{foo: bar}" inner.hx-swap="innerHTML">'
+        "</include:empty-props>"
+    ).render(Context())
+    assert output == 'Attrs: x-data="{foo: bar}"/hx-swap="innerHTML"'

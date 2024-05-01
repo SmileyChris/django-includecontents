@@ -187,6 +187,26 @@ It could be defined like this:
 </div>
 ```
 
+#### Kebab-cased props
+
+Non-defined props can be "kebab-cased", for example: 
+
+```html
+<include:example my-prop="value">
+```
+
+To access a kebab-cased prop to a via the ``attrs`` variable, use its CamelCase equivalent. The ``{% attrs %}`` tag works with kebab-case fine though::
+
+```jinja
+{# props #}
+
+{% attrs my-prop="fallback" %}
+
+{% if attrs.myProp %}
+my-prop is explicitly set to {{ attrs.myProp }}
+{% endif %}
+```
+
 #### Extended / conditional classes
 
 Prepend your class list with `"& "` to have it extended rather than replaced:
