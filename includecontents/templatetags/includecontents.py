@@ -8,7 +8,7 @@ from django.template import TemplateSyntaxError, Variable
 from django.template.base import FilterExpression, NodeList, Parser, TokenType
 from django.template.context import Context
 from django.template.loader_tags import IncludeNode, construct_relative_path, do_include
-from django.utils.html import escape
+from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
 
@@ -352,7 +352,7 @@ class Attrs(MutableMapping):
     def __str__(self):
         return mark_safe(
             " ".join(
-                (f'{key}="{escape(value)}"' if value is not True else key)
+                (f'{key}="{conditional_escape(value)}"' if value is not True else key)
                 for key, value in self.all_attrs()
                 if value is not None
             )

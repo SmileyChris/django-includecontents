@@ -114,3 +114,24 @@ def test_kebab_props():
         "</include:empty-props>"
     ).render(Context())
     assert output == 'Attrs: x-data="{foo: bar}"/hx-swap="innerHTML"'
+
+
+def test_safe_constants():
+    output = Template(
+        """<include:escape-props test="2>1" another="3>2"></include:escape-props>"""
+    ).render(Context())
+    assert output == 'test="2>1" another="3>2"'
+
+
+def test_safe_constants_fallback():
+    output = Template("""<include:escape-props></include:escape-props>""").render(
+        Context()
+    )
+    assert output == 'test="5>4"'
+
+
+def test_escape_variables():
+    output = Template(
+        """<include:escape-props test=somevar another="3>2"></include:escape-props>"""
+    ).render(Context({"somevar": '2>1"'}))
+    assert output == 'test="2&gt;1&quot;" another="3>2"'

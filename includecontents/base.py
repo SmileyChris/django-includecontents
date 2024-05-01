@@ -38,7 +38,9 @@ class Template(django.template.base.Template):
             raise
 
 
-tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:.*?>)", re.DOTALL)
+tag_re = re.compile(
+    r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:(?:\"[^\"]*\"|'[^']*'|.)*?>)", re.DOTALL
+)
 
 
 class Lexer(django.template.base.Lexer):
