@@ -140,3 +140,8 @@ def test_escape_variables():
         """<include:escape-props test=somevar another="3>2"></include:escape-props>"""
     ).render(Context({"somevar": '2>1"'}))
     assert output == 'test="2&gt;1&quot;" another="3>2"'
+
+
+def test_subdir():
+    output = Template("<include:inside/cat />").render(Context())
+    assert output == "Meow"

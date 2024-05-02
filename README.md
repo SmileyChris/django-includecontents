@@ -133,6 +133,12 @@ Which will allow you to use it like this (without the need to load any template 
 </include:my-card>
 ```
 
+You can use directories within `components` to group your components. For example, `components/forms/field.html`:
+
+```html
+<include:forms/field ... />
+```
+
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
 
 Some HTML formatters (like prettier) insist on quoting HTML attribute values, you can avoid this by optionally wrapping template values in `{}`:
