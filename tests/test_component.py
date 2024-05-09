@@ -145,3 +145,17 @@ def test_escape_variables():
 def test_subdir():
     output = Template("<include:inside/cat />").render(Context())
     assert output == "Meow"
+
+
+def test_template_caching(mocker):
+    template = Template("""
+{% for i in '12345'|make_list %}
+    <include:empty-props i={i} />
+{% endfor %}
+""")
+    context = Context()
+    context.bind_template(template)
+    spy = mocker.spy(template.engine, "select_template")
+
+    template.render(context)
+    assert spy.call_count == 1

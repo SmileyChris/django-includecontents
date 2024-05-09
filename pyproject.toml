@@ -28,7 +28,7 @@ text = "MIT"
 Repository = "https://github.com/SmileyChris/django-includecontents"
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-django"]
+test = ["pytest", "pytest-django", "pytest-mock"]
 
 [build-system]
 requires = ["pdm-backend"]

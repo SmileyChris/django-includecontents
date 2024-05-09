@@ -1,6 +1,7 @@
 import re
 from collections import abc
 from collections.abc import MutableMapping
+from contextlib import contextmanager
 from typing import Any
 
 from django import template
@@ -106,17 +107,13 @@ def includecontents(parser, token):
     nodelist, named_nodelists = get_contents_nodelists(parser, token_name)
     include_node = do_include(parser, token)
     include_node.origin = parser.origin
-    isolated_context = (
-        False if token_name.startswith("<") else include_node.isolated_context
-    )
-    include_node.isolated_context = False
+
     return IncludeContentsNode(
         token_name=token_name,
         nested_attrs=advanced_attrs,
         include_node=include_node,
         nodelist=nodelist,
         named_nodelists=named_nodelists,
-        isolated_context=isolated_context,
     )
 
 
@@ -158,13 +155,18 @@ class IncludeContentsNode(template.Node):
         include_node,
         nodelist,
         named_nodelists,
-        isolated_context,
     ):
         self.token_name = token_name
         self.nested_attrs = nested_attrs
         self.include_node = include_node
         self.nodelist = nodelist
         self.named_nodelists = named_nodelists
+
+        self.is_component = token_name.startswith("<")
+
+        # We'll handle the include_node context isolation ourselves.
+        isolated_context = True if self.is_component else include_node.isolated_context
+        include_node.isolated_context = False
         self.isolated_context = isolated_context
 
     def render(self, context):
@@ -177,27 +179,26 @@ class IncludeContentsNode(template.Node):
                 nodelist=self.nodelist,
                 named_nodelists=self.named_nodelists,
             )
-            if self.set_component_attrs(context, new_context):
-                # Don't use the extra context for the include tag if it's a component
-                # with defined props.
-                node = IncludeNode(self.include_node.template)
-                node.origin = self.origin
-                rendered = node.render(new_context)
-            else:
+            with self.set_component_attrs(context, new_context):
                 rendered = self.include_node.render(new_context)
-            if self.token_name.startswith("<"):
+            if self.is_component:
                 rendered = rendered.strip()
         return rendered
 
+    @contextmanager
     def set_component_attrs(self, context: Context, new_context: Context):
         """
         Set the attributes of the component tag in the new context.
+
+        Use as a context manager around rendering the
         """
-        if not self.token_name.startswith("<"):
-            return False
-        template = self.get_template(context)
+        if not self.is_component:
+            yield
+            return
+        template = self.get_component_template(context)
         if not template.first_comment:
-            return False
+            yield
+            return
         if (
             template.first_comment.startswith("props ")
             or template.first_comment == "props"
@@ -208,7 +209,8 @@ class IncludeContentsNode(template.Node):
         ):
             first_comment = template.first_comment[4:]
         else:
-            return False
+            yield
+            return
         used_attrs = self.include_node.extra_context or {}
         defined_attrs = []
         for bit in smart_split(first_comment.strip()):
@@ -231,9 +233,14 @@ class IncludeContentsNode(template.Node):
         for key, value in self.nested_attrs.items():
             attrs[key] = value.resolve(context)
         new_context["attrs"] = attrs
-        return True
 
-    def get_template(self, context) -> Template:
+        # Don't use the extra context for the include tag if it's a component
+        # with defined props.
+        extra_context = self.include_node.extra_context
+        yield
+        self.include_node.extra_context = extra_context
+
+    def get_component_template(self, context) -> Template:
         template = self.include_node.template.resolve(context)
         # Does this quack like a Template?
         if not callable(getattr(template, "render", None)):
@@ -248,7 +255,8 @@ class IncludeContentsNode(template.Node):
                 )
             else:
                 template_name = tuple(template_name)
-            cache = context.render_context.dicts[0].setdefault(self, {})
+            # Use the same cache as the include node to avoid duplicate template loads.
+            cache = context.render_context.dicts[0].setdefault(self.include_node, {})
             template = cache.get(template_name)
             if template is None:
                 template = context.template.engine.select_template(template_name)
