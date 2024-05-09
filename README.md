@@ -112,7 +112,7 @@ This requires the custom template engine to be installed.
 Create a `components` directory in your templates directory. This is where you will put your component templates that are used via the HTML component format.
 These components are normal Django templates that will be rendered with an isolated context. The context is passed to the component via component's attributes.
 
-Components not match any standard HTML tags. Actually, it's best practice to name them as HTML custom elements (1 or more ASCII letters; a hyphen; 1 or more more ASCII letters, digits or hyphens).
+Components must not match any standard HTML tags. Actually, it's best practice to name them as HTML custom elements (1 or more ASCII letters; a hyphen; 1 or more more ASCII letters, digits or hyphens).
 
 For example, a `components/my-card.html` template could look like:
 
@@ -124,6 +124,8 @@ For example, a `components/my-card.html` template could look like:
   </div>
 </div>
 ```
+
+Components are always rendered isolated from the parent template, so they should not rely on any context variables from the parent template.
 
 Which will allow you to use it like this (without the need to load any template library):
 

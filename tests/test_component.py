@@ -159,3 +159,16 @@ def test_template_caching(mocker):
 
     template.render(context)
     assert spy.call_count == 1
+
+
+def test_context_passthrough():
+    output = Template("""<include:context food="fries" />""").render(
+        Context({"food": "fries"})
+    )
+    assert output == "fries"
+    output = Template("""<include:context food={food} />""").render(
+        Context({"food": "sushi"})
+    )
+    assert output == "sushi"
+    output = Template("""<include:context />""").render(Context({"food": "pizza"}))
+    assert output == ""

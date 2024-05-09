@@ -41,3 +41,27 @@ def test_attrs_class():
     # Camel case is converted to kebab case
     assert attrs["meOut"] == 2
     assert attrs["MeOut"] == 2
+
+
+def test_context():
+    assert render_to_string("test_tag/basic.html", {"id": "seen"}) == (
+        """<div class="outer">
+  <div class="inner" id="seen">
+    inner content
+  </div>
+
+</div>
+"""
+    )
+
+
+def test_context_only():
+    assert render_to_string("test_tag/basic_only.html", {"id": "unseen"}) == (
+        """<div class="outer">
+  <div class="inner" id="">
+    inner content
+  </div>
+
+</div>
+"""
+    )

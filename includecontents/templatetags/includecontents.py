@@ -2,13 +2,14 @@ import re
 from collections import abc
 from collections.abc import MutableMapping
 from contextlib import contextmanager
+from math import e
 from typing import Any
 
 from django import template
 from django.template import TemplateSyntaxError, Variable
 from django.template.base import FilterExpression, NodeList, Parser, TokenType
 from django.template.context import Context
-from django.template.loader_tags import IncludeNode, construct_relative_path, do_include
+from django.template.loader_tags import construct_relative_path, do_include
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
@@ -110,7 +111,7 @@ def includecontents(parser, token):
 
     return IncludeContentsNode(
         token_name=token_name,
-        nested_attrs=advanced_attrs,
+        advanced_attrs=advanced_attrs,
         include_node=include_node,
         nodelist=nodelist,
         named_nodelists=named_nodelists,
@@ -151,13 +152,13 @@ class IncludeContentsNode(template.Node):
     def __init__(
         self,
         token_name,
-        nested_attrs,
+        advanced_attrs,
         include_node,
         nodelist,
         named_nodelists,
     ):
         self.token_name = token_name
-        self.nested_attrs = nested_attrs
+        self.advanced_attrs = advanced_attrs
         self.include_node = include_node
         self.nodelist = nodelist
         self.named_nodelists = named_nodelists
@@ -191,16 +192,55 @@ class IncludeContentsNode(template.Node):
         Set the attributes of the component tag in the new context.
 
         Use as a context manager around rendering the include node so that when in
-        component mode, the non-listed attributes will be set as in the ``attrs``
-        variable rather than directly in the new context.
+        component "props" mode, the non-listed attributes will be set as in the
+        ``attrs`` variable rather than directly in the new context.
         """
         if not self.is_component:
             yield
             return
         template = self.get_component_template(context)
+        component_props = self.get_component_props(template)
+        if component_props is not None:
+            undefined_attrs = Attrs()
+        for key, value in self.all_attrs():
+            if component_props is None:
+                if "." in key or ":" in key:
+                    raise TemplateSyntaxError(
+                        f"Advanced attribute {key!r} only allowed if component template"
+                        " defines props"
+                    )
+                new_context[key] = value.resolve(context)
+            else:
+                if key in component_props:
+                    new_context[key] = value.resolve(context)
+                else:
+                    undefined_attrs[key] = value.resolve(context)
+
+        if component_props is not None:
+            new_context["attrs"] = undefined_attrs
+
+            # Put default values in the new context.
+            for key, value in component_props.items():
+                if value:
+                    if key in new_context:
+                        continue
+                    new_context[key] = value.resolve(context)
+
+        # Don't use the extra context for the include tag if it's a component
+        # since we've handled adding it to the new context ourselves.
+        extra_context = self.include_node.extra_context
+        yield
+        self.include_node.extra_context = extra_context
+
+    def all_attrs(self):
+        for key, value in self.include_node.extra_context.items():
+            yield key, value
+        for key, value in self.advanced_attrs.items():
+            yield key, value
+
+    def get_component_props(self, template):
         if not template.first_comment:
-            yield
-            return
+            return None
         if (
             template.first_comment.startswith("props ")
             or template.first_comment == "props"
@@ -211,36 +251,21 @@ class IncludeContentsNode(template.Node):
         ):
             first_comment = template.first_comment[4:]
         else:
-            yield
-            return
-        used_attrs = self.include_node.extra_context or {}
-        defined_attrs = []
+            return None
+        used_attrs = self.include_node.extra_context
+        props = {}
         for bit in smart_split(first_comment.strip()):
             if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
                 attr, value = match.groups()
-                defined_attrs.append(attr)
-                if attr not in used_attrs:
-                    if value is None:
+                if value is None:
+                    if attr not in used_attrs:
                         raise TemplateSyntaxError(
-                            f'Missing required attribute "{attr}" in '
-                            f"{self.token_name}"
+                            f'Missing required attribute "{attr}" in {self.token_name}'
                         )
-                    new_context[attr] = Variable(value).resolve(context)
-        attrs = Attrs()
-        for key, value in used_attrs.items():
-            if key not in defined_attrs:
-                attrs[key] = value.resolve(context)
-            else:
-                new_context[key] = value.resolve(context)
-        for key, value in self.nested_attrs.items():
-            attrs[key] = value.resolve(context)
-        new_context["attrs"] = attrs
-
-        # Don't use the extra context for the include tag if it's a component
-        # with defined props.
-        extra_context = self.include_node.extra_context
-        yield
-        self.include_node.extra_context = extra_context
+                    props[attr] = None
+                else:
+                    props[attr] = Variable(value)
+        return props
 
     def get_component_template(self, context) -> Template:
         template = self.include_node.template.resolve(context)
