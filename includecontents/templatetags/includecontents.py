@@ -190,7 +190,9 @@ class IncludeContentsNode(template.Node):
         """
         Set the attributes of the component tag in the new context.
 
-        Use as a context manager around rendering the
+        Use as a context manager around rendering the include node so that when in
+        component mode, the non-listed attributes will be set as in the ``attrs``
+        variable rather than directly in the new context.
         """
         if not self.is_component:
             yield
