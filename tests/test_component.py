@@ -143,7 +143,7 @@ def test_escape_variables():
 
 
 def test_subdir():
-    output = Template("<include:inside/cat />").render(Context())
+    output = Template("<include:inside:cat />").render(Context())
     assert output == "Meow"
 
 

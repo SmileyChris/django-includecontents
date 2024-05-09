@@ -91,7 +91,7 @@ class Lexer(django.template.base.Lexer):
             content = [
                 "includecontents",
                 f"_{tag_name}{'/' if self_closing else ''}",
-                f'"components/{tag_name[8:]}.html"',
+                f'"components/{tag_name[8:].replace(":", "/")}.html"',
             ]
             if attrs:
                 content.append("with")
