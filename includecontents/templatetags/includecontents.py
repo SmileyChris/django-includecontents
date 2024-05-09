@@ -74,17 +74,13 @@ def includecontents(parser, token):
         # Replace the token contents to use the rewritten token name.
         bits[1] = token_name
         del bits[0]
-        # In tag mode, allow boolean attributes to be set without a value.
-        for i, bit in enumerate(bits[3:], start=3):
-            if "=" not in bit:
-                bits[i] = f"{bit}=True"
         # Split out nested attributes (those with a dot in the name).
         new_bits = []
         advanced_attrs = {}
         for i, bit in enumerate(bits):
             if i < 3:
                 new_bits.append(bit)
-            elif match := re.match(r"(^\w+[.:][-.\w:]+)(?:=(.+))?", bit):
+            elif match := re.match(r"(^\w+[.:][-.\w:]+)(?:=(.+))?$", bit):
                 # Nested attrs can't be handled by the standard include tag.
                 attr, value = match.groups()
                 advanced_attrs[attr] = parser.compile_filter(value or "True")
@@ -92,12 +88,18 @@ def includecontents(parser, token):
                 # Attributes with a dash also can't be handled by the standard include.
                 attr, value = bit.split("=", 1)
                 advanced_attrs[attr] = parser.compile_filter(value)
+            elif match := re.match(r"^{ *(\w+) *}$", bit):
+                # Shorthand, e.g. {attr} is equivalent to attr=attr.
+                attr = match.group(1)
+                advanced_attrs[attr] = parser.compile_filter(attr)
             else:
+                # In tag mode, attributes without a value are treated as boolean flags.
+                if "=" not in bit:
+                    bit = f"{bit}=True"
                 new_bits.append(bit)
         if new_bits and new_bits[-1] == "with":
             new_bits = new_bits[:-1]
-        bits = new_bits
-        token.contents = " ".join(bits)
+        token.contents = " ".join(new_bits)
     else:
         token_name = bits[0]
         advanced_attrs = {}

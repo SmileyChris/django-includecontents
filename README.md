@@ -149,6 +149,12 @@ Some HTML formatters (like prettier) insist on quoting HTML attribute values, yo
 <include:my-card title={mytitle} />
 ``` 
 
+You can also use short-hand syntax for HTML attributes when the attribute name matches the variable name:
+
+```html
+<include:my-card {title} />
+```
+
 ### Component Props
 
 You can define the required or default props of the component in a comment at the top of its template that begins with `props `  (or `def ` to match what JinjaX uses). An exception will be raised if a required prop is not provided.

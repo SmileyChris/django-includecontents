@@ -172,3 +172,10 @@ def test_context_passthrough():
     assert output == "sushi"
     output = Template("""<include:context />""").render(Context({"food": "pizza"}))
     assert output == ""
+
+
+def test_shorthand_attrs():
+    output = Template("""<include:context {food} />""").render(
+        Context({"food": "pizza"})
+    )
+    assert output == "pizza"
