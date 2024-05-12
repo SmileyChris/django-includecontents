@@ -289,6 +289,9 @@ Then create a `.prettierrc` file in your project root with the following content
 }
 ```
 
+`quoteAttributes` is set to `false` to avoid quoting HTML attribute values that are template variables (e.g. `title={mytitle}`).
+The workaround to keep the quotes when using the alpineJS `x-data` directive is to simply is to put a space between the quote and the curly brace: `x-data=" {...} "`.
+
 ### VScode formatting
 
 To use this Prettier formatting within VScode, use the following two extensions:
