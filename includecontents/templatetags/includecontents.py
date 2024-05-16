@@ -14,7 +14,7 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
 
-from includecontents.base import Template
+from includecontents.django.base import Template
 
 register = template.Library()
 

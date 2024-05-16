@@ -41,14 +41,14 @@ pip install django-includecontents
 
 Either install the custom template engine or just add this app to your `INSTALLED_APPS`.
 
-### Template engine installation
+### Install with template engine
 
-Replace the default `DjangoTemplates` backend in your settings:
+Replace the default `django.template.backends.django.DjangoTemplates` backend in your settings:
 
 ```python
 TEMPLATES = [
     {
-        'BACKEND': 'includecontents.backend.Templates',
+        'BACKEND': 'includecontents.django.DjangoTemplates',
         ...
     },
 ]
@@ -56,7 +56,7 @@ TEMPLATES = [
 
 This engine also adds `includecontents` to the built-in tag libraries so there is no need to load it in your templates.
 
-### Basic installation
+### Install without template engine
 
 Alternatively, add this app to your `INSTALLED_APPS` and use `{% load includecontents %}` in your templates:
 

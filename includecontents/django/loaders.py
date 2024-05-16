@@ -8,7 +8,6 @@ from .base import Template
 
 
 class CustomTemplateMixin(django.template.loaders.base.Loader):
-
     def get_template(self, template_name, skip=None):
         """
         Call self.get_template_sources() and return a Template object for

@@ -1,6 +1,6 @@
 TEMPLATES = [
     {
-        "BACKEND": "includecontents.backend.Templates",
+        "BACKEND": "includecontents.django.DjangoTemplates",
         "DIRS": ["tests/templates"],
         "OPTIONS": {},
     }

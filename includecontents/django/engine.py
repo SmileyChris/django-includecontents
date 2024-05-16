@@ -21,10 +21,10 @@ class Engine(django.template.Engine):
         **kwargs,
     ):
         if loaders is None:
-            loaders = ["includecontents.loaders.FilesystemLoader"]
+            loaders = ["includecontents.django.loaders.FilesystemLoader"]
             if app_dirs:
-                loaders += ["includecontents.loaders.AppDirectoriesLoader"]
-            loaders = [("includecontents.loaders.CachedLoader", loaders)]
+                loaders += ["includecontents.django.loaders.AppDirectoriesLoader"]
+            loaders = [("includecontents.django.loaders.CachedLoader", loaders)]
         else:
             if app_dirs:
                 raise ImproperlyConfigured(

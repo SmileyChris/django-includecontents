@@ -5,7 +5,7 @@ from django.template import Context, TemplateSyntaxError
 from django.template.loader import render_to_string
 from django.test import override_settings
 
-from includecontents.base import Template
+from includecontents.django.base import Template
 
 
 def test_basic():

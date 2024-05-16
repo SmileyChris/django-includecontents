@@ -4,7 +4,7 @@ from django.conf import settings
 from .engine import Engine
 
 
-class Templates(django.template.backends.django.DjangoTemplates):
+class DjangoTemplates(django.template.backends.django.DjangoTemplates):
     def __init__(self, params):
         # Copy parent init code.
         params = params.copy()
