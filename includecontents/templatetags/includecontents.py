@@ -86,10 +86,10 @@ def includecontents(parser, token):
                 advanced_attrs[attr] = parser.compile_filter(value or "True")
             elif "-" in bit:
                 # Attributes with a dash also can't be handled by the standard include.
-                parts = bit.split("=", 1)
-                if len(parts) < 2:
-                    parts.append("")
-                attr, value = parts
+                if "=" in bit:
+                    attr, value = bit.split("=", 1)
+                else:
+                    attr, value = bit, ""
                 advanced_attrs[attr] = parser.compile_filter(value)
             elif match := re.match(r"^{ *(\w+) *}$", bit):
                 # Shorthand, e.g. {attr} is equivalent to attr=attr.
