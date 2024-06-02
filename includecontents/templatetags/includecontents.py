@@ -90,7 +90,7 @@ def includecontents(parser, token):
                     attr, value = bit.split("=", 1)
                 else:
                     attr, value = bit, ""
-                advanced_attrs[attr] = parser.compile_filter(value)
+                advanced_attrs[attr] = parser.compile_filter(value or "True")
             elif match := re.match(r"^{ *(\w+) *}$", bit):
                 # Shorthand, e.g. {attr} is equivalent to attr=attr.
                 attr = match.group(1)
