@@ -1,0 +1,57 @@
+name: Release new version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Type of version bump (patch, minor, major)"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -e .
+          python -m pip install towncrier pdm
+
+      - name: Get next version number
+        run: |
+          echo "version=$(python -m includecontents.next_version ${{ inputs.bump }})" >> "$GITHUB_ENV"
+
+      - name: Store release notes
+        run: |
+          towncrier build --draft --version $version | tail -n +3 > /tmp/changes.txt
+
+      - name: Build full changelog
+        run: |
+          towncrier build --yes --version $version
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Update CHANGES for $version"
+          git tag "v$version" --file=/tmp/changes.txt --cleanup=whitespace
+          git push --follow-tags
+
+      - name: Generate github release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v$version" --title "$version" --notes-from-tag --verify-tag
+
+      - name: Publish to PyPI
+        uses: ./.github/publish.yml
