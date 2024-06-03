@@ -28,7 +28,7 @@ def test_debug_mode():
 def test_attrs():
     assert render_to_string("test_component/attrs.html") == (
         """<main>
-  <section class="mycard" id="topcard">
+  <section class="mycard" id="topcard" x-data>
   <h3 class="large">hello</h3>
   <div>
     some content

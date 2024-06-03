@@ -84,10 +84,13 @@ def includecontents(parser, token):
                 # Nested attrs can't be handled by the standard include tag.
                 attr, value = match.groups()
                 advanced_attrs[attr] = parser.compile_filter(value or "True")
-            elif "-" in bit.split("=", 1)[0]:
+            elif "-" in bit:
                 # Attributes with a dash also can't be handled by the standard include.
-                attr, value = bit.split("=", 1)
-                advanced_attrs[attr] = parser.compile_filter(value)
+                if "=" in bit:
+                    attr, value = bit.split("=", 1)
+                else:
+                    attr, value = bit, ""
+                advanced_attrs[attr] = parser.compile_filter(value or "True")
             elif match := re.match(r"^{ *(\w+) *}$", bit):
                 # Shorthand, e.g. {attr} is equivalent to attr=attr.
                 attr = match.group(1)
