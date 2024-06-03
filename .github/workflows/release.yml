@@ -39,7 +39,7 @@ jobs:
 
       - name: Build full changelog
         run: |
-          towncrier build --yes --version $version
+          towncrier build --yes --name "Version" --version $version
 
       - name: Commit changelog
         run: |
