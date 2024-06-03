@@ -2,7 +2,6 @@ import re
 from collections import abc
 from collections.abc import MutableMapping
 from contextlib import contextmanager
-from math import e
 from typing import Any
 
 from django import template
