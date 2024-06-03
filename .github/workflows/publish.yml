@@ -1,4 +1,4 @@
-name: Release new version
+name: Publish to PyPI
 
 on:
   workflow_call:
