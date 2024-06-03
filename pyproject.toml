@@ -1,9 +1,9 @@
 [project]
 name = "django-includecontents"
-version = "1.0"
 description = "Django includecontents component-like tag"
 authors = [{ name = "Chris Beaven", email = "smileychris@gmail.com" }]
-dependencies = ["django"]
+dynamic = ["version"]
+dependencies = ["django", "packaging"]
 requires-python = ">=3.8"
 readme = "README.md"
 classifiers = [
@@ -29,6 +29,7 @@ Repository = "https://github.com/SmileyChris/django-includecontents"
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-django", "pytest-mock"]
+deploy = ["pdm", "pdm.backend"]
 
 [build-system]
 requires = ["pdm-backend"]
@@ -36,6 +37,10 @@ build-backend = "pdm.backend"
 
 [tool.pdm]
 distribution = true
+
+[tool.pdm.version]
+source = "scm"
+tag_regex = 'v(?P<version>[0-9]+(\.[0-9]+)+)'
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
