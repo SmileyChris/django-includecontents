@@ -24,8 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install -e .
-          python -m pip install towncrier pdm
+          python -m pip install -e .[deploy]
+          python -m pip install towncrier
 
       - name: Get next version number
         run: |
