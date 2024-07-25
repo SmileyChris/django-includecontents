@@ -1,14 +1,15 @@
 name: Publish to PyPI
 
 on:
-  workflow_call:
-  workflow_dispatch:
+  release:
+    types:
+      - released
 
 jobs:
   pypi-publish:
     name: upload release to PyPI
     runs-on: ubuntu-latest
-    environment: release
+    environment: pypi
     permissions:
       id-token: write
     steps:
