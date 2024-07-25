@@ -179,3 +179,32 @@ def test_shorthand_attrs():
         Context({"food": "pizza"})
     )
     assert output == "pizza"
+
+
+def test_multi():
+    output = render_to_string("test_component/multi.html")
+    assert output == (
+        """<main>
+  <section class="card">
+  <h3 >hello</h3>
+  <div>Title</div>
+</section>
+  
+    <section class="card">
+  <h3 >1</h3>
+  <div>loop 1</div>
+</section>
+  
+    <section class="card">
+  <h3 >2</h3>
+  <div>loop 2</div>
+</section>
+  
+    <section class="card">
+  <h3 >3</h3>
+  <div>loop 3</div>
+</section>
+  
+</main>
+"""
+    )
