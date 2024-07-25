@@ -4,6 +4,15 @@ This long shows interesting changes that happen for each release of `django-incl
 
 <!-- towncrier release notes start -->
 
+# Version 1.1.1 (2024-07-25)
+
+### Bugfixes
+
+- Fix a bug where the component context wasn't being set correctly, especially noticeable inside of a loop. ([5])
+
+[5]: https://github.com/SmileyChris/django-includecontents/issues/5
+
+
 # Version 1.1 (2024-06-03)
 
 ### Bugfixes
