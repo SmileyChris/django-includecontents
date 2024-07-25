@@ -233,6 +233,7 @@ class IncludeContentsNode(template.Node):
         # Don't use the extra context for the include tag if it's a component
         # since we've handled adding it to the new context ourselves.
         extra_context = self.include_node.extra_context
+        self.include_node.extra_context = {}
         yield
         self.include_node.extra_context = extra_context
 
