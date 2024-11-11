@@ -63,6 +63,8 @@ def includecontents(parser, token):
             {% endif %}
         </div>
     """
+    # Remove template {{ }}.
+    token.contents = re.sub(r"(['\"]?)\{\{ *(.*?) *\}\}\1", r"\2", token.contents)
     bits = token.split_contents()
     # If this was an HTML tag, it's second element is the tag name prefixed with an
     # underscore (and ending with a slash if it's self-closing).
@@ -94,6 +96,10 @@ def includecontents(parser, token):
                 # Shorthand, e.g. {attr} is equivalent to attr=attr.
                 attr = match.group(1)
                 advanced_attrs[attr] = parser.compile_filter(attr)
+            elif match := re.match(r"^(\w+)={(\w+)}$", bit):
+                # Old style template variable syntax: title={myTitle}
+                attr, var = match.groups()
+                advanced_attrs[attr] = parser.compile_filter(var)
             else:
                 # In tag mode, attributes without a value are treated as boolean flags.
                 if "=" not in bit:

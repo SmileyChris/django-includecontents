@@ -222,3 +222,32 @@ def test_multi():
 </main>
 """
     )
+
+
+def test_new_attr_syntax():
+    output = render_to_string(
+        "test_component/new_attr_syntax.html", {"myTitle": "Hello World"}
+    )
+    assert output == (
+        """<main>
+  <section class="mycard">
+  <h3 >Hello World</h3>
+  <div>
+    content with new syntax
+  </div>
+</section>
+  <section class="mycard">
+  <h3 >hello world</h3>
+  <div>
+    content with new syntax unquoted
+  </div>
+</section>
+  <section class="mycard">
+  <h3 >Hello World</h3>
+  <div>
+    content with old syntax
+  </div>
+</section>
+</main>
+"""
+    )

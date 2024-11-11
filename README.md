@@ -143,10 +143,10 @@ You can use directories within `components` to group your components. For exampl
 
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
 
-Some HTML formatters (like prettier) insist on quoting HTML attribute values, you can avoid this by optionally wrapping template values in `{}`:
+Some HTML formatters (like prettier) insist on quoting HTML attribute values. You can wrap the string contents in `{{ }}` to still read this as a template variable rather than a string:
 
 ```html
-<include:my-card title={mytitle} />
+<include:my-card title="{{ mytitle }}" />
 ``` 
 
 You can also use short-hand syntax for HTML attributes when the attribute name matches the variable name:
@@ -242,7 +242,7 @@ You can provide conditional classes for the `class` attribute using the svelte c
 You can use this same conditional format on the component attributes directly:
 
 ```html
-<include:my-card title="Hello" class:lg={is_large}>
+<include:my-card title="Hello" class:lg={{ is_large }}> 
   <p>World</p>
 </include:my-card>
 ```
@@ -281,16 +281,12 @@ Then create a `.prettierrc` file in your project root with the following content
     {
       "files": ["**/{templates,jinja2}/**/*.html"],
       "options": {
-        "parser": "jinja-template",
-        "quoteAttributes": false
+        "parser": "jinja-template"
       }
     }
   ]
 }
 ```
-
-`quoteAttributes` is set to `false` to avoid quoting HTML attribute values that are template variables (e.g. `title={mytitle}`).
-The workaround to keep the quotes when using the alpineJS `x-data` directive is to simply put a space between the quote and the curly brace: `x-data=" {...} "`.
 
 ### VScode formatting
 

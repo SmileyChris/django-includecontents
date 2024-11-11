@@ -79,7 +79,7 @@ class Lexer(django.template.base.Lexer):
             self_closing = content.endswith("/")
             if self_closing:
                 content = content[:-1].strip()
-            # Strip {} from attributes
+            # Strip {} from attributes (deprecated)
             bits = list(smart_split(content))
             tag_name = bits.pop(0)
             attrs = []

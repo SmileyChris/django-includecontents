@@ -1,0 +1,11 @@
+<main>
+  <include:card title="{{ myTitle }}" class="mycard">
+    content with new syntax
+  </include:card>
+  <include:card title={{ myTitle|lower }} class="mycard">
+    content with new syntax unquoted
+  </include:card>
+  <include:card title={myTitle} class="mycard">
+    content with old syntax
+  </include:card>
+</main>
