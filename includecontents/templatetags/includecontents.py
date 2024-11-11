@@ -257,13 +257,16 @@ class IncludeContentsNode(template.Node):
             first_comment = template.first_comment[4:]
         else:
             return None
-        used_attrs = self.include_node.extra_context
         props = {}
         for bit in smart_split(first_comment.strip()):
             if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
                 attr, value = match.groups()
                 if value is None:
-                    if attr not in used_attrs:
+                    # Check both extra_context and advanced_attrs for required attributes
+                    if (
+                        attr not in self.include_node.extra_context
+                        and attr not in self.advanced_attrs
+                    ):
                         raise TemplateSyntaxError(
                             f'Missing required attribute "{attr}" in {self.token_name}'
                         )

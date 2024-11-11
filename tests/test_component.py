@@ -181,6 +181,20 @@ def test_shorthand_attrs():
     assert output == "pizza"
 
 
+def test_shorthand_required_attrs():
+    output = Template("""<include:card {title} />""").render(
+        Context({"title": "hello"})
+    )
+    assert (
+        output
+        == """\
+<section class="card">
+  <h3 >hello</h3>
+  <div></div>
+</section>"""
+    )
+
+
 def test_multi():
     output = render_to_string("test_component/multi.html")
     assert output == (
