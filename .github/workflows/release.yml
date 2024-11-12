@@ -54,3 +54,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "v$version" --title "$version" --notes-from-tag --verify-tag
+
+      - name: Publish to PyPI
+        uses: ./.github/workflows/publish.yml
