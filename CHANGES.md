@@ -4,6 +4,17 @@ This long shows interesting changes that happen for each release of `django-incl
 
 <!-- towncrier release notes start -->
 
+# Version 1.2 (2024-11-12)
+
+### Features
+
+- Added support for Django-style template variables in component attributes: `title="{{ myTitle }}"`. The old style `title={myTitle}` is still supported but will be deprecated in a future version.
+
+### Bugfixes
+
+- Short-hand syntax props weren't being taken into account by the required attrs check.
+
+
 # Version 1.1.1 (2024-07-25)
 
 ### Bugfixes
