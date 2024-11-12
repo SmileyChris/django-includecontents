@@ -1,7 +1,5 @@
 from pdm.backend.hooks.version import scm
 
-RELEASE_TAG = r"v(?P<version>[0-9]+(\.[0-9]+)+)"
-
 
 def _major(scm_version: scm.SCMVersion) -> str:
     version = scm_version.version
@@ -31,33 +29,18 @@ def next_version(part: str) -> str:
     """
     formatter = formatters[part]
     version = scm.get_version_from_scm(
-        ".", version_formatter=formatter, tag_regex=RELEASE_TAG
+        ".",
+        tag_regex=r"v(?P<version>[0-9]+(\.[0-9]+)+)",
     )
     if version is None:
         raise ValueError("No version found in git tags")
-    return version
-
-
-def check_version_is_release() -> str:
-    """
-    Ensure the current version is a release version.
-    """
-    version = scm.get_version_from_scm(".", tag_regex=RELEASE_TAG)
-    if version is None:
-        raise ValueError("No version found in git tags")
-    if ".dev" in version:
-        raise ValueError(f"Current version ({version}) is not a release version")
-    return version
+    return formatter(version)
 
 
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) == 1:
-        print(f"{check_version_is_release()} is a release version")
-        sys.exit(0)
-
-    if len(sys.argv) > 2:
+    if len(sys.argv) != 2:
         raise ValueError("Expected a single 'part' argument (major, minor, or patch)")
     part = sys.argv[1] if len(sys.argv) > 1 else "patch"
     if part not in formatters:
