@@ -43,10 +43,10 @@ def check_version_is_release() -> str:
     """
     Ensure the current version is a release version.
     """
-    version = scm.get_version_from_scm(".", tag_regex=RELEASE_TAG)
+    version = scm.get_version_from_scm(".")
     if version is None:
         raise ValueError("No version found in git tags")
-    version = str(version.version)
+    version = scm.default_version_formatter(version)
     if ".dev" in version:
         raise ValueError(f"Current version ({version}) is not a release version")
     return version
