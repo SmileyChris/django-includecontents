@@ -181,7 +181,14 @@ class IncludeContentsNode(template.Node):
         self.isolated_context = isolated_context
 
     def render(self, context):
-        new_context = context.new() if self.isolated_context else context
+        if self.isolated_context:
+            new_context = context.new()
+            if request := getattr(context, "request", None):
+                new_context.request = request
+            if csrf_token := context.get("csrf_token"):
+                new_context["csrf_token"] = csrf_token
+        else:
+            new_context = context
         with new_context.push():
             new_context["contents"] = RenderedContents(
                 # Contents aren't rendered with isolation, hence the use of context
