@@ -4,6 +4,13 @@ This long shows interesting changes that happen for each release of `django-incl
 
 <!-- towncrier release notes start -->
 
+# Version 1.2.1 (2024-11-19)
+
+### Bugfixes
+
+- Make csrf_token work from within components
+
+
 # Version 1.2 (2024-11-12)
 
 ### Features
