@@ -1,3 +1,7 @@
+INSTALLED_APPS = [
+    "includecontents",
+]
+
 TEMPLATES = [
     {
         "BACKEND": "includecontents.django.DjangoTemplates",

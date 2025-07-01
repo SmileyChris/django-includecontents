@@ -12,6 +12,8 @@ from django.template.loader_tags import construct_relative_path, do_include
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
+from django.template.defaulttags import TemplateIfParser
+from django.template.base import Node
 
 from includecontents.django.base import Template
 
@@ -597,3 +599,350 @@ class AttrsNode(template.Node):
         if isinstance(context_attrs, Attrs):
             attrs.update(context_attrs)
         return str(attrs)
+
+
+class ContentsObject:
+    """Object that provides both string representation and attribute access for contents blocks."""
+    
+    def __init__(self, contents_dict):
+        self._contents = contents_dict
+        self.default = contents_dict.get(None, '')
+    
+    def __str__(self):
+        return str(self.default)
+    
+    def __getattr__(self, name):
+        return self._contents.get(name, '')
+    
+    def __bool__(self):
+        return bool(self.default)
+    
+    def __contains__(self, name):
+        return name in self._contents
+
+
+class WrapperSpec:
+    """Represents a wrapper specification - either shorthand or full template."""
+    
+    def __init__(self, tag_name=None, attrs=None, nodelist=None):
+        self.tag_name = tag_name  # For shorthand syntax
+        self.attrs = attrs or {}  # For shorthand syntax
+        self.nodelist = nodelist  # For full template syntax
+        self.is_shorthand = tag_name is not None
+
+
+class WrapIfNode(Node):
+    child_nodelists = ('contents_nodelists',)
+    
+    def __init__(self, conditions_and_wrappers, default_wrapper, contents_nodelists):
+        self.conditions_and_wrappers = conditions_and_wrappers  # [(condition, wrapper_spec), ...]
+        self.default_wrapper = default_wrapper  # For wrapelse
+        self.contents_nodelists = contents_nodelists  # {'default': nodelist, 'header': nodelist, ...}
+    
+    def render(self, context):
+        # First, render all contents blocks
+        contents_dict = {}
+        for name, nodelist in self.contents_nodelists.items():
+            rendered = nodelist.render(context)
+            if name == 'default':
+                contents_dict[None] = mark_safe(rendered)
+            else:
+                contents_dict[name] = mark_safe(rendered)
+        
+        # Create a contents object that supports both dict access and default str()
+        contents_obj = ContentsObject(contents_dict)
+        
+        # Store contents in context
+        context.push()
+        context['contents'] = contents_obj
+        
+        try:
+            # Evaluate conditions in order
+            for condition, wrapper_spec in self.conditions_and_wrappers:
+                try:
+                    match = condition.eval(context)
+                except Exception:
+                    match = False
+                    
+                if match:
+                    return self.apply_wrapper(contents_obj, wrapper_spec, context)
+            
+            # No conditions matched, use default wrapper if provided
+            if self.default_wrapper:
+                return self.apply_wrapper(contents_obj, self.default_wrapper, context)
+            
+            # No wrapper applies, return all contents
+            # If we have multiple contents blocks, concatenate them
+            if len(contents_dict) > 1:
+                result_parts = []
+                for name, content in contents_dict.items():
+                    if content:  # Only include non-empty content
+                        result_parts.append(content)
+                return mark_safe(''.join(result_parts))
+            else:
+                return contents_obj.default
+        finally:
+            context.pop()
+    
+    def apply_wrapper(self, contents_obj, wrapper_spec, context):
+        if wrapper_spec.is_shorthand:
+            # Build HTML tag with attributes
+            attrs_str = self.build_attrs_string(wrapper_spec.attrs, context)
+            if attrs_str:
+                return mark_safe(f'<{wrapper_spec.tag_name} {attrs_str}>{contents_obj.default}</{wrapper_spec.tag_name}>')
+            else:
+                return mark_safe(f'<{wrapper_spec.tag_name}>{contents_obj.default}</{wrapper_spec.tag_name}>')
+        else:
+            # For full template syntax, render the wrapper template
+            # The wrapper template will have access to the contents via context
+            return wrapper_spec.nodelist.render(context)
+    
+    def build_attrs_string(self, attrs, context):
+        """Build HTML attributes string from attrs dict."""
+        rendered_attrs = []
+        for key, value in attrs.items():
+            resolved = value.resolve(context)
+            if resolved is True:
+                rendered_attrs.append(key)
+            elif resolved not in (False, None, ''):
+                rendered_attrs.append(f'{key}="{conditional_escape(resolved)}"')
+        return ' '.join(rendered_attrs)
+
+
+def parse_wrapper_shorthand(bits, parser):
+    """Parse shorthand wrapper syntax: then "tag" attr=value..."""
+    if not bits:
+        raise TemplateSyntaxError("Expected tag name after 'then'")
+    
+    # First bit should be the tag name (possibly quoted)
+    tag_name = bits[0]
+    if tag_name.startswith(('"', "'")) and tag_name.endswith(tag_name[0]):
+        tag_name = tag_name[1:-1]
+    
+    # Parse attributes
+    attrs = {}
+    for bit in bits[1:]:
+        if '=' in bit:
+            key, value = bit.split('=', 1)
+            attrs[key] = parser.compile_filter(value)
+        else:
+            # Boolean attribute
+            attrs[bit] = parser.compile_filter('True')
+    
+    return WrapperSpec(tag_name=tag_name, attrs=attrs)
+
+
+def extract_contents_from_wrapper(nodelist):
+    """Check if wrapper nodelist contains contents tags."""
+    for node in nodelist:
+        if isinstance(node, ContentsNode):
+            return True
+    return False
+
+
+def parse_contents_from_full_syntax(wrapper_nodelist):
+    """Parse contents blocks from the wrapper nodelist."""
+    contents_blocks = {}
+    
+    # Walk through the wrapper nodelist recursively to find ContentsNode instances
+    def extract_contents_nodes(nodes):
+        for node in nodes:
+            if isinstance(node, ContentsNode):
+                name = node.name or 'default'
+                contents_blocks[name] = node.nodelist
+            # Check if node has child nodelists
+            if hasattr(node, 'nodelist') and node.nodelist:
+                extract_contents_nodes(node.nodelist)
+            # Check for other nodelist attributes
+            for attr in dir(node):
+                if attr.startswith('nodelist_') and hasattr(node, attr):
+                    child_nodelist = getattr(node, attr)
+                    if isinstance(child_nodelist, NodeList):
+                        extract_contents_nodes(child_nodelist)
+    
+    extract_contents_nodes(wrapper_nodelist)
+    
+    # If no contents blocks found, this means the wrapper doesn't use contents
+    # In this case, we should have parsed the content separately
+    if not contents_blocks:
+        contents_blocks['default'] = NodeList()
+    
+    return contents_blocks
+
+
+@register.tag('wrapif')
+def do_wrapif(parser, token):
+    """
+    Conditionally wrap content with HTML elements.
+    
+    Basic syntax:
+        {% wrapif condition %}
+        <tag>{% contents %}content here{% endcontents %}</tag>
+        {% endwrapif %}
+    
+    Shorthand syntax:
+        {% wrapif condition then "tag" attr=value %}
+          content
+        {% endwrapif %}
+    
+    With else:
+        {% wrapif condition then "a" href=url %}
+        {% wrapelse "span" %}
+          content
+        {% endwrapif %}
+    """
+    bits = token.split_contents()[1:]
+    
+    if not bits:
+        raise TemplateSyntaxError("wrapif tag requires at least one argument")
+    
+    # Determine if we're using shorthand or full syntax by looking ahead
+    using_shorthand = 'then' in bits
+    
+    # Parse all conditions and wrappers first
+    conditions_and_wrappers = []
+    
+    # Parse first condition
+    if using_shorthand:
+        then_index = bits.index('then')
+        condition_bits = bits[:then_index]
+        wrapper_bits = bits[then_index + 1:]
+        
+        condition = TemplateIfParser(parser, condition_bits).parse()
+        wrapper = parse_wrapper_shorthand(wrapper_bits, parser)
+    else:
+        # Full template syntax
+        condition = TemplateIfParser(parser, bits).parse()
+        # We need to parse differently for full syntax
+        # Save the current position
+        wrapper_start = parser.tokens[:]
+        wrapper_nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
+        wrapper_end = parser.tokens[:]
+        
+        # Extract the contents from the wrapper
+        contents_info = extract_contents_from_wrapper(wrapper_nodelist)
+        if contents_info:
+            wrapper = WrapperSpec(nodelist=wrapper_nodelist)
+        else:
+            # No contents tags found, treat as simple wrapper
+            wrapper = WrapperSpec(nodelist=wrapper_nodelist)
+    
+    conditions_and_wrappers.append((condition, wrapper))
+    
+    # Now we need to handle the content parsing differently for shorthand vs full syntax
+    if using_shorthand:
+        # For shorthand, parse through all conditions first, then get the content
+        nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
+        
+        # Process any wrapelif/wrapelse
+        token = parser.next_token()
+        
+        while token.contents.startswith('wrapelif'):
+            bits = token.split_contents()[1:]
+            
+            if 'then' in bits:
+                then_index = bits.index('then')
+                condition_bits = bits[:then_index]
+                wrapper_bits = bits[then_index + 1:]
+                
+                condition = TemplateIfParser(parser, condition_bits).parse()
+                wrapper = parse_wrapper_shorthand(wrapper_bits, parser)
+            else:
+                # Mixed syntax not allowed
+                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
+            
+            conditions_and_wrappers.append((condition, wrapper))
+            
+            # Skip to next clause
+            nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
+            token = parser.next_token()
+        
+        # Handle wrapelse
+        default_wrapper = None
+        if token.contents.startswith('wrapelse'):
+            bits = token.split_contents()[1:]
+            
+            if bits:
+                # Shorthand else
+                default_wrapper = parse_wrapper_shorthand(bits, parser)
+            else:
+                # Mixed syntax not allowed
+                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
+            
+            # Parse the final content
+            nodelist = parser.parse(('endwrapif',))
+            parser.delete_first_token()
+        
+        # For shorthand, the content is the last parsed nodelist
+        contents_blocks = {'default': nodelist}
+    else:
+        # Full template syntax - need to extract contents from wrapper
+        # The actual content needs to be parsed from within the wrapper templates
+        # For now, we'll parse it as empty and handle it during rendering
+        contents_blocks = parse_contents_from_full_syntax(wrapper_nodelist)
+        
+        token = parser.next_token()
+        
+        while token.contents.startswith('wrapelif'):
+            bits = token.split_contents()[1:]
+            
+            if 'then' in bits:
+                # Mixed syntax not allowed
+                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
+            else:
+                condition = TemplateIfParser(parser, bits).parse()
+                nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
+                wrapper = WrapperSpec(nodelist=nodelist)
+            
+            conditions_and_wrappers.append((condition, wrapper))
+            token = parser.next_token()
+        
+        # Handle wrapelse
+        default_wrapper = None
+        if token.contents.startswith('wrapelse'):
+            bits = token.split_contents()[1:]
+            
+            if bits:
+                # Mixed syntax not allowed
+                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
+            else:
+                # Full template else
+                nodelist = parser.parse(('endwrapif',))
+                default_wrapper = WrapperSpec(nodelist=nodelist)
+            
+            parser.delete_first_token()
+    
+    return WrapIfNode(conditions_and_wrappers, default_wrapper, contents_blocks)
+
+
+@register.tag('contents')
+def do_contents(parser, token):
+    """
+    Used within {% wrapif %} blocks to mark content placement.
+    
+    Usage:
+        {% contents %}content here{% endcontents %}
+        {% contents name %}named content{% endcontents %}
+    """
+    bits = token.split_contents()
+    if len(bits) > 2:
+        raise TemplateSyntaxError(f"Invalid contents tag format: {token.contents}")
+    
+    name = bits[1] if len(bits) == 2 else None
+    nodelist = parser.parse(('endcontents',))
+    parser.delete_first_token()
+    
+    return ContentsNode(name, nodelist)
+
+
+class ContentsNode(Node):
+    """Node for contents blocks within wrapif."""
+    
+    def __init__(self, name, nodelist):
+        self.name = name
+        self.nodelist = nodelist
+    
+    def render(self, context):
+        # Contents nodes are handled specially by WrapIfNode
+        # If rendered directly, just return the content
+        return self.nodelist.render(context)

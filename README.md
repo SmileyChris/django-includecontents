@@ -1,6 +1,6 @@
 # Django IncludeContents tag
 
-Provides a component-like `{% includecontents %}` tag to Django.
+Provides a component-like `{% includecontents %}` tag to Django. Also includes a `{% wrapif %}` tag for conditional wrapping.
 
 For example:
 
@@ -251,10 +251,10 @@ It could be defined like this:
 {# props value, label="" #}
 
 <div {% attrs class="field" %}>
-  {% if label %}{{ '<label>'|safe }}{% endif %}
-  {{ label }}
-  <input {% attrs.input type="text" value=value %}>
-  {% if label %}{{ '</label>'|safe }}{% endif %}
+  {% wrapif label then "label" %}
+    {{ label }}
+    <input {% attrs.input type="text" value=value %}>
+  {% endwrapif %}
 </div>
 ```
 
@@ -369,4 +369,105 @@ Add this to your settings (`Ctrl-P`, paste `>Preferences: Open Workspace Setting
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 }
+```
+
+## Wrapif tag usage
+
+The `wrapif` tag allows you to conditionally wrap content with HTML elements, providing a clean way to avoid repeating opening and closing tags based on conditions.
+
+### Basic syntax
+
+You can use the full template syntax with `{% contents %}` blocks:
+
+```jinja
+{% load includecontents %}
+{% wrapif show_link %}
+<a href="{{ url }}">
+  {% contents %}Click here{% endcontents %}
+</a>
+{% endwrapif %}
+```
+
+When `show_link` is true, this outputs: `<a href="...">Click here</a>`
+When `show_link` is false, this outputs: `Click here`
+
+### Shorthand syntax
+
+For simpler cases, use the `then` shorthand:
+
+```jinja
+{% wrapif show_link then "a" href=url class="link" %}
+  Click here
+{% endwrapif %}
+```
+
+### Wrapelse
+
+Use `{% wrapelse %}` to provide an alternative wrapper when the condition is false:
+
+```jinja
+{% wrapif is_active then "a" href=url %}
+{% wrapelse "span" class="disabled" %}
+  {{ label }}
+{% endwrapif %}
+```
+
+This outputs either `<a href="...">{{ label }}</a>` or `<span class="disabled">{{ label }}</span>`.
+
+### Multiple conditions with wrapelif
+
+```jinja
+{% wrapif level == 1 then "h1" %}
+{% wrapelif level == 2 then "h2" %}
+{% wrapelif level == 3 then "h3" %}
+{% wrapelse "p" %}
+  {{ title }}
+{% endwrapif %}
+```
+
+### Complex conditions
+
+The tag supports all Django template conditional operators:
+
+```jinja
+{% wrapif user.is_authenticated and user.is_staff then "div" class="admin" %}
+  Admin content
+{% endwrapif %}
+
+{% wrapif price > 100 then "span" class="expensive" %}
+  ${{ price }}
+{% endwrapif %}
+
+{% wrapif status in active_statuses then "strong" %}
+  {{ status }}
+{% endwrapif %}
+```
+
+### Multiple named contents blocks
+
+When using full template syntax, you can have multiple named content blocks:
+
+```jinja
+{% wrapif show_card %}
+<div class="card">
+  <header>{% contents header %}{{ title }}{% endcontents %}</header>
+  <div class="body">
+    {% contents %}{{ body_text }}{% endcontents %}
+  </div>
+  <footer>{% contents footer %}{{ footer_text }}{% endcontents %}</footer>
+</div>
+{% endwrapif %}
+```
+
+### Nested wrapif
+
+Wrapif tags can be nested for complex conditional structures:
+
+```jinja
+{% wrapif show_section then "section" class="main" %}
+  {% wrapif show_header then "header" %}
+    <h1>{{ title }}</h1>
+  {% endwrapif %}
+  {{ content }}
+{% endwrapif %}
 ```
