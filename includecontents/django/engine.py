@@ -26,6 +26,8 @@ class Engine(django.template.Engine):
                 loaders += ["includecontents.django.loaders.AppDirectoriesLoader"]
             loaders = [("includecontents.django.loaders.CachedLoader", loaders)]
         else:
+            # If loaders are provided, they've already been processed by IncludeContentsDjangoTemplates
+            # Just check for app_dirs conflict
             if app_dirs:
                 raise ImproperlyConfigured(
                     "app_dirs must not be set when loaders is defined."
