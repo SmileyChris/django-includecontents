@@ -385,6 +385,35 @@ def test_html_content_multiline():
     )
 
 
+def test_class_negation():
+    """Test class: attribute with negation using 'not' syntax."""
+    # Test with disabled=True (should NOT include 'active' class)
+    output = render_to_string("test_component/class_negation.html", {"disabled": True})
+    assert output == (
+        """<main>
+  <section class="mycard card">
+  <h3 >hello</h3>
+  <div>
+    some content
+  </div>
+</section>
+</main>"""
+    )
+
+    # Test with disabled=False (should include 'active' class)
+    output = render_to_string("test_component/class_negation.html", {"disabled": False})
+    assert output == (
+        """<main>
+  <section class="mycard card active">
+  <h3 >hello</h3>
+  <div>
+    some content
+  </div>
+</section>
+</main>"""
+    )
+
+
 def test_class_append():
     """Test class attribute appending with '& ' syntax."""
     output = Template(

@@ -1,9 +1,8 @@
 <main>
   <include:card-extend
     title="hello"
-    large
     class="mycard"
-    title.class:text-red="{{ red }}"
+    class:active="{{ disabled|not }}"
   >
     some content
   </include:card-extend>

@@ -19,6 +19,12 @@ from includecontents.django.base import Template
 
 register = template.Library()
 
+
+@register.filter(name='not')
+def not_filter(value):
+    """Template filter to negate a boolean value."""
+    return not value
+
 re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 

@@ -312,6 +312,15 @@ You can use this same conditional format on the component attributes directly:
 </include:my-card>
 ```
 
+For negating boolean values in conditions, use the included `|not` filter:
+
+```jinja
+{% load includecontents %}
+<include:my-card title="Hello" class:active="{{ disabled|not }}">
+  <p>World</p>
+</include:my-card>
+```
+
 #### Conditional classes in tailwindcss
 
 Add this transform in your `tailwind.config.js` so that Tailwind picks up the
