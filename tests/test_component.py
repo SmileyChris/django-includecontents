@@ -383,3 +383,29 @@ def test_html_content_multiline():
   
 </section>"""
     )
+
+
+def test_class_append():
+    """Test class attribute appending with '& ' syntax."""
+    output = Template(
+        """<include:card-extend title="Append Test" class="user-class" />"""
+    ).render(Context())
+    assert output == (
+        """<section class="user-class card">
+  <h3 >Append Test</h3>
+  <div></div>
+</section>"""
+    )
+
+
+def test_class_prepend():
+    """Test class attribute prepending with ' &' syntax."""
+    output = Template(
+        """<include:card-prepend title="Prepend Test" class="user-class" />"""
+    ).render(Context())
+    assert output == (
+        """<section class="card-base user-class">
+  <h3>Prepend Test</h3>
+  <div></div>
+</section>"""
+    )

@@ -284,8 +284,16 @@ Prepend your class list with `"& "` to have it extended rather than replaced:
 
 ```jinja
 {% attrs class="lg" %}        {# sets default class attribute to "lg" but can be overridden #}
-{% attrs class="& lg p-3" %}  {# always add 'lg p-3' classes #}
+{% attrs class="& lg p-3" %}  {# always add 'lg p-3' classes after user's classes #}
 ```
+
+Append `" &"` to your class list to prepend rather than replace:
+
+```jinja
+{% attrs class="card &" %}    {# prepends 'card' class before user's classes #}
+```
+
+This allows you to control the order of classes - useful when CSS specificity or utility class ordering matters.
 
 You can provide conditional classes for the `class` attribute using the svelte class directive format:
 

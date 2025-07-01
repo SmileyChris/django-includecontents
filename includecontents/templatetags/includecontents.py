@@ -418,6 +418,7 @@ class Attrs(MutableMapping):
         self._attrs: dict[str, Any] = {}
         self._nested_attrs: dict[str, Attrs] = {}
         self._extended: dict[str, dict[str, bool]] = {}
+        self._prepended: dict[str, dict[str, bool]] = {}
 
     def __getattr__(self, key):
         if key not in self._nested_attrs:
@@ -445,6 +446,12 @@ class Attrs(MutableMapping):
             for bit in value[2:].split(" "):
                 extended[bit] = True
             return
+        if key == "class" and value.endswith(" &"):
+            prepended = self._prepended.setdefault(key, {})
+            for bit in value[:-2].strip().split(" "):
+                if bit:
+                    prepended[bit] = True
+            return
         self._attrs[key] = value
 
     def __delitem__(self, key):
@@ -467,30 +474,62 @@ class Attrs(MutableMapping):
 
     def all_attrs(self):
         extended = {}
+        prepended = {}
+        
+        # Collect extended and prepended values
         for key, parts in self._extended.items():
             parts = [key for key, value in parts.items() if value]
             if parts:
                 extended[key] = parts
-        for key, value in self._attrs.items():
-            if key in extended:
+        
+        for key, parts in self._prepended.items():
+            parts = [key for key, value in parts.items() if value]
+            if parts:
+                prepended[key] = parts
+        
+        # Process all keys (from attrs, extended, and prepended)
+        # Maintain order: attrs keys first, then any additional extended/prepended keys
+        seen = set()
+        
+        for key in self._attrs:
+            seen.add(key)
+            value = self._attrs[key]
+            # Handle class merging
+            if key in extended or key in prepended:
                 if value is True or not value:
                     value_parts = []
                 else:
                     value_parts = str(value).split(" ")
-                for part in extended[key]:
-                    if part not in value_parts:
-                        value_parts.append(part)
-                value = " ".join(value_parts)
-            yield key, value or None
-        for key, parts in extended.items():
-            if key not in self._attrs:
-                yield key, " ".join(parts) or None
+                
+                # Prepend parts come first
+                if key in prepended:
+                    value_parts = prepended[key] + [p for p in value_parts if p not in prepended[key]]
+                
+                # Extended parts come last
+                if key in extended:
+                    for part in extended[key]:
+                        if part not in value_parts:
+                            value_parts.append(part)
+                
+                value = " ".join(value_parts) if value_parts else None
+            
+            yield key, value
+        
+        # Handle keys that only exist in extended/prepended
+        for key in list(extended.keys()) + list(prepended.keys()):
+            if key not in seen:
+                seen.add(key)
+                value_parts = prepended.get(key, []) + extended.get(key, [])
+                value = " ".join(value_parts) if value_parts else None
+                yield key, value
 
     def update(self, attrs):
         super().update(attrs)
         if isinstance(attrs, Attrs):
             for key, extended in attrs._extended.items():
                 self._extended.setdefault(key, {}).update(extended)
+            for key, prepended in attrs._prepended.items():
+                self._prepended.setdefault(key, {}).update(prepended)
             for key, nested_attrs in attrs._nested_attrs.items():
                 self._nested_attrs.setdefault(key, Attrs()).update(nested_attrs)
 
