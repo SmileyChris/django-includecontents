@@ -1,1 +1,0 @@
-Added `|not` template filter for negating boolean values in conditional class attributes

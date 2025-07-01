@@ -4,6 +4,41 @@ This long shows interesting changes that happen for each release of `django-incl
 
 <!-- towncrier release notes start -->
 
+# Version 2.0 (2025-07-01)
+
+### Features
+
+- Add HTML-style `<content:name>` syntax for named content blocks in components. This provides a more HTML-consistent alternative to `{% contents %}` tags while maintaining full backwards compatibility.
+- Add class prepend syntax for component attrs.
+
+  Classes can now be prepended with `{% attrs class="card &" %}` syntax.
+
+  - Append `" &"` to prepend component classes before user-provided classes
+  - Complements existing `"& "` syntax which appends after user classes
+  - Useful when CSS specificity or utility class ordering matters
+- Add enum validation for component props.
+
+  Props can now be defined with allowed values: `{# props variant=primary,secondary,accent #}`
+
+  - Validates prop values against the allowed list
+  - Sets both the prop value and a camelCased boolean (e.g., `variant="primary"` and `variantPrimary=True`)
+  - Optional enums start with empty: `size=,small,medium,large`
+  - Hyphens are camelCased: `dark-mode` → `variantDarkMode`
+- Add {% wrapif %} template tag for conditional wrapping.
+
+  The new `{% wrapif %}` tag provides a clean way to conditionally wrap content with HTML elements:
+
+  - **Shorthand syntax**: `{% wrapif condition then "tag" attr=value %}content{% endwrapif %}`
+  - **Full template syntax**: Supports `{% contents %}` blocks for complex wrappers
+  - **Multiple conditions**: `{% wrapelif %}` and `{% wrapelse %}` for if/elif/else patterns
+  - **Complex conditions**: Inherits all Django template operators (and, or, not, comparisons, in)
+  - **Multiple named contents**: Support for multiple content blocks in full syntax
+  - **Attribute handling**: Proper escaping and boolean attribute support
+
+  This reduces template boilerplate and improves readability when conditionally wrapping content.
+- Added `|not` template filter for negating boolean values in conditional class attributes
+
+
 # Version 1.2.1 (2024-11-19)
 
 ### Bugfixes

@@ -1,1 +1,0 @@
-Add HTML-style `<content:name>` syntax for named content blocks in components. This provides a more HTML-consistent alternative to `{% contents %}` tags while maintaining full backwards compatibility.
