@@ -20,6 +20,19 @@ register = template.Library()
 re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 
+class EnumVariable:
+    """A variable that validates against a list of allowed values."""
+    
+    def __init__(self, allowed_values, required=True):
+        self.allowed_values = allowed_values
+        self.required = required
+    
+    def resolve(self, context):
+        # This should not be called for enum validation
+        # The actual value comes from the component usage
+        return None
+
+
 @register.tag
 def includecontents(parser, token):
     """
@@ -229,7 +242,27 @@ class IncludeContentsNode(template.Node):
                 new_context[key] = value.resolve(context)
             else:
                 if key in component_props:
-                    new_context[key] = value.resolve(context)
+                    resolved_value = value.resolve(context)
+                    prop_def = component_props[key]
+                    # Validate enum values
+                    if isinstance(prop_def, EnumVariable):
+                        if resolved_value not in prop_def.allowed_values:
+                            raise TemplateSyntaxError(
+                                f'Invalid value "{resolved_value}" for attribute "{key}" in {self.token_name}. '
+                                f'Allowed values: {", ".join(repr(v) for v in prop_def.allowed_values)}'
+                            )
+                        # Set enum values as boolean attributes in the context
+                        # e.g., variant="primary" sets variant="primary" and variantPrimary=True
+                        new_context[key] = resolved_value
+                        if resolved_value:  # Don't set True for empty string
+                            # CamelCase version: variantPrimary or variantDarkMode (from dark-mode)
+                            # Convert hyphens to camelCase
+                            parts = resolved_value.split('-')
+                            camel_value = parts[0] + ''.join(p.capitalize() for p in parts[1:])
+                            camel_key = key + camel_value[0].upper() + camel_value[1:]
+                            new_context[camel_key] = True
+                    else:
+                        new_context[key] = resolved_value
                 else:
                     undefined_attrs[key] = value.resolve(context)
 
@@ -241,7 +274,13 @@ class IncludeContentsNode(template.Node):
                 if value:
                     if key in new_context:
                         continue
-                    new_context[key] = value.resolve(context)
+                    # Check if it's a required enum that wasn't provided
+                    if isinstance(value, EnumVariable) and value.required:
+                        raise TemplateSyntaxError(
+                            f'Missing required attribute "{key}" in {self.token_name}'
+                        )
+                    elif not isinstance(value, EnumVariable):
+                        new_context[key] = value.resolve(context)
 
         # Don't use the extra context for the include tag if it's a component
         # since we've handled adding it to the new context ourselves.
@@ -285,7 +324,18 @@ class IncludeContentsNode(template.Node):
                         )
                     props[attr] = None
                 else:
-                    props[attr] = Variable(value)
+                    # Check if value contains comma-separated values (enum) without spaces
+                    if "," in value and " " not in value:
+                        # Strip quotes if present
+                        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+                            value = value[1:-1]
+                        # Parse enum values
+                        enum_values = value.split(",")
+                        # First value empty means optional
+                        required = bool(enum_values[0])
+                        props[attr] = EnumVariable(enum_values, required)
+                    else:
+                        props[attr] = Variable(value)
         return props
 
     def get_component_template(self, context) -> Template:

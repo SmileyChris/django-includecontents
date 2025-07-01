@@ -203,6 +203,39 @@ You can also provide default values for these attributes via the `{% attrs %}` t
 
 This example component above would require a `title` attribute and allow an optional `large` attribute. Any other attributes will be rendered on the div, with a default class of `card` if you don't specify a class attribute.
 
+#### Enum Props
+
+Props can be defined with a list of allowed values (enums) by using a comma-separated list without spaces:
+
+```jinja
+{# props variant=primary,secondary,accent #}
+
+<button {% attrs class="btn" class:btn-primary=variantPrimary class:btn-secondary=variantSecondary class:btn-accent=variantAccent %}>
+  {{ contents }}
+</button>
+```
+
+This component requires a `variant` prop that must be one of `primary`, `secondary`, or `accent`. Invalid values will raise a `TemplateSyntaxError`.
+
+When an enum prop is set, the component context receives:
+- The original prop value: `variant="primary"`
+- A camelCased boolean for the selected value: `variantPrimary=True`
+
+This makes it easy to conditionally apply CSS classes based on the enum value, which works particularly well with Tailwind CSS.
+
+To make an enum prop optional, start the list with an empty value:
+
+```jinja
+{# props size=,small,medium,large #}
+```
+
+Enum values can contain hyphens, which will be converted to camelCase for the boolean variables:
+
+```jinja
+{# props theme=light-mode,dark-mode #}
+{# When theme="dark-mode", themeDarkMode=True #}
+```
+
 If you want to provide multiple groups of undefined attributes, you can use `group.name` as the format.
 Then render them with `{{ attrs.group }}` (or `{% attrs.group %}` if you want fallback values).
 
