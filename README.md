@@ -179,6 +179,22 @@ You can also use short-hand syntax for HTML attributes when the attribute name m
 <include:my-card {title} />
 ```
 
+#### Template Tags in Attributes
+
+Component attributes fully support Django template tags, allowing you to use dynamic URLs, conditionals, and variables:
+
+```html
+<include:ui-button 
+  variant="primary" 
+  href="{% url 'settings' %}" 
+  class="btn {% if large %}btn-lg{% endif %}"
+>
+  Save Settings
+</include:ui-button>
+```
+
+This works with all Django template syntax including `{% url %}`, `{{ variables }}`, `{% if %}`, `{% for %}`, and custom tags.
+
 ### Component Props
 
 You can define the required or default props of the component in a comment at the top of its template that begins with `props `  (or `def ` to match what JinjaX uses). An exception will be raised if a required prop is not provided.

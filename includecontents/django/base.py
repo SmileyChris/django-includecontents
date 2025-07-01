@@ -4,6 +4,66 @@ import django.template.base
 from django.utils.text import smart_split
 
 
+def process_component_with_template_tags(token_string, position, lineno):
+    """
+    Process a component token that may contain template tags in attribute values.
+    Returns a list of tokens to be inserted into the token stream.
+    """
+    # Parse the component normally first
+    content = token_string[1:-1].strip()
+    self_closing = content.endswith("/")
+    if self_closing:
+        content = content[:-1].strip()
+    
+    bits = list(smart_split(content))
+    tag_name = bits.pop(0)
+    
+    # Check if any attributes contain template tags
+    has_template_tags = False
+    processed_attrs = []
+    
+    for attr in bits:
+        if '=' in attr and ('"' in attr or "'" in attr):
+            # Check for template tags in this attribute
+            attr_name, quoted_value = attr.split('=', 1)
+            if ((quoted_value.startswith('"') and quoted_value.endswith('"')) or 
+                (quoted_value.startswith("'") and quoted_value.endswith("'"))):
+                
+                inner_content = quoted_value[1:-1]
+                template_tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#})", re.DOTALL)
+                
+                if template_tag_re.search(inner_content):
+                    has_template_tags = True
+                    # For now, keep the attribute as-is - Django will process the template tags
+                    processed_attrs.append(attr)
+                else:
+                    processed_attrs.append(attr)
+            else:
+                processed_attrs.append(attr)
+        else:
+            # Handle deprecated {} syntax
+            if group := re.match(r"([-:.\w]+)=\{(.+)\}", attr):
+                attr = f"{group[1]}={group[2]}"
+            processed_attrs.append(attr)
+    
+    # Build the includecontents tag
+    content_parts = [
+        "includecontents",
+        f"_{tag_name}{'/' if self_closing else ''}",
+        f'"components/{tag_name[8:].replace(":", "/")}.html"',
+    ]
+    if processed_attrs:
+        content_parts.append("with")
+        content_parts.extend(processed_attrs)
+    
+    return django.template.base.Token(
+        django.template.base.TokenType.BLOCK,
+        " ".join(content_parts),
+        position,
+        lineno,
+    )
+
+
 class Template(django.template.base.Template):
     first_comment: str | None
 
@@ -92,33 +152,7 @@ class Lexer(django.template.base.Lexer):
                 lineno,
             )
         elif in_tag and token_string.startswith("<include:"):
-            content = token_string[1:-1].strip()
-            self_closing = content.endswith("/")
-            if self_closing:
-                content = content[:-1].strip()
-            # Strip {} from attributes (deprecated)
-            bits = list(smart_split(content))
-            tag_name = bits.pop(0)
-            attrs = []
-            for attr in bits:
-                if group := re.match(r"([-:.\w]+)=\{(.+)\}", attr):
-                    attr = f"{group[1]}={group[2]}"
-                attrs.append(attr)
-            # Build the includecontents tag
-            content = [
-                "includecontents",
-                f"_{tag_name}{'/' if self_closing else ''}",
-                f'"components/{tag_name[8:].replace(":", "/")}.html"',
-            ]
-            if attrs:
-                content.append("with")
-                content.extend(attrs)
-            return django.template.base.Token(
-                django.template.base.TokenType.BLOCK,
-                " ".join(content),
-                position,
-                lineno,
-            )
+            return process_component_with_template_tags(token_string, position, lineno)
         return super().create_token(token_string, position, lineno, in_tag)
 
 
