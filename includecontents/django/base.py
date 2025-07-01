@@ -39,7 +39,7 @@ class Template(django.template.base.Template):
 
 
 tag_re = re.compile(
-    r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:(?:\"[^\"]*\"|'[^']*'|.)*?>)", re.DOTALL
+    r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:(?:\"[^\"]*\"|'[^']*'|.)*?>|</?content:[-\w]+>)", re.DOTALL
 )
 
 
@@ -65,9 +65,26 @@ class Lexer(django.template.base.Lexer):
         otherwise it should be treated as a literal string.
 
         Extends the default implementation to convert include: tags into
-        includecontents tags.
+        includecontents tags and content: tags into contents blocks.
         """
-        if in_tag and token_string.startswith("</include:"):
+        if in_tag and token_string.startswith("</content:"):
+            # Convert </content:name> to {% endcontents %}
+            return django.template.base.Token(
+                django.template.base.TokenType.BLOCK,
+                "endcontents",
+                position,
+                lineno,
+            )
+        elif in_tag and token_string.startswith("<content:"):
+            # Convert <content:name> to {% contents name %}
+            content_name = token_string[9:-1]  # Remove <content: and >
+            return django.template.base.Token(
+                django.template.base.TokenType.BLOCK,
+                f"contents {content_name}",
+                position,
+                lineno,
+            )
+        elif in_tag and token_string.startswith("</include:"):
             return django.template.base.Token(
                 django.template.base.TokenType.BLOCK,
                 token_string,

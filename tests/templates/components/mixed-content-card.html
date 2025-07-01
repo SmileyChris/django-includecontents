@@ -1,0 +1,12 @@
+{# props title #}
+
+<section class="card">
+  <h3>{{ title }}</h3>
+  <div class="content">{{ contents }}</div>
+  {% if contents.oldstyle %}
+  <div class="oldstyle">{{ contents.oldstyle }}</div>
+  {% endif %}
+  {% if contents.newstyle %}
+  <div class="newstyle">{{ contents.newstyle }}</div>
+  {% endif %}
+</section>

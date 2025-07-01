@@ -1,0 +1,12 @@
+{# props title #}
+
+<section class="card">
+  <h3>{{ title }}</h3>
+  <div class="content">{{ contents }}</div>
+  {% if contents.footer %}
+  <footer class="footer">{{ contents.footer }}</footer>
+  {% endif %}
+  {% if contents.sidebar %}
+  <aside class="sidebar">{{ contents.sidebar }}</aside>
+  {% endif %}
+</section>

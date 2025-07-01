@@ -251,3 +251,135 @@ def test_new_attr_syntax():
 </main>
 """
     )
+
+
+def test_html_content_syntax():
+    """Test the new <content:name> HTML syntax for named content blocks."""
+    output = render_to_string("test_component/html_content.html")
+    assert output == (
+        """<main>
+  <section class="card">
+  <h3>Test Card</h3>
+  <div class="content">
+    <p>Main content</p>
+    
+    
+  </div>
+  
+  <footer class="footer">Footer content</footer>
+  
+  
+  <aside class="sidebar">Sidebar content</aside>
+  
+</section>
+</main>"""
+    )
+
+
+def test_mixed_content_syntax():
+    """Test mixing old {% contents %} and new <content:name> syntax."""
+    output = render_to_string("test_component/mixed_content.html")
+    assert output == (
+        """<main>
+  <section class="card">
+  <h3>Mixed Syntax</h3>
+  <div class="content">
+    <p>Main content</p>
+    
+    
+  </div>
+  
+  <div class="oldstyle">Old style content</div>
+  
+  
+  <div class="newstyle">New style content</div>
+  
+</section>
+</main>"""
+    )
+
+
+def test_html_content_empty():
+    """Test HTML content syntax with empty named blocks."""
+    output = Template(
+        """<include:card-with-footer title="Empty">
+  <p>Just main content</p>
+</include:card-with-footer>"""
+    ).render(Context())
+    assert output == (
+        """<section class="card">
+  <h3>Empty</h3>
+  <div class="content">
+  <p>Just main content</p>
+</div>
+  
+  
+</section>"""
+    )
+
+
+def test_html_content_only_named():
+    """Test HTML content syntax with only named blocks and no main content."""
+    output = Template(
+        """<include:card-with-footer title="Only Named">
+  <content:footer>Just footer</content:footer>
+</include:card-with-footer>"""
+    ).render(Context())
+    assert output == (
+        """<section class="card">
+  <h3>Only Named</h3>
+  <div class="content"></div>
+  
+  <footer class="footer">Just footer</footer>
+  
+  
+</section>"""
+    )
+
+
+def test_html_content_with_variables():
+    """Test HTML content syntax with template variables."""
+    output = Template(
+        """<include:card-with-footer title="Variables">
+  <p>Hello {{ name }}!</p>
+  <content:footer>Copyright {{ year }}</content:footer>
+</include:card-with-footer>"""
+    ).render(Context({"name": "World", "year": 2024}))
+    assert output == (
+        """<section class="card">
+  <h3>Variables</h3>
+  <div class="content">
+  <p>Hello World!</p>
+  
+</div>
+  
+  <footer class="footer">Copyright 2024</footer>
+  
+  
+</section>"""
+    )
+
+
+def test_html_content_multiline():
+    """Test HTML content syntax with multiline content."""
+    output = Template(
+        """<include:card-with-footer title="Multiline">
+  <content:footer>
+    <p>Line 1</p>
+    <p>Line 2</p>
+  </content:footer>
+</include:card-with-footer>"""
+    ).render(Context())
+    assert output == (
+        """<section class="card">
+  <h3>Multiline</h3>
+  <div class="content"></div>
+  
+  <footer class="footer">
+    <p>Line 1</p>
+    <p>Line 2</p>
+  </footer>
+  
+  
+</section>"""
+    )

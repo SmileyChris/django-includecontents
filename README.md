@@ -143,6 +143,30 @@ You can use directories within `components` to group your components. For exampl
 
 You can use named [`{% contents %}` blocks](#named-contents-blocks), just like with the `includecontents` tag.
 
+### HTML Content Syntax
+
+When using the custom template engine, you can also use HTML-style syntax for named content blocks with `<content:name>` tags:
+
+```html
+<include:my-card title="Hello">
+  <p>Main content</p>
+  <content:footer>Footer content</content:footer>
+  <content:sidebar>Sidebar content</content:sidebar>
+</include:my-card>
+```
+
+This is equivalent to using the traditional `{% contents %}` syntax:
+
+```html
+<include:my-card title="Hello">
+  <p>Main content</p>
+  {% contents footer %}Footer content{% endcontents %}
+  {% contents sidebar %}Sidebar content{% endcontents %}
+</include:my-card>
+```
+
+The HTML content syntax provides a more consistent HTML-like experience and integrates better with HTML formatters and editors. Both syntaxes can be mixed within the same component if needed.
+
 Some HTML formatters (like prettier) insist on quoting HTML attribute values. You can wrap the string contents in `{{ }}` to still read this as a template variable rather than a string:
 
 ```html
