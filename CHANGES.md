@@ -4,6 +4,13 @@ This long shows interesting changes that happen for each release of `django-incl
 
 <!-- towncrier release notes start -->
 
+# Version 2.1.1 (2025-07-02)
+
+### Bugfixes
+
+- Fixed self-closing component tags within nested components incorrectly incrementing the nesting level, causing "Unclosed tag" errors.
+
+
 # Version 2.1 (2025-07-02)
 
 ### Features
