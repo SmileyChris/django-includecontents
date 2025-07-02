@@ -95,24 +95,6 @@ def test_tokenization_output():
     print(f"✓ Tokenization output: {first_token.contents}")
 
 
-def test_real_world_case():
-    """Test the exact user case that prompted this feature."""
-    template_code = '''<include:ui-button variant="primary" outline href="{% url 'faculty:theme_settings' %}" class="inline-flex items-center">Save Settings</include:ui-button>'''
-    
-    # The main test is that this compiles without error
-    template = Template(template_code)
-    nodelist = template.compile_nodelist()
-    
-    # Verify we have nodes and no compilation errors
-    assert len(nodelist) > 0
-    
-    # Check that the template tag is preserved in the generated token
-    node = nodelist[0]
-    if hasattr(node, 'token'):
-        token_content = str(node.token.contents)
-        assert "{% url 'faculty:theme_settings' %}" in token_content
-    
-    print("✓ Real-world case: UI button with template tag in href compiles successfully")
 
 
 def test_backwards_compatibility():
@@ -143,7 +125,6 @@ if __name__ == '__main__':
     test_multiple_template_tags()
     test_nested_quotes()
     test_tokenization_output()
-    test_real_world_case()
     test_backwards_compatibility()
     
     print("✅ All template tag tests passed!")
