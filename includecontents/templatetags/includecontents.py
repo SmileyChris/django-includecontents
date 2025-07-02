@@ -394,8 +394,19 @@ def get_contents_nodelists(
         tag_name = bits[0]
         
         # Check if this is a nested includecontents tag
-        if tag_name == "includecontents" or tag_name.startswith("<include:"):
-            nesting_level += 1
+        if tag_name == "includecontents":
+            # For includecontents tags, check the second element to see if it's self-closing
+            if len(bits) >= 2 and bits[1].startswith("_") and bits[1].endswith("/"):
+                # Self-closing tag, don't increment nesting
+                pass
+            else:
+                nesting_level += 1
+            default.append(token)
+            continue
+        elif tag_name.startswith("<include:"):
+            # This case shouldn't happen as these are converted to includecontents
+            if not tag_name.endswith("/>"):
+                nesting_level += 1
             default.append(token)
             continue
         elif tag_name.startswith("</include:") or tag_name.startswith("end"):

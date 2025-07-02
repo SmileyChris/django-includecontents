@@ -1,0 +1,1 @@
+Fixed self-closing component tags within nested components incorrectly incrementing the nesting level, causing "Unclosed tag" errors.
