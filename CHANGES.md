@@ -4,6 +4,27 @@ This long shows interesting changes that happen for each release of `django-incl
 
 <!-- towncrier release notes start -->
 
+# Version 2.1 (2025-07-02)
+
+### Features
+
+- Add Django template tag support in component attributes. Component attributes now fully support Django template syntax including `{% url %}`, `{{ variables }}`, `{% if %}` conditionals, and all other template tags.
+
+  ```html
+  <include:ui-button 
+    variant="primary" 
+    href="{% url 'settings' %}" 
+    class="btn {% if large %}btn-lg{% endif %}"
+  >
+    Save Settings
+  </include:ui-button>
+  ```
+
+### Bugfixes
+
+- Fix duplicate content block names error when nesting components with same named content blocks
+
+
 # Version 2.0 (2025-07-01)
 
 ### Features
