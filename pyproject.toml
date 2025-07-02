@@ -30,6 +30,12 @@ Repository = "https://github.com/SmileyChris/django-includecontents"
 [project.optional-dependencies]
 test = ["pytest", "pytest-django", "pytest-mock"]
 deploy = ["pdm", "pdm.backend"]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocstrings[python]>=0.20.0",
+    "pymdown-extensions>=9.0.0"
+]
 
 [build-system]
 requires = ["pdm-backend"]

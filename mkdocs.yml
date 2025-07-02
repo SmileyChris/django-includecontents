@@ -1,0 +1,88 @@
+site_name: Django IncludeContents
+site_description: Component-like Django template tags with HTML syntax
+site_url: https://smileychris.github.io/django-includecontents/
+repo_url: https://github.com/SmileyChris/django-includecontents
+repo_name: django-includecontents
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: sphinx
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quick Start: quickstart.md
+  - Template Tag:
+    - Basic Usage: template-tag/basic-usage.md
+    - Named Contents: template-tag/named-contents.md
+    - Wrapif Tag: template-tag/wrapif-tag.md
+  - HTML Components:
+    - HTML Syntax: components/html-syntax.md
+    - Props & Attrs: components/props-and-attrs.md
+    - Advanced Props: components/advanced-props.md
+    - CSS Classes: components/css-classes.md
+  - Advanced:
+    - Multi-line Tags: advanced/multiline-tags.md
+    - Custom Engine: advanced/custom-engine.md
+    - Component Patterns: advanced/component-patterns.md
+  - Integration:
+    - Prettier: integration/prettier.md
+    - VS Code: integration/vscode.md
+    - Tailwind CSS: integration/tailwind.md
+  - API Reference: api-reference.md
+  - Developing:
+    - Changelog: changelog.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/SmileyChris/django-includecontents
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/django-includecontents/
