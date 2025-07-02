@@ -383,6 +383,7 @@ def get_contents_nodelists(
     )
     named_nodelists = {}
     default = []
+    nesting_level = 0  # Track nesting level for proper scoping
 
     while parser.tokens:
         token = parser.next_token()
@@ -391,7 +392,21 @@ def get_contents_nodelists(
             continue
         bits = token.split_contents()
         tag_name = bits[0]
-        if tag_name == "contents":
+        
+        # Check if this is a nested includecontents tag
+        if tag_name == "includecontents" or tag_name.startswith("<include:"):
+            nesting_level += 1
+            default.append(token)
+            continue
+        elif tag_name.startswith("</include:") or tag_name.startswith("end"):
+            # Check if this is the end of a nested includecontents
+            if nesting_level > 0 and (tag_name.startswith("</include:") or tag_name == "endincludecontents"):
+                nesting_level -= 1
+                default.append(token)
+                continue
+        
+        # Only process contents tags that are at our nesting level (nesting_level == 0)
+        if tag_name == "contents" and nesting_level == 0:
             if len(bits) < 2:
                 raise TemplateSyntaxError(
                     "Unnamed {tag_name!r} tag within {token_name}" % tag_name
@@ -406,7 +421,7 @@ def get_contents_nodelists(
             named_nodelists[content_name] = parser.parse((f"end{tag_name}",))
             parser.delete_first_token()
             continue
-        elif tag_name == end_tag:
+        elif tag_name == end_tag and nesting_level == 0:
             default.append(token)
             for default_token in reversed(default):
                 parser.prepend_token(default_token)
