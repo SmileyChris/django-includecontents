@@ -135,9 +135,9 @@ If you're using the traditional setup (without the custom template engine), the 
 
 Now that you've created your first component, explore more features:
 
-- **[Template Tag Usage](template-tag/basic-usage.md)**: Learn about the `{% includecontents %}` tag
-- **[HTML Components](components/html-syntax.md)**: Dive deeper into component syntax
-- **[Props & Attrs](components/props-and-attrs.md)**: Master the props system
-- **[Wrapif Tag](template-tag/wrapif-tag.md)**: Learn conditional wrapping
+- **[Template Tag Usage](../using-components/template-tag-syntax.md)**: Learn about the `{% includecontents %}` tag
+- **[HTML Components](../using-components/html-syntax.md)**: Dive deeper into component syntax
+- **[Props & Attrs](../using-components/props-and-attrs.md)**: Master the props system
+- **[Wrapif Tag](../using-components/wrapif-tag.md)**: Learn conditional wrapping
 
-Ready to build more complex components? Check out the [Component Patterns](advanced/component-patterns.md) guide!
+Ready to build more complex components? Check out the [Component Patterns](../building-components/component-patterns.md) guide!

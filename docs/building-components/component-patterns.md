@@ -786,6 +786,6 @@ Example:
 
 ## Next Steps
 
-- Review [CSS Classes](../components/css-classes.md) for styling patterns
-- Check [Integration Guides](../integration/prettier.md) for development setup
-- Explore the [API Reference](../api-reference.md) for complete syntax details
+- Review [CSS Classes](css-and-styling.md) for styling patterns
+- Check [Integration Guides](../tooling-integration/prettier-formatting.md) for development setup
+- Explore the [API Reference](../reference/api-reference.md) for complete syntax details

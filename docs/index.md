@@ -21,6 +21,14 @@ Django IncludeContents provides two main features:
 
 ## Quick Example
 
+=== "HTML Component Syntax"
+
+    ```html
+    <include:card title="Hello">
+        <p>This content gets passed to the component</p>
+    </include:card>
+    ```
+
 === "Template Tag Syntax"
 
     ```django
@@ -28,14 +36,6 @@ Django IncludeContents provides two main features:
     {% includecontents "components/card.html" title="Hello" %}
         <p>This content gets passed to the component</p>
     {% endincludecontents %}
-    ```
-
-=== "HTML Component Syntax"
-
-    ```html
-    <include:card title="Hello">
-        <p>This content gets passed to the component</p>
-    </include:card>
     ```
 
 Both examples render the same component defined in `templates/components/card.html`:
@@ -53,8 +53,8 @@ Both examples render the same component defined in `templates/components/card.ht
 
 Ready to add component-like functionality to your Django templates?
 
-[Get Started →](installation.md){ .md-button .md-button--primary }
-[Quick Start Guide →](quickstart.md){ .md-button }
+[Get Started →](getting-started/installation.md){ .md-button .md-button--primary }
+[Quick Start Guide →](getting-started/quickstart.md){ .md-button }
 
 ## Why Django IncludeContents?
 

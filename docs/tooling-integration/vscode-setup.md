@@ -688,6 +688,6 @@ Configure terminal for Django development:
 
 ## Next Steps
 
-- Set up [Prettier Integration](prettier.md) for consistent formatting
-- Configure [Tailwind CSS](tailwind.md) for utility-first styling
-- Explore [Component Patterns](../advanced/component-patterns.md) for development best practices
+- Set up [Prettier Integration](../tooling-integration/prettier-formatting.md) for consistent formatting
+- Configure [Tailwind CSS](../tooling-integration/tailwind-css.md) for utility-first styling
+- Explore [Component Patterns](../building-components/component-patterns.md) for development best practices

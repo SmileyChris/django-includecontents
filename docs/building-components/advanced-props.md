@@ -382,6 +382,6 @@ props:
 
 ## Next Steps
 
-- Learn about [CSS Classes](css-classes.md) for advanced styling
-- Explore [Component Patterns](../advanced/component-patterns.md) for real-world examples
-- Check out the [API Reference](../api-reference.md) for complete syntax details
+- Learn about [CSS Classes](css-and-styling.md) for advanced styling
+- Explore [Component Patterns](../building-components/component-patterns.md) for real-world examples
+- Check out the [API Reference](../reference/api-reference.md) for complete syntax details

@@ -489,6 +489,6 @@ Classes:
 
 ## Next Steps
 
-- Explore [Component Patterns](../advanced/component-patterns.md) for real-world examples
-- Check out [Integration Guides](../integration/tailwind.md) for framework-specific setup
-- Review the [API Reference](../api-reference.md) for complete class syntax
+- Explore [Component Patterns](../building-components/component-patterns.md) for real-world examples
+- Check out [Integration Guides](../tooling-integration/tailwind-css.md) for framework-specific setup
+- Review the [API Reference](../reference/api-reference.md) for complete class syntax

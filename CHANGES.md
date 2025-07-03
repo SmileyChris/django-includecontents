@@ -1,6 +1,6 @@
 # Change Log
 
-This long shows interesting changes that happen for each release of `django-includecontents`.
+This log shows interesting changes that happen for each release of `django-includecontents`.
 
 <!-- towncrier release notes start -->
 

@@ -13,6 +13,16 @@ The `{% includecontents %}` tag is the foundation of Django IncludeContents. It 
 
 The content between the opening and closing tags becomes available as the `{{ contents }}` variable in the included template.
 
+**HTML Syntax Equivalent:**
+```html
+<include:template-name>
+    Content to pass to the template
+</include:template-name>
+```
+
+!!! tip "Modern Alternative"
+    Consider using the [HTML Component Syntax](html-syntax.md) for a more modern, HTML-like experience that doesn't require loading template tags.
+
 ## Simple Example
 
 **templates/greeting.html**
@@ -140,9 +150,9 @@ Raises `TemplateSyntaxError`.
 
 The basic `{% includecontents %}` tag supports several advanced features:
 
-- **[Named Contents Blocks](named-contents.md)**: Multiple content sections within a single component
-- **[Dynamic Template Names](../advanced/component-patterns.md#dynamic-templates)**: Use variables for template names
-- **[Conditional Inclusion](../advanced/component-patterns.md#conditional-components)**: Conditionally include templates
+- **[Named Contents Blocks](named-content-blocks.md)**: Multiple content sections within a single component
+- **[Dynamic Template Names](../building-components/component-patterns.md#dynamic-templates)**: Use variables for template names
+- **[Conditional Inclusion](../building-components/component-patterns.md#conditional-components)**: Conditionally include templates
 
 ## Comparison with Standard Include
 
@@ -156,6 +166,6 @@ The basic `{% includecontents %}` tag supports several advanced features:
 
 ## Next Steps
 
-- Learn about [Named Contents Blocks](named-contents.md) for more complex components
-- Explore the [HTML Component Syntax](../components/html-syntax.md) for a more modern approach
-- Check out [Component Patterns](../advanced/component-patterns.md) for best practices
+- Learn about [Named Contents Blocks](named-content-blocks.md) for more complex components
+- Explore the [HTML Component Syntax](../using-components/html-syntax.md) for a more modern approach
+- Check out [Component Patterns](../building-components/component-patterns.md) for best practices

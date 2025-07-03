@@ -597,6 +597,6 @@ Include accessibility classes:
 
 ## Next Steps
 
-- Explore [Component Patterns](../advanced/component-patterns.md) for advanced Tailwind usage
-- Set up [VS Code Integration](vscode.md) for Tailwind IntelliSense
-- Check [Prettier Integration](prettier.md) for consistent formatting
+- Explore [Component Patterns](../building-components/component-patterns.md) for advanced Tailwind usage
+- Set up [VS Code Integration](vscode-setup.md) for Tailwind IntelliSense
+- Check [Prettier Integration](../tooling-integration/prettier-formatting.md) for consistent formatting

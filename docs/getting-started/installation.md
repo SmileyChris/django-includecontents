@@ -110,7 +110,7 @@ If you want to contribute to the project or run the tests:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/django-includecontents.git
+git clone https://github.com/SmileyChris/django-includecontents.git
 cd django-includecontents
 
 # Install with test dependencies
@@ -119,6 +119,8 @@ pip install -e ".[test]"
 # Run tests
 pytest
 ```
+
+For complete development setup instructions, see the [Development Guide](../reference/development.md).
 
 ## Next Steps
 

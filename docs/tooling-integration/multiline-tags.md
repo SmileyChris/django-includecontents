@@ -405,5 +405,5 @@ Multi-line tags work with:
 ## Next Steps
 
 - Learn about [Custom Engine](custom-engine.md) features
-- Explore [Component Patterns](component-patterns.md) for advanced usage
-- Check out [Integration Guides](../integration/prettier.md) for formatting setup
+- Explore [Component Patterns](../building-components/component-patterns.md) for advanced usage
+- Check out [Integration Guides](../tooling-integration/prettier-formatting.md) for formatting setup

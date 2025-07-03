@@ -529,6 +529,6 @@ class TemplateTimingMiddleware:
 
 ## Next Steps
 
-- Learn [Component Patterns](component-patterns.md) for advanced usage
-- Explore [Integration Guides](../integration/prettier.md) for tooling setup
-- Check the [API Reference](../api-reference.md) for complete engine details
+- Learn [Component Patterns](../building-components/component-patterns.md) for advanced usage
+- Explore [Integration Guides](../tooling-integration/prettier-formatting.md) for tooling setup
+- Check the [API Reference](../reference/api-reference.md) for complete engine details

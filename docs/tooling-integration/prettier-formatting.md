@@ -556,6 +556,6 @@ echo "static/" >> .prettierignore
 
 ## Next Steps
 
-- Set up [VS Code Integration](vscode.md) for the complete development experience
-- Configure [Tailwind CSS](tailwind.md) for utility-first styling
-- Check the [Component Patterns](../advanced/component-patterns.md) guide for formatting examples
+- Set up [VS Code Integration](vscode-setup.md) for the complete development experience
+- Configure [Tailwind CSS](../tooling-integration/tailwind-css.md) for utility-first styling
+- Check the [Component Patterns](../building-components/component-patterns.md) guide for formatting examples

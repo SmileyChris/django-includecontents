@@ -329,5 +329,5 @@ The order of content blocks in your usage doesn't need to match the order in the
 ## Next Steps
 
 - Learn about the [Wrapif Tag](wrapif-tag.md) for conditional wrapping
-- Explore [HTML Component Syntax](../components/html-syntax.md) for a modern alternative
-- Check out [Component Patterns](../advanced/component-patterns.md) for advanced usage
+- Explore [HTML Component Syntax](../using-components/html-syntax.md) for a modern alternative
+- Check out [Component Patterns](../building-components/component-patterns.md) for advanced usage

@@ -57,28 +57,32 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Quick Start: quickstart.md
-  - Template Tag:
-    - Basic Usage: template-tag/basic-usage.md
-    - Named Contents: template-tag/named-contents.md
-    - Wrapif Tag: template-tag/wrapif-tag.md
-  - HTML Components:
-    - HTML Syntax: components/html-syntax.md
-    - Props & Attrs: components/props-and-attrs.md
-    - Advanced Props: components/advanced-props.md
-    - CSS Classes: components/css-classes.md
-  - Advanced:
-    - Multi-line Tags: advanced/multiline-tags.md
-    - Custom Engine: advanced/custom-engine.md
-    - Component Patterns: advanced/component-patterns.md
-  - Integration:
-    - Prettier: integration/prettier.md
-    - VS Code: integration/vscode.md
-    - Tailwind CSS: integration/tailwind.md
-  - API Reference: api-reference.md
-  - Developing:
-    - Changelog: changelog.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Basic Concepts: getting-started/basic-concepts.md
+  - Using Components:
+    - HTML Syntax: using-components/html-syntax.md
+    - Template Tag Syntax: using-components/template-tag-syntax.md
+    - Props & Attributes: using-components/props-and-attrs.md
+    - Named Content Blocks: using-components/named-content-blocks.md
+    - Wrapif Tag: using-components/wrapif-tag.md
+  - Building Components:
+    - Component Patterns: building-components/component-patterns.md
+    - Advanced Props: building-components/advanced-props.md
+    - CSS & Styling: building-components/css-and-styling.md
+    - Best Practices: building-components/best-practices.md
+  - Tooling & Integration:
+    - Prettier Formatting: tooling-integration/prettier-formatting.md
+    - Tailwind CSS: tooling-integration/tailwind-css.md
+    - Custom Engine: tooling-integration/custom-engine.md
+    - Multi-line Tags: tooling-integration/multiline-tags.md
+    - VS Code Setup: tooling-integration/vscode-setup.md
+  - Reference:
+    - API Reference: reference/api-reference.md
+    - Migration Guide: reference/migration-guide.md
+    - Troubleshooting: reference/troubleshooting.md
+    - Development: reference/development.md
 
 extra:
   social:

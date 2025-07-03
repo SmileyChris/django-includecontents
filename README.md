@@ -82,12 +82,10 @@ If you prefer traditional Django template syntax:
 
 📚 **[Full Documentation](https://smileychris.github.io/django-includecontents/)**
 
-- **[Installation Guide](https://smileychris.github.io/django-includecontents/installation/)** - Setup options and configuration
-- **[Quick Start](https://smileychris.github.io/django-includecontents/quickstart/)** - Get started in 5 minutes
-- **[HTML Components](https://smileychris.github.io/django-includecontents/components/html-syntax/)** - Modern HTML-like component syntax
-- **[Template Tags](https://smileychris.github.io/django-includecontents/template-tag/basic-usage/)** - Traditional Django template tag usage
-- **[Props System](https://smileychris.github.io/django-includecontents/components/props-and-attrs/)** - Component props and attribute handling
-- **[Integration Guides](https://smileychris.github.io/django-includecontents/integration/prettier/)** - VS Code, Prettier, and Tailwind CSS setup
+- **[Getting Started](https://smileychris.github.io/django-includecontents/getting-started/installation/)** - Installation and setup
+- **[Quick Start Guide](https://smileychris.github.io/django-includecontents/getting-started/quickstart/)** - Get started in 5 minutes  
+- **[HTML Components](https://smileychris.github.io/django-includecontents/using-components/html-syntax/)** - Modern component syntax
+- **[Best Practices](https://smileychris.github.io/django-includecontents/building-components/best-practices/)** - Building great components
 
 ## Examples
 
@@ -136,7 +134,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-Contributions welcome! See our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+Contributions welcome! Please see our [GitHub Issues](https://github.com/SmileyChris/django-includecontents/issues) for bug reports and feature requests.
 
 ## Support
 

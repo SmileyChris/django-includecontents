@@ -1,6 +1,6 @@
 # HTML Component Syntax
 
-The HTML component syntax provides a modern, HTML-like way to use components in your Django templates. This feature requires the [custom template engine](../installation.md#option-1-with-custom-template-engine-recommended).
+The HTML component syntax provides a modern, HTML-like way to use components in your Django templates. This feature requires the [custom template engine](../getting-started/installation.md#option-1-with-custom-template-engine-recommended).
 
 ## Basic Syntax
 
@@ -10,13 +10,7 @@ The HTML component syntax provides a modern, HTML-like way to use components in 
 </include:component-name>
 ```
 
-This is equivalent to:
-```django
-{% load includecontents %}
-{% includecontents "components/component-name.html" attribute="value" %}
-    Content goes here
-{% endincludecontents %}
-```
+Components use HTML-like tags that feel natural and familiar. The component name maps directly to a template file in your `components/` directory.
 
 ## Component Discovery
 
@@ -412,5 +406,5 @@ Converting existing `{% includecontents %}` usage to HTML syntax:
 ## Next Steps
 
 - Learn about [Props & Attrs](props-and-attrs.md) for component attribute handling
-- Explore [Advanced Props](advanced-props.md) for validation and enum props
-- Check out [CSS Classes](css-classes.md) for advanced styling features
+- Explore [Advanced Props](../building-components/advanced-props.md) for validation and enum props
+- Check out [CSS Classes](../building-components/css-and-styling.md) for advanced styling features

@@ -358,6 +358,6 @@ Wrapif works well with other Django IncludeContents features:
 
 ## Next Steps
 
-- Explore [HTML Component Syntax](../components/html-syntax.md) for modern component development
-- Learn about [Props & Attrs](../components/props-and-attrs.md) for component attributes
-- Check out [Component Patterns](../advanced/component-patterns.md) for advanced techniques
+- Explore [HTML Component Syntax](../using-components/html-syntax.md) for modern component development
+- Learn about [Props & Attrs](../using-components/props-and-attrs.md) for component attributes
+- Check out [Component Patterns](../building-components/component-patterns.md) for advanced techniques

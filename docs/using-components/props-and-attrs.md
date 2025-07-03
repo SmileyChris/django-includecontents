@@ -523,6 +523,6 @@ props:
 
 ## Next Steps
 
-- Learn about [Advanced Props](advanced-props.md) for enum validation and complex prop handling
-- Explore [CSS Classes](css-classes.md) for advanced class management
-- Check out [Component Patterns](../advanced/component-patterns.md) for real-world examples
+- Learn about [Advanced Props](../building-components/advanced-props.md) for enum validation and complex prop handling
+- Explore [CSS Classes](../building-components/css-and-styling.md) for advanced class management
+- Check out [Component Patterns](../building-components/component-patterns.md) for real-world examples
