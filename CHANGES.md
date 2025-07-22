@@ -4,6 +4,17 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 2.2 (2025-07-22)
+
+### Features
+
+- Support multiple space-separated values in enum props (e.g., `variant="primary icon"`) to enable combining visual modifiers.
+
+### Bugfixes
+
+- Fix parsing of multiline closing tags (e.g., `</include:item\n>`) in HTML component syntax.
+
+
 # Version 2.1.1 (2025-07-02)
 
 ### Bugfixes

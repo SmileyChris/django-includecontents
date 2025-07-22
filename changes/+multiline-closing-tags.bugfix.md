@@ -1,1 +1,0 @@
-Fix parsing of multiline closing tags (e.g., `</include:item\n>`) in HTML component syntax.
