@@ -99,7 +99,7 @@ class Template(django.template.base.Template):
 
 
 tag_re = re.compile(
-    r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:(?:\"[^\"]*\"|'[^']*'|.)*?>|</?content:[-\w]+>)", re.DOTALL
+    r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:(?:\"[^\"]*\"|'[^']*'|[^>])*?>|</?content:[-\w]+\s*>)", re.DOTALL
 )
 
 
@@ -145,9 +145,17 @@ class Lexer(django.template.base.Lexer):
                 lineno,
             )
         elif in_tag and token_string.startswith("</include:"):
+            # Normalize closing tags by removing any whitespace before the closing >
+            # Handle cases like "</include:item\n>" -> "</include:item>"
+            if token_string.endswith('>'):
+                # Find the position of > and remove any whitespace before it
+                content = token_string[:-1].rstrip()  # Everything except the >
+                cleaned = content + '>'
+            else:
+                cleaned = token_string
             return django.template.base.Token(
                 django.template.base.TokenType.BLOCK,
-                token_string,
+                cleaned,
                 position,
                 lineno,
             )

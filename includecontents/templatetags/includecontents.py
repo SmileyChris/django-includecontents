@@ -432,7 +432,7 @@ def get_contents_nodelists(
             named_nodelists[content_name] = parser.parse((f"end{tag_name}",))
             parser.delete_first_token()
             continue
-        elif tag_name == end_tag and nesting_level == 0:
+        elif (tag_name == end_tag or (tag_name.startswith("</include:") and end_tag.startswith("</include:") and tag_name == end_tag[:-1])) and nesting_level == 0:
             default.append(token)
             for default_token in reversed(default):
                 parser.prepend_token(default_token)
