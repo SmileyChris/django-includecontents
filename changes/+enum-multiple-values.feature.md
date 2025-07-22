@@ -1,0 +1,1 @@
+Support multiple space-separated values in enum props (e.g., `variant="primary icon"`) to enable combining visual modifiers.

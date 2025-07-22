@@ -229,13 +229,23 @@ Define props with allowed values:
 
 **Usage:**
 ```html
+<!-- Single value -->
 <include:button variant="primary">Click me</include:button>
+
+<!-- Multiple values (space-separated) -->
+<include:button variant="primary large">Big Primary Button</include:button>
 ```
 
-**Generated variables:**
+**Generated variables for single value (`variant="primary"`):**
 - `variant` - The prop value (`"primary"`)
-- `variantPrimary` - Boolean for the selected value (`True`)
-- `variantSecondary` - Boolean for other values (`False`)
+- `variantPrimary` - Boolean (`True`)
+- `variantSecondary` - Boolean (`False`)
+
+**Generated variables for multiple values (`variant="primary large"`):**
+- `variant` - The full value (`"primary large"`)
+- `variantPrimary` - Boolean (`True`)
+- `variantLarge` - Boolean (`True`)
+- Other boolean flags remain `False`
 
 ### Attrs Variable
 

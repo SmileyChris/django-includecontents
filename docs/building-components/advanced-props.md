@@ -79,6 +79,45 @@ Enum values with hyphens are converted to camelCase for boolean variables:
 </div>
 ```
 
+### Multiple Enum Values
+
+You can specify multiple enum values separated by spaces:
+
+```html
+{# props variant=primary,secondary,accent,icon,large #}
+<button {% attrs 
+    class="btn" 
+    class:btn-primary=variantPrimary 
+    class:btn-secondary=variantSecondary 
+    class:btn-accent=variantAccent
+    class:btn-icon=variantIcon
+    class:btn-large=variantLarge
+%}>
+    {{ contents }}
+</button>
+```
+
+**Usage:**
+```html
+<!-- Single value -->
+<include:button variant="primary">Save</include:button>
+
+<!-- Multiple values -->
+<include:button variant="primary icon">Save</include:button>
+<include:button variant="secondary large">Cancel</include:button>
+<include:button variant="accent icon large">Featured</include:button>
+```
+
+**Context variables created for `variant="primary icon"`:**
+- `variant` - The full value (`"primary icon"`)
+- `variantPrimary` - Boolean (`True`)
+- `variantIcon` - Boolean (`True`)
+- `variantSecondary` - Boolean (`False`)
+- `variantAccent` - Boolean (`False`)
+- `variantLarge` - Boolean (`False`)
+
+This is particularly useful for combining visual modifiers like size, appearance, and behavior flags.
+
 ## Complex Props
 
 ### Default Value Types

@@ -67,3 +67,31 @@ def test_enum_with_hyphens():
         '<include:button-optional variant="dark-mode">Dark mode</include:button-optional>'
     ).render(Context())
     assert 'class="btn btn-dark-mode"' in output
+
+
+def test_enum_multiple_values():
+    """Test that multiple enum values can be specified."""
+    output = Template(
+        '<include:button-multi variant="primary icon">Click me</include:button-multi>'
+    ).render(Context())
+    assert 'class="btn btn-primary btn-icon"' in output
+    assert '>Click me<' in output
+
+
+def test_enum_multiple_values_validation():
+    """Test that all values in a multi-value enum are validated."""
+    with pytest.raises(
+        TemplateSyntaxError,
+        match=r'Invalid value "invalid" for attribute "variant" in <include:button-multi>\. Allowed values: \'primary\', \'secondary\', \'accent\', \'icon\', \'large\'',
+    ):
+        Template(
+            '<include:button-multi variant="primary invalid">Click me</include:button-multi>'
+        ).render(Context())
+
+
+def test_enum_multiple_values_with_hyphens():
+    """Test multiple enum values with hyphens."""
+    output = Template(
+        '<include:button-optional variant="dark-mode icon-only">Icon</include:button-optional>'
+    ).render(Context())
+    assert 'class="btn btn-dark-mode btn-icon-only"' in output

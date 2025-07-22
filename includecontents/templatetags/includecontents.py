@@ -254,21 +254,30 @@ class IncludeContentsNode(template.Node):
                     prop_def = component_props[key]
                     # Validate enum values
                     if isinstance(prop_def, EnumVariable):
-                        if resolved_value not in prop_def.allowed_values:
-                            raise TemplateSyntaxError(
-                                f'Invalid value "{resolved_value}" for attribute "{key}" in {self.token_name}. '
-                                f'Allowed values: {", ".join(repr(v) for v in prop_def.allowed_values)}'
-                            )
-                        # Set enum values as boolean attributes in the context
-                        # e.g., variant="primary" sets variant="primary" and variantPrimary=True
+                        # Support multiple space-separated enum values
+                        enum_values = resolved_value.split() if resolved_value else []
+                        
+                        # Validate each value
+                        for enum_value in enum_values:
+                            if enum_value not in prop_def.allowed_values:
+                                raise TemplateSyntaxError(
+                                    f'Invalid value "{enum_value}" for attribute "{key}" in {self.token_name}. '
+                                    f'Allowed values: {", ".join(repr(v) for v in prop_def.allowed_values)}'
+                                )
+                        
+                        # Set the original value as-is
                         new_context[key] = resolved_value
-                        if resolved_value:  # Don't set True for empty string
-                            # CamelCase version: variantPrimary or variantDarkMode (from dark-mode)
-                            # Convert hyphens to camelCase
-                            parts = resolved_value.split('-')
-                            camel_value = parts[0] + ''.join(p.capitalize() for p in parts[1:])
-                            camel_key = key + camel_value[0].upper() + camel_value[1:]
-                            new_context[camel_key] = True
+                        
+                        # Set boolean attributes for each enum value
+                        # e.g., variant="primary icon" sets variantPrimary=True and variantIcon=True
+                        for enum_value in enum_values:
+                            if enum_value:  # Don't set True for empty string
+                                # CamelCase version: variantPrimary or variantDarkMode (from dark-mode)
+                                # Convert hyphens to camelCase
+                                parts = enum_value.split('-')
+                                camel_value = parts[0] + ''.join(p.capitalize() for p in parts[1:])
+                                camel_key = key + camel_value[0].upper() + camel_value[1:]
+                                new_context[camel_key] = True
                     else:
                         new_context[key] = resolved_value
                 else:

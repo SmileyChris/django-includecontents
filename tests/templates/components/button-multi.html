@@ -1,0 +1,10 @@
+{# props variant=primary,secondary,accent,icon,large #}
+
+<button {% attrs 
+    class="btn" 
+    class:btn-primary=variantPrimary 
+    class:btn-secondary=variantSecondary 
+    class:btn-accent=variantAccent
+    class:btn-icon=variantIcon
+    class:btn-large=variantLarge
+%}>{{ contents }}</button>
