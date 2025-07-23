@@ -8,17 +8,17 @@ def simple_context_processor(request):
     return {"processor_var": "from_processor"}
 
 
-def test_view(http_request):
+def context_processor_view(request):
     # Use render_to_string which properly applies context processors
     content = render_to_string(
         'test_context_processor.html',
         context={},
-        request=http_request
+        request=request
     )
     return HttpResponse(content)
 
 urlpatterns = [
-    path('test/', test_view, name='test'),
+    path('test/', context_processor_view, name='test'),
 ]
 
 
