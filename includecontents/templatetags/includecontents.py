@@ -6,35 +6,35 @@ from typing import Any
 
 from django import template
 from django.template import TemplateSyntaxError, Variable
-from django.template.base import FilterExpression, NodeList, Parser, TokenType
+from django.template.base import FilterExpression, Node, NodeList, Parser, TokenType
 from django.template.context import Context
+from django.template.defaulttags import TemplateIfParser
 from django.template.loader_tags import construct_relative_path, do_include
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
-from django.template.defaulttags import TemplateIfParser
-from django.template.base import Node
 
 from includecontents.django.base import Template
 
 register = template.Library()
 
 
-@register.filter(name='not')
+@register.filter(name="not")
 def not_filter(value):
     """Template filter to negate a boolean value."""
     return not value
+
 
 re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 
 class EnumVariable:
     """A variable that validates against a list of allowed values."""
-    
+
     def __init__(self, allowed_values, required=True):
         self.allowed_values = allowed_values
         self.required = required
-    
+
     def resolve(self, context):
         # This should not be called for enum validation
         # The actual value comes from the component usage
@@ -203,11 +203,22 @@ class IncludeContentsNode(template.Node):
 
     def render(self, context):
         if self.isolated_context:
-            new_context = context.new()
-            if request := getattr(context, "request", None):
-                new_context.request = request
+            # If we have a RequestContext with processor data, grab it before creating new context
+            processor_data = {}
+            processors_index = getattr(context, "_processors_index", None)
+            if processors_index is not None and hasattr(context, "dicts"):
+                # Get the already-computed processor values from Django's RequestContext
+                processor_data = context.dicts[processors_index].copy()
+
+            # Ensure request and csrf_token are available (if not already provided by processors)
+            if request := context.get("request"):
+                processor_data.setdefault("request", request)
             if csrf_token := context.get("csrf_token"):
-                new_context["csrf_token"] = csrf_token
+                processor_data.setdefault("csrf_token", csrf_token)
+
+            # Create new isolated context and inject all processor data at once
+            new_context = context.new()
+            new_context.update(processor_data)
         else:
             new_context = context
         with new_context.push():
@@ -256,27 +267,31 @@ class IncludeContentsNode(template.Node):
                     if isinstance(prop_def, EnumVariable):
                         # Support multiple space-separated enum values
                         enum_values = resolved_value.split() if resolved_value else []
-                        
+
                         # Validate each value
                         for enum_value in enum_values:
                             if enum_value not in prop_def.allowed_values:
                                 raise TemplateSyntaxError(
                                     f'Invalid value "{enum_value}" for attribute "{key}" in {self.token_name}. '
-                                    f'Allowed values: {", ".join(repr(v) for v in prop_def.allowed_values)}'
+                                    f"Allowed values: {', '.join(repr(v) for v in prop_def.allowed_values)}"
                                 )
-                        
+
                         # Set the original value as-is
                         new_context[key] = resolved_value
-                        
+
                         # Set boolean attributes for each enum value
                         # e.g., variant="primary icon" sets variantPrimary=True and variantIcon=True
                         for enum_value in enum_values:
                             if enum_value:  # Don't set True for empty string
                                 # CamelCase version: variantPrimary or variantDarkMode (from dark-mode)
                                 # Convert hyphens to camelCase
-                                parts = enum_value.split('-')
-                                camel_value = parts[0] + ''.join(p.capitalize() for p in parts[1:])
-                                camel_key = key + camel_value[0].upper() + camel_value[1:]
+                                parts = enum_value.split("-")
+                                camel_value = parts[0] + "".join(
+                                    p.capitalize() for p in parts[1:]
+                                )
+                                camel_key = (
+                                    key + camel_value[0].upper() + camel_value[1:]
+                                )
                                 new_context[camel_key] = True
                     else:
                         new_context[key] = resolved_value
@@ -344,7 +359,9 @@ class IncludeContentsNode(template.Node):
                     # Check if value contains comma-separated values (enum) without spaces
                     if "," in value and " " not in value:
                         # Strip quotes if present
-                        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+                        if (value.startswith('"') and value.endswith('"')) or (
+                            value.startswith("'") and value.endswith("'")
+                        ):
                             value = value[1:-1]
                         # Parse enum values
                         enum_values = value.split(",")
@@ -401,7 +418,7 @@ def get_contents_nodelists(
             continue
         bits = token.split_contents()
         tag_name = bits[0]
-        
+
         # Check if this is a nested includecontents tag
         if tag_name == "includecontents":
             # For includecontents tags, check the second element to see if it's self-closing
@@ -420,11 +437,13 @@ def get_contents_nodelists(
             continue
         elif tag_name.startswith("</include:") or tag_name.startswith("end"):
             # Check if this is the end of a nested includecontents
-            if nesting_level > 0 and (tag_name.startswith("</include:") or tag_name == "endincludecontents"):
+            if nesting_level > 0 and (
+                tag_name.startswith("</include:") or tag_name == "endincludecontents"
+            ):
                 nesting_level -= 1
                 default.append(token)
                 continue
-        
+
         # Only process contents tags that are at our nesting level (nesting_level == 0)
         if tag_name == "contents" and nesting_level == 0:
             if len(bits) < 2:
@@ -441,7 +460,14 @@ def get_contents_nodelists(
             named_nodelists[content_name] = parser.parse((f"end{tag_name}",))
             parser.delete_first_token()
             continue
-        elif (tag_name == end_tag or (tag_name.startswith("</include:") and end_tag.startswith("</include:") and tag_name == end_tag[:-1])) and nesting_level == 0:
+        elif (
+            tag_name == end_tag
+            or (
+                tag_name.startswith("</include:")
+                and end_tag.startswith("</include:")
+                and tag_name == end_tag[:-1]
+            )
+        ) and nesting_level == 0:
             default.append(token)
             for default_token in reversed(default):
                 parser.prepend_token(default_token)
@@ -518,22 +544,22 @@ class Attrs(MutableMapping):
     def all_attrs(self):
         extended = {}
         prepended = {}
-        
+
         # Collect extended and prepended values
         for key, parts in self._extended.items():
             parts = [key for key, value in parts.items() if value]
             if parts:
                 extended[key] = parts
-        
+
         for key, parts in self._prepended.items():
             parts = [key for key, value in parts.items() if value]
             if parts:
                 prepended[key] = parts
-        
+
         # Process all keys (from attrs, extended, and prepended)
         # Maintain order: attrs keys first, then any additional extended/prepended keys
         seen = set()
-        
+
         for key in self._attrs:
             seen.add(key)
             value = self._attrs[key]
@@ -543,21 +569,23 @@ class Attrs(MutableMapping):
                     value_parts = []
                 else:
                     value_parts = str(value).split(" ")
-                
+
                 # Prepend parts come first
                 if key in prepended:
-                    value_parts = prepended[key] + [p for p in value_parts if p not in prepended[key]]
-                
+                    value_parts = prepended[key] + [
+                        p for p in value_parts if p not in prepended[key]
+                    ]
+
                 # Extended parts come last
                 if key in extended:
                     for part in extended[key]:
                         if part not in value_parts:
                             value_parts.append(part)
-                
+
                 value = " ".join(value_parts) if value_parts else None
-            
+
             yield key, value
-        
+
         # Handle keys that only exist in extended/prepended
         for key in list(extended.keys()) + list(prepended.keys()):
             if key not in seen:
@@ -644,27 +672,27 @@ class AttrsNode(template.Node):
 
 class ContentsObject:
     """Object that provides both string representation and attribute access for contents blocks."""
-    
+
     def __init__(self, contents_dict):
         self._contents = contents_dict
-        self.default = contents_dict.get(None, '')
-    
+        self.default = contents_dict.get(None, "")
+
     def __str__(self):
         return str(self.default)
-    
+
     def __getattr__(self, name):
-        return self._contents.get(name, '')
-    
+        return self._contents.get(name, "")
+
     def __bool__(self):
         return bool(self.default)
-    
+
     def __contains__(self, name):
         return name in self._contents
 
 
 class WrapperSpec:
     """Represents a wrapper specification - either shorthand or full template."""
-    
+
     def __init__(self, tag_name=None, attrs=None, nodelist=None):
         self.tag_name = tag_name  # For shorthand syntax
         self.attrs = attrs or {}  # For shorthand syntax
@@ -673,30 +701,34 @@ class WrapperSpec:
 
 
 class WrapIfNode(Node):
-    child_nodelists = ('contents_nodelists',)
-    
+    child_nodelists = ("contents_nodelists",)
+
     def __init__(self, conditions_and_wrappers, default_wrapper, contents_nodelists):
-        self.conditions_and_wrappers = conditions_and_wrappers  # [(condition, wrapper_spec), ...]
+        self.conditions_and_wrappers = (
+            conditions_and_wrappers  # [(condition, wrapper_spec), ...]
+        )
         self.default_wrapper = default_wrapper  # For wrapelse
-        self.contents_nodelists = contents_nodelists  # {'default': nodelist, 'header': nodelist, ...}
-    
+        self.contents_nodelists = (
+            contents_nodelists  # {'default': nodelist, 'header': nodelist, ...}
+        )
+
     def render(self, context):
         # First, render all contents blocks
         contents_dict = {}
         for name, nodelist in self.contents_nodelists.items():
             rendered = nodelist.render(context)
-            if name == 'default':
+            if name == "default":
                 contents_dict[None] = mark_safe(rendered)
             else:
                 contents_dict[name] = mark_safe(rendered)
-        
+
         # Create a contents object that supports both dict access and default str()
         contents_obj = ContentsObject(contents_dict)
-        
+
         # Store contents in context
         context.push()
-        context['contents'] = contents_obj
-        
+        context["contents"] = contents_obj
+
         try:
             # Evaluate conditions in order
             for condition, wrapper_spec in self.conditions_and_wrappers:
@@ -704,14 +736,14 @@ class WrapIfNode(Node):
                     match = condition.eval(context)
                 except Exception:
                     match = False
-                    
+
                 if match:
                     return self.apply_wrapper(contents_obj, wrapper_spec, context)
-            
+
             # No conditions matched, use default wrapper if provided
             if self.default_wrapper:
                 return self.apply_wrapper(contents_obj, self.default_wrapper, context)
-            
+
             # No wrapper applies, return all contents
             # If we have multiple contents blocks, concatenate them
             if len(contents_dict) > 1:
@@ -719,25 +751,29 @@ class WrapIfNode(Node):
                 for name, content in contents_dict.items():
                     if content:  # Only include non-empty content
                         result_parts.append(content)
-                return mark_safe(''.join(result_parts))
+                return mark_safe("".join(result_parts))
             else:
                 return contents_obj.default
         finally:
             context.pop()
-    
+
     def apply_wrapper(self, contents_obj, wrapper_spec, context):
         if wrapper_spec.is_shorthand:
             # Build HTML tag with attributes
             attrs_str = self.build_attrs_string(wrapper_spec.attrs, context)
             if attrs_str:
-                return mark_safe(f'<{wrapper_spec.tag_name} {attrs_str}>{contents_obj.default}</{wrapper_spec.tag_name}>')
+                return mark_safe(
+                    f"<{wrapper_spec.tag_name} {attrs_str}>{contents_obj.default}</{wrapper_spec.tag_name}>"
+                )
             else:
-                return mark_safe(f'<{wrapper_spec.tag_name}>{contents_obj.default}</{wrapper_spec.tag_name}>')
+                return mark_safe(
+                    f"<{wrapper_spec.tag_name}>{contents_obj.default}</{wrapper_spec.tag_name}>"
+                )
         else:
             # For full template syntax, render the wrapper template
             # The wrapper template will have access to the contents via context
             return wrapper_spec.nodelist.render(context)
-    
+
     def build_attrs_string(self, attrs, context):
         """Build HTML attributes string from attrs dict."""
         rendered_attrs = []
@@ -745,31 +781,31 @@ class WrapIfNode(Node):
             resolved = value.resolve(context)
             if resolved is True:
                 rendered_attrs.append(key)
-            elif resolved not in (False, None, ''):
+            elif resolved not in (False, None, ""):
                 rendered_attrs.append(f'{key}="{conditional_escape(resolved)}"')
-        return ' '.join(rendered_attrs)
+        return " ".join(rendered_attrs)
 
 
 def parse_wrapper_shorthand(bits, parser):
     """Parse shorthand wrapper syntax: then "tag" attr=value..."""
     if not bits:
         raise TemplateSyntaxError("Expected tag name after 'then'")
-    
+
     # First bit should be the tag name (possibly quoted)
     tag_name = bits[0]
     if tag_name.startswith(('"', "'")) and tag_name.endswith(tag_name[0]):
         tag_name = tag_name[1:-1]
-    
+
     # Parse attributes
     attrs = {}
     for bit in bits[1:]:
-        if '=' in bit:
-            key, value = bit.split('=', 1)
+        if "=" in bit:
+            key, value = bit.split("=", 1)
             attrs[key] = parser.compile_filter(value)
         else:
             # Boolean attribute
-            attrs[bit] = parser.compile_filter('True')
-    
+            attrs[bit] = parser.compile_filter("True")
+
     return WrapperSpec(tag_name=tag_name, attrs=attrs)
 
 
@@ -784,48 +820,48 @@ def extract_contents_from_wrapper(nodelist):
 def parse_contents_from_full_syntax(wrapper_nodelist):
     """Parse contents blocks from the wrapper nodelist."""
     contents_blocks = {}
-    
+
     # Walk through the wrapper nodelist recursively to find ContentsNode instances
     def extract_contents_nodes(nodes):
         for node in nodes:
             if isinstance(node, ContentsNode):
-                name = node.name or 'default'
+                name = node.name or "default"
                 contents_blocks[name] = node.nodelist
             # Check if node has child nodelists
-            if hasattr(node, 'nodelist') and node.nodelist:
+            if hasattr(node, "nodelist") and node.nodelist:
                 extract_contents_nodes(node.nodelist)
             # Check for other nodelist attributes
             for attr in dir(node):
-                if attr.startswith('nodelist_') and hasattr(node, attr):
+                if attr.startswith("nodelist_") and hasattr(node, attr):
                     child_nodelist = getattr(node, attr)
                     if isinstance(child_nodelist, NodeList):
                         extract_contents_nodes(child_nodelist)
-    
+
     extract_contents_nodes(wrapper_nodelist)
-    
+
     # If no contents blocks found, this means the wrapper doesn't use contents
     # In this case, we should have parsed the content separately
     if not contents_blocks:
-        contents_blocks['default'] = NodeList()
-    
+        contents_blocks["default"] = NodeList()
+
     return contents_blocks
 
 
-@register.tag('wrapif')
+@register.tag("wrapif")
 def do_wrapif(parser, token):
     """
     Conditionally wrap content with HTML elements.
-    
+
     Basic syntax:
         {% wrapif condition %}
         <tag>{% contents %}content here{% endcontents %}</tag>
         {% endwrapif %}
-    
+
     Shorthand syntax:
         {% wrapif condition then "tag" attr=value %}
           content
         {% endwrapif %}
-    
+
     With else:
         {% wrapif condition then "a" href=url %}
         {% wrapelse "span" %}
@@ -833,22 +869,22 @@ def do_wrapif(parser, token):
         {% endwrapif %}
     """
     bits = token.split_contents()[1:]
-    
+
     if not bits:
         raise TemplateSyntaxError("wrapif tag requires at least one argument")
-    
+
     # Determine if we're using shorthand or full syntax by looking ahead
-    using_shorthand = 'then' in bits
-    
+    using_shorthand = "then" in bits
+
     # Parse all conditions and wrappers first
     conditions_and_wrappers = []
-    
+
     # Parse first condition
     if using_shorthand:
-        then_index = bits.index('then')
+        then_index = bits.index("then")
         condition_bits = bits[:then_index]
-        wrapper_bits = bits[then_index + 1:]
-        
+        wrapper_bits = bits[then_index + 1 :]
+
         condition = TemplateIfParser(parser, condition_bits).parse()
         wrapper = parse_wrapper_shorthand(wrapper_bits, parser)
     else:
@@ -857,9 +893,9 @@ def do_wrapif(parser, token):
         # We need to parse differently for full syntax
         # Save the current position
         wrapper_start = parser.tokens[:]
-        wrapper_nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
+        wrapper_nodelist = parser.parse(("wrapelif", "wrapelse", "endwrapif"))
         wrapper_end = parser.tokens[:]
-        
+
         # Extract the contents from the wrapper
         contents_info = extract_contents_from_wrapper(wrapper_nodelist)
         if contents_info:
@@ -867,100 +903,108 @@ def do_wrapif(parser, token):
         else:
             # No contents tags found, treat as simple wrapper
             wrapper = WrapperSpec(nodelist=wrapper_nodelist)
-    
+
     conditions_and_wrappers.append((condition, wrapper))
-    
+
     # Now we need to handle the content parsing differently for shorthand vs full syntax
     if using_shorthand:
         # For shorthand, parse through all conditions first, then get the content
-        nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
-        
+        nodelist = parser.parse(("wrapelif", "wrapelse", "endwrapif"))
+
         # Process any wrapelif/wrapelse
         token = parser.next_token()
-        
-        while token.contents.startswith('wrapelif'):
+
+        while token.contents.startswith("wrapelif"):
             bits = token.split_contents()[1:]
-            
-            if 'then' in bits:
-                then_index = bits.index('then')
+
+            if "then" in bits:
+                then_index = bits.index("then")
                 condition_bits = bits[:then_index]
-                wrapper_bits = bits[then_index + 1:]
-                
+                wrapper_bits = bits[then_index + 1 :]
+
                 condition = TemplateIfParser(parser, condition_bits).parse()
                 wrapper = parse_wrapper_shorthand(wrapper_bits, parser)
             else:
                 # Mixed syntax not allowed
-                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
-            
+                raise TemplateSyntaxError(
+                    "Cannot mix shorthand and full syntax in wrapif"
+                )
+
             conditions_and_wrappers.append((condition, wrapper))
-            
+
             # Skip to next clause
-            nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
+            nodelist = parser.parse(("wrapelif", "wrapelse", "endwrapif"))
             token = parser.next_token()
-        
+
         # Handle wrapelse
         default_wrapper = None
-        if token.contents.startswith('wrapelse'):
+        if token.contents.startswith("wrapelse"):
             bits = token.split_contents()[1:]
-            
+
             if bits:
                 # Shorthand else
                 default_wrapper = parse_wrapper_shorthand(bits, parser)
             else:
                 # Mixed syntax not allowed
-                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
-            
+                raise TemplateSyntaxError(
+                    "Cannot mix shorthand and full syntax in wrapif"
+                )
+
             # Parse the final content
-            nodelist = parser.parse(('endwrapif',))
+            nodelist = parser.parse(("endwrapif",))
             parser.delete_first_token()
-        
+
         # For shorthand, the content is the last parsed nodelist
-        contents_blocks = {'default': nodelist}
+        contents_blocks = {"default": nodelist}
     else:
         # Full template syntax - need to extract contents from wrapper
         # The actual content needs to be parsed from within the wrapper templates
         # For now, we'll parse it as empty and handle it during rendering
         contents_blocks = parse_contents_from_full_syntax(wrapper_nodelist)
-        
+
         token = parser.next_token()
-        
-        while token.contents.startswith('wrapelif'):
+
+        while token.contents.startswith("wrapelif"):
             bits = token.split_contents()[1:]
-            
-            if 'then' in bits:
+
+            if "then" in bits:
                 # Mixed syntax not allowed
-                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
+                raise TemplateSyntaxError(
+                    "Cannot mix shorthand and full syntax in wrapif"
+                )
             else:
                 condition = TemplateIfParser(parser, bits).parse()
-                nodelist = parser.parse(('wrapelif', 'wrapelse', 'endwrapif'))
+                nodelist = parser.parse(("wrapelif", "wrapelse", "endwrapif"))
                 wrapper = WrapperSpec(nodelist=nodelist)
-            
+
             conditions_and_wrappers.append((condition, wrapper))
             token = parser.next_token()
-        
+
         # Handle wrapelse
         default_wrapper = None
-        if token.contents.startswith('wrapelse'):
+        if token.contents.startswith("wrapelse"):
             bits = token.split_contents()[1:]
-            
+
             if bits:
                 # Mixed syntax not allowed
-                raise TemplateSyntaxError("Cannot mix shorthand and full syntax in wrapif")
+                raise TemplateSyntaxError(
+                    "Cannot mix shorthand and full syntax in wrapif"
+                )
             else:
                 # Full template else
-                nodelist = parser.parse(('endwrapif',))
+                nodelist = parser.parse(("endwrapif",))
                 default_wrapper = WrapperSpec(nodelist=nodelist)
-            
+
             parser.delete_first_token()
-    
+
     return WrapIfNode(conditions_and_wrappers, default_wrapper, contents_blocks)
 
 
-@register.tag('contents')
+@register.tag("contents")
 def do_contents(parser, token):
     """
     Used within {% wrapif %} blocks to mark content placement.
-    
+
     Usage:
         {% contents %}content here{% endcontents %}
         {% contents name %}named content{% endcontents %}
@@ -968,21 +1012,21 @@ def do_contents(parser, token):
     bits = token.split_contents()
     if len(bits) > 2:
         raise TemplateSyntaxError(f"Invalid contents tag format: {token.contents}")
-    
+
     name = bits[1] if len(bits) == 2 else None
-    nodelist = parser.parse(('endcontents',))
+    nodelist = parser.parse(("endcontents",))
     parser.delete_first_token()
-    
+
     return ContentsNode(name, nodelist)
 
 
 class ContentsNode(Node):
     """Node for contents blocks within wrapif."""
-    
+
     def __init__(self, name, nodelist):
         self.name = name
         self.nodelist = nodelist
-    
+
     def render(self, context):
         # Contents nodes are handled specially by WrapIfNode
         # If rendered directly, just return the content
