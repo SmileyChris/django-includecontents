@@ -4,6 +4,15 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 2.3 (2025-07-23)
+
+### Features
+
+- HTML-based components now have access to all context variables provided by context processors, not just the request object and CSRF token
+
+  This ensures consistent behavior between HTML components and regular Django templates.
+
+
 # Version 2.2 (2025-07-22)
 
 ### Features
