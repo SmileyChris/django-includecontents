@@ -108,8 +108,10 @@ If you prefer traditional Django template syntax:
 
 ```django
 {% load includecontents %}
-{% wrapif user.is_authenticated then "a" href="/profile" class="user-link" %}
-    Welcome, {{ user.name }}
+{% wrapif user.is_authenticated %}
+    <a href="/profile" class="user-link">
+        {% contents %}Welcome, {{ user.name }}{% endcontents %}
+    </a>
 {% endwrapif %}
 ```
 

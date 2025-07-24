@@ -1,8 +1,8 @@
 # Wrapif Tag
 
-The `{% wrapif %}` tag provides a clean way to conditionally wrap content with HTML elements, eliminating the need to repeat opening and closing tags in conditional blocks.
+The `{% wrapif %}` tag provides a clean way to conditionally wrap content with HTML elements, eliminating the need to repeat opening and closing tags in conditional blocks. This tag solves the common problem where you need to wrap content in an element only under certain conditions - without it, you'd have to duplicate your content in both the "if" and "else" branches. With wrapif, you write your content once and the wrapping happens conditionally.
 
-## Basic Syntax
+## Standard Syntax
 
 ```django
 {% load includecontents %}
@@ -27,11 +27,23 @@ For simple cases, use the compact `then` syntax:
 
 ### Basic Conditional Wrapping
 
-```django
-{% wrapif user.is_authenticated then "a" href="/dashboard" class="user-link" %}
-    Welcome, {{ user.name }}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif user.is_authenticated %}
+        <a href="/dashboard" class="user-link">
+            {% contents %}Welcome, {{ user.name }}{% endcontents %}
+        </a>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif user.is_authenticated then "a" href="/dashboard" class="user-link" %}
+        Welcome, {{ user.name }}
+    {% endwrapif %}
+    ```
 
 **When `user.is_authenticated` is True:**
 ```html
@@ -57,7 +69,17 @@ Welcome, John
     {% endif %}
     ```
 
-=== "With Wrapif (Clean)"
+=== "With Wrapif - Standard Syntax"
+
+    ```django
+    {% wrapif show_link %}
+        <a href="{{ url }}" class="link">
+            {% contents %}Click here for {{ title }}{% endcontents %}
+        </a>
+    {% endwrapif %}
+    ```
+
+=== "With Wrapif - Shorthand Syntax"
 
     ```django
     {% wrapif show_link then "a" href=url class="link" %}
@@ -65,9 +87,9 @@ Welcome, John
     {% endwrapif %}
     ```
 
-## Full Template Syntax
+## Complex Wrappers
 
-For complex wrappers, use the full template syntax with `{% contents %}` blocks:
+For complex wrappers that need more than a single element, use the standard syntax with full templates:
 
 ```django
 {% wrapif user.is_premium %}
@@ -89,12 +111,30 @@ For complex wrappers, use the full template syntax with `{% contents %}` blocks:
 
 Provide an alternative wrapper when the condition is false:
 
-```django
-{% wrapif user.is_active then "a" href="/profile" %}
-{% wrapelse "span" class="disabled" %}
-    {{ user.name }}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif user.is_active %}
+        <a href="/profile">
+            {% contents %}{{ user.name }}{% endcontents %}
+        </a>
+    {% wrapelse %}
+        <span class="disabled">
+            {{ contents }}
+        </span>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif user.is_active then "a" href="/profile" %}
+        {{ user.name }}
+    {% wrapelse "span" class="disabled" %}
+    {% endwrapif %}
+    ```
+    
+    Note: In shorthand syntax, the content comes **before** the `wrapelse` tag
 
 **When active:**
 ```html
@@ -110,32 +150,72 @@ Provide an alternative wrapper when the condition is false:
 
 Handle multiple conditions with `{% wrapelif %}`:
 
-```django
-{% wrapif priority == "high" then "strong" class="text-red" %}
-{% wrapelif priority == "medium" then "em" class="text-yellow" %}
-{% wrapelif priority == "low" then "span" class="text-gray" %}
-{% wrapelse "span" %}
-    {{ task.title }}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif priority == "high" %}
+        <strong class="text-red">
+            {% contents %}{{ task.title }}{% endcontents %}
+        </strong>
+    {% wrapelif priority == "medium" %}
+        <em class="text-yellow">
+            {{ contents }}
+        </em>
+    {% wrapelif priority == "low" %}
+        <span class="text-gray">
+            {{ contents }}
+        </span>
+    {% wrapelse %}
+        <span>
+            {{ contents }}
+        </span>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif priority == "high" then "strong" class="text-red" %}
+        {{ task.title }}
+    {% wrapelif priority == "medium" then "em" class="text-yellow" %}
+    {% wrapelif priority == "low" then "span" class="text-gray" %}
+    {% wrapelse "span" %}
+    {% endwrapif %}
+    ```
+    
+    Note: In shorthand syntax, the content is placed after the first condition and is reused for all conditions
 
 ### Complex Conditions
 
 The tag supports all Django template conditional operators:
 
-```django
-{% wrapif user.is_authenticated and user.is_staff then "div" class="admin-panel" %}
-    Admin controls
-{% endwrapif %}
+=== "Standard Syntax"
 
-{% wrapif price > 100 then "span" class="expensive" %}
-    ${{ price }}
-{% endwrapif %}
+    ```django
+    {% wrapif user.is_authenticated and user.is_staff %}
+        <div class="admin-panel">
+            {% contents %}Admin controls{% endcontents %}
+        </div>
+    {% endwrapif %}
+    
+    {% wrapif price > 100 %}
+        <span class="expensive">
+            {% contents %}${{ price }}{% endcontents %}
+        </span>
+    {% endwrapif %}
+    ```
 
-{% wrapif status in "published,featured" then "mark" class="highlight" %}
-    {{ article.title }}
-{% endwrapif %}
-```
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif user.is_authenticated and user.is_staff then "div" class="admin-panel" %}
+        Admin controls
+    {% endwrapif %}
+    
+    {% wrapif price > 100 then "span" class="expensive" %}
+        ${{ price }}
+    {% endwrapif %}
+    ```
 
 ## Advanced Usage
 
@@ -153,25 +233,53 @@ Use template variables for dynamic attributes:
 
 Wrapif tags can be nested for complex conditional structures:
 
-```django
-{% wrapif show_section then "section" class="main-content" %}
-    {% wrapif show_header then "header" class="section-header" %}
-        <h1>{{ section.title }}</h1>
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif show_section %}
+        <section class="main-content">
+            {% contents %}
+                {% wrapif show_header %}
+                    <header class="section-header">
+                        {% contents %}<h1>{{ section.title }}</h1>{% endcontents %}
+                    </header>
+                {% endwrapif %}
+                
+                <div class="section-body">
+                    {{ section.content }}
+                </div>
+                
+                {% wrapif show_footer %}
+                    <footer class="section-footer">
+                        {% contents %}<p>Updated: {{ section.updated_at|date }}</p>{% endcontents %}
+                    </footer>
+                {% endwrapif %}
+            {% endcontents %}
+        </section>
     {% endwrapif %}
-    
-    <div class="section-body">
-        {{ section.content }}
-    </div>
-    
-    {% wrapif show_footer then "footer" class="section-footer" %}
-        <p>Updated: {{ section.updated_at|date }}</p>
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif show_section then "section" class="main-content" %}
+        {% wrapif show_header then "header" class="section-header" %}
+            <h1>{{ section.title }}</h1>
+        {% endwrapif %}
+        
+        <div class="section-body">
+            {{ section.content }}
+        </div>
+        
+        {% wrapif show_footer then "footer" class="section-footer" %}
+            <p>Updated: {{ section.updated_at|date }}</p>
+        {% endwrapif %}
     {% endwrapif %}
-{% endwrapif %}
-```
+    ```
 
 ### Multiple Named Contents
 
-When using full template syntax, you can have multiple named content blocks:
+When using standard syntax, you can have multiple named content blocks:
 
 ```django
 {% wrapif show_card %}
@@ -208,82 +316,178 @@ When using full template syntax, you can have multiple named content blocks:
 {% endwrapif %}
 ```
 
-## Common Use Cases
+## Example Use Cases
 
 ### Conditional Links
 
-```django
-{% wrapif article.url then "a" href=article.url target="_blank" %}
-    {{ article.title }}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif article.url %}
+        <a href="{{ article.url }}" target="_blank">
+            {% contents %}{{ article.title }}{% endcontents %}
+        </a>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif article.url then "a" href=article.url target="_blank" %}
+        {{ article.title }}
+    {% endwrapif %}
+    ```
 
 ### Dynamic Headings
 
-```django
-{% wrapif level == 1 then "h1" %}
-{% wrapelif level == 2 then "h2" %}
-{% wrapelif level == 3 then "h3" %}
-{% wrapelse "p" %}
-    {{ heading_text }}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif level == 1 %}
+        <h1>{% contents %}{{ heading_text }}{% endcontents %}</h1>
+    {% wrapelif level == 2 %}
+        <h2>{{ contents }}</h2>
+    {% wrapelif level == 3 %}
+        <h3>{{ contents }}</h3>
+    {% wrapelse %}
+        <p>{{ contents }}</p>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif level == 1 then "h1" %}
+        {{ heading_text }}
+    {% wrapelif level == 2 then "h2" %}
+    {% wrapelif level == 3 then "h3" %}
+    {% wrapelse "p" %}
+    {% endwrapif %}
+    ```
 
 ### Responsive Containers
 
-```django
-{% wrapif is_mobile then "div" class="mobile-container" %}
-{% wrapelse "div" class="desktop-container" %}
-    {{ content }}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif is_mobile %}
+        <div class="mobile-container">
+            {% contents %}{{ content }}{% endcontents %}
+        </div>
+    {% wrapelse %}
+        <div class="desktop-container">
+            {{ contents }}
+        </div>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif is_mobile then "div" class="mobile-container" %}
+        {{ content }}
+    {% wrapelse "div" class="desktop-container" %}
+    {% endwrapif %}
+    ```
 
 ### Permission-Based Wrapping
 
-```django
-{% wrapif user.can_edit then "div" class="editable" data-edit-url=edit_url %}
-    {{ content }}
-    {% if user.can_edit %}
-        <button class="edit-btn">Edit</button>
-    {% endif %}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif user.can_edit %}
+        <div class="editable" data-edit-url="{{ edit_url }}">
+            {% contents %}
+                {{ content }}
+                {% if user.can_edit %}
+                    <button class="edit-btn">Edit</button>
+                {% endif %}
+            {% endcontents %}
+        </div>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif user.can_edit then "div" class="editable" data-edit-url=edit_url %}
+        {{ content }}
+        {% if user.can_edit %}
+            <button class="edit-btn">Edit</button>
+        {% endif %}
+    {% endwrapif %}
+    ```
 
 ### Form Field Validation
 
-```django
-{% wrapif field.errors then "div" class="field-group error" %}
-{% wrapelse "div" class="field-group" %}
-    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-    {{ field }}
-    {% if field.errors %}
-        <div class="error-messages">
-            {% for error in field.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif field.errors %}
+        <div class="field-group error">
+            {% contents %}
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <div class="error-messages">
+                        {% for error in field.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endcontents %}
         </div>
-    {% endif %}
-{% endwrapif %}
-```
+    {% wrapelse %}
+        <div class="field-group">
+            {{ contents }}
+        </div>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif field.errors then "div" class="field-group error" %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+            <div class="error-messages">
+                {% for error in field.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% wrapelse "div" class="field-group" %}
+    {% endwrapif %}
+    ```
 
 ## Boolean Attributes
 
 The wrapif tag properly handles boolean HTML attributes:
 
-```django
-{% wrapif is_required then "input" type="text" required %}
-{% endwrapif %}
-```
+=== "Standard Syntax"
+
+    ```django
+    {% wrapif is_required %}
+        <input type="text" required>
+            {% contents %}{% endcontents %}
+        </input>
+    {% endwrapif %}
+    ```
+
+=== "Shorthand Syntax"
+
+    ```django
+    {% wrapif is_required then "input" type="text" required %}
+    {% endwrapif %}
+    ```
 
 When `is_required` is `True`, outputs:
 ```html
 <input type="text" required>
 ```
 
-When `is_required` is `False`, outputs:
-```html
-<input type="text">
-```
+When `is_required` is `False`, the input element is not rendered at all (for standard syntax) or rendered without the wrapper (for shorthand with content).
 
 ## Performance Considerations
 
