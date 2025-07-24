@@ -1,6 +1,5 @@
 # Django IncludeContents
-
-[![PyPI version](https://badge.fury.io/py/django-includecontents.svg)](https://badge.fury.io/py/django-includecontents)
+[![PyPI version](https://img.shields.io/pypi/v/django-includecontents)](https://pypi.org/project/django-includecontents/)
 [![Python Support](https://img.shields.io/pypi/pyversions/django-includecontents.svg)](https://pypi.org/project/django-includecontents/)
 [![Django Support](https://img.shields.io/pypi/djversions/django-includecontents.svg)](https://pypi.org/project/django-includecontents/)
 
