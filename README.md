@@ -1,6 +1,5 @@
 # Django IncludeContents
 [![PyPI version](https://img.shields.io/pypi/v/django-includecontents)](https://pypi.org/project/django-includecontents/)
-[![Python Support](https://img.shields.io/pypi/pyversions/django-includecontents.svg)](https://pypi.org/project/django-includecontents/)
 [![Django Support](https://img.shields.io/pypi/djversions/django-includecontents.svg)](https://pypi.org/project/django-includecontents/)
 
 Component-like Django template tags with HTML syntax support.
