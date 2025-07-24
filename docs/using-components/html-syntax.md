@@ -185,9 +185,9 @@ You can mix HTML content syntax with traditional `{% contents %}` blocks:
 </include:card>
 ```
 
-## Template Tags in Attributes
+## Template Syntax in Attributes
 
-Component attributes fully support Django template tags:
+Component attributes now support the full Django template language, including variables, filters, and template tags:
 
 ```html
 <include:ui-button 
@@ -204,14 +204,69 @@ Component attributes fully support Django template tags:
 </include:ui-button>
 ```
 
-### Complex Template Logic
+### Template Variables and Filters
+
+Use Django template variables and filters in any attribute:
+
+```html
+<include:card 
+    title="{{ product.name }}"
+    price="{{ product.price|floatformat:2 }}"
+    url="{{ product.get_absolute_url }}"
+    active="{{ user.is_premium|yesno:'true,false' }}"
+    count="{{ items|length|add:1 }}"
+/>
+```
+
+### Mixed Content
+
+Combine static text with template variables for dynamic attributes:
+
+```html
+<include:button 
+    class="btn btn-{{ variant }} {{ 'active' if is_active }}"
+    href="/products/{{ product.id }}/details/"
+    data-info="Count: {{ total }} of {{ maximum }}"
+    title="{{ product.name }} - ${{ product.price }}"
+/>
+```
+
+### Template Tags
+
+Use any Django template tag including `{% if %}`, `{% for %}`, and `{% url %}`:
+
+```html
+<!-- Conditional classes -->
+<include:card 
+    class="card {% if featured %}featured{% endif %} {% if new %}new{% endif %}"
+>
+
+<!-- Dynamic lists -->
+<include:select
+    data-options="{% for opt in options %}{{ opt.value }}:{{ opt.label }}{% if not forloop.last %},{% endif %}{% endfor %}"
+>
+
+<!-- URL generation -->
+<include:link 
+    href="{% url 'product_detail' pk=product.pk %}"
+    class="link {% if product.on_sale %}sale{% endif %}"
+>
+    View Product
+</include:link>
+```
+
+### Complex Example
+
+Here's a real-world example combining multiple template features:
 
 ```html
 <include:product-card 
-    product="{{ product }}"
-    discount="{% if product.sale_price %}{{ product.calculate_discount }}{% endif %}"
-    available="{{ product.stock > 0 }}"
-    rating="{{ product.reviews.aggregate.avg_rating|floatformat:1 }}"
+    title="{{ product.name }}"
+    price="{{ product.price|floatformat:2 }}"
+    href="{% url 'product_detail' product.slug %}"
+    class="product-card {% if product.on_sale %}on-sale{% endif %}"
+    data-category="{{ product.category.slug }}"
+    stock-status="{{ product.stock|yesno:'in-stock,out-of-stock' }}"
 >
     {% if product.is_featured %}
         <content:badge>Featured</content:badge>
@@ -219,11 +274,9 @@ Component attributes fully support Django template tags:
     
     {{ product.description|truncatewords:20 }}
     
-    {% if product.reviews.count > 0 %}
-        <content:reviews>
-            <p>{{ product.reviews.count }} review{{ product.reviews.count|pluralize }}</p>
-        </content:reviews>
-    {% endif %}
+    <content:footer>
+        <p class="reviews">{{ product.review_count }} review{{ product.review_count|pluralize }}</p>
+    </content:footer>
 </include:product-card>
 ```
 
