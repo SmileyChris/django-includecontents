@@ -19,6 +19,22 @@ from includecontents.django.base import Template
 register = template.Library()
 
 
+class TemplateAttributeExpression:
+    """
+    A custom expression that evaluates template syntax in attribute values.
+    This allows mixed content like 'class="btn {{ variant }}"' to work correctly.
+    """
+    def __init__(self, template_string):
+        self.template_string = template_string
+        self._template = None
+    
+    def resolve(self, context):
+        if self._template is None:
+            # Compile the template once and cache it
+            self._template = Template(self.template_string)
+        return self._template.render(context)
+
+
 @register.filter(name="not")
 def not_filter(value):
     """Template filter to negate a boolean value."""
@@ -84,7 +100,11 @@ def includecontents(parser, token):
             {% endif %}
         </div>
     """
-    # Remove template {{ }}.
+    # Store the original token contents for checking template syntax
+    original_contents = token.contents
+    
+    # Remove template {{ }} only for non-quoted contexts
+    # This regex only removes {{ }} when they're not inside quotes
     token.contents = re.sub(r"(['\"]?)\{\{ *(.*?) *\}\}\1", r"\2", token.contents)
     bits = token.split_contents()
     # If this was an HTML tag, it's second element is the tag name prefixed with an
@@ -99,6 +119,20 @@ def includecontents(parser, token):
         # Split out nested attributes (those with a dot in the name).
         new_bits = []
         advanced_attrs = {}
+        
+        # Parse the original token to find attributes with template syntax
+        original_bits = list(smart_split(original_contents))
+        if len(original_bits) >= 2 and original_bits[1].startswith("_"):
+            original_bits = original_bits[2:]  # Skip includecontents and tag name
+        
+        # Create a mapping of processed bits to original bits for template detection
+        bit_to_original = {}
+        for orig_bit in original_bits:
+            # Strip {{ }} to match processed version
+            processed = re.sub(r"(['\"]?)\{\{ *(.*?) *\}\}\1", r"\2", orig_bit)
+            if processed in bits:
+                bit_to_original[processed] = orig_bit
+        
         for i, bit in enumerate(bits):
             if i < 3:
                 new_bits.append(bit)
@@ -120,9 +154,31 @@ def includecontents(parser, token):
                 # This includes class:something for conditional classes
                 if "=" in bit:
                     attr, value = bit.split("=", 1)
+                    # Check if this attribute had template syntax in the original
+                    original_bit = bit_to_original.get(bit, bit)
+                    if original_bit and ('{{' in original_bit or '{%' in original_bit):
+                        # Extract the original value with template syntax
+                        if '=' in original_bit:
+                            _, orig_value = original_bit.split('=', 1)
+                            # Remove quotes if present
+                            if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
+                                (orig_value.startswith("'") and orig_value.endswith("'"))):
+                                orig_value = orig_value[1:-1]
+                            # Check if this is a class: attribute with only a variable (no mixed content)
+                            # These should use FilterExpression to get boolean values
+                            if attr.startswith('class:') and orig_value.strip().startswith('{{') and orig_value.strip().endswith('}}'):
+                                # This is a pure variable expression, use FilterExpression
+                                advanced_attrs[attr] = parser.compile_filter(value or "True")
+                            else:
+                                # Use TemplateAttributeExpression for mixed content
+                                advanced_attrs[attr] = TemplateAttributeExpression(orig_value)
+                        else:
+                            advanced_attrs[attr] = parser.compile_filter(value or "True")
+                    else:
+                        advanced_attrs[attr] = parser.compile_filter(value or "True")
                 else:
                     attr, value = bit, ""
-                advanced_attrs[attr] = parser.compile_filter(value or "True")
+                    advanced_attrs[attr] = parser.compile_filter(value or "True")
             elif match := re.match(r"^{ *(\w+) *}$", bit):
                 # Shorthand, e.g. {attr} is equivalent to attr=attr.
                 attr = match.group(1)
@@ -132,10 +188,22 @@ def includecontents(parser, token):
                 attr, var = match.groups()
                 advanced_attrs[attr] = parser.compile_filter(var)
             else:
-                # In tag mode, attributes without a value are treated as boolean flags.
-                if "=" not in bit:
-                    bit = f"{bit}=True"
-                new_bits.append(bit)
+                # Check if this attribute had template syntax in the original
+                original_bit = bit_to_original.get(bit, bit)
+                if original_bit and "=" in original_bit and ('{{' in original_bit or '{%' in original_bit):
+                    # This is a regular attribute with template syntax
+                    attr, orig_value = original_bit.split('=', 1)
+                    # Remove quotes if present
+                    if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
+                        (orig_value.startswith("'") and orig_value.endswith("'"))):
+                        orig_value = orig_value[1:-1]
+                    # Use TemplateAttributeExpression for mixed content
+                    advanced_attrs[attr] = TemplateAttributeExpression(orig_value)
+                else:
+                    # In tag mode, attributes without a value are treated as boolean flags.
+                    if "=" not in bit:
+                        bit = f"{bit}=True"
+                    new_bits.append(bit)
         if new_bits and new_bits[-1] == "with":
             new_bits = new_bits[:-1]
         token.contents = " ".join(new_bits)

@@ -504,16 +504,42 @@ def test_template_variables_in_component_attributes():
         '''<include:empty-props active="{{ is_active|yesno:'true,false' }}" />'''
     ).render(Context({"is_active": True}))
     assert output == 'active="true"/'
-    
-    # Test 5: Mixed content (does NOT work correctly)
+
+
+def test_mixed_content_in_attributes():
+    """Test mixed static text and template variables in attributes."""
+    # Test 1: Mixed content with variable
     output = Template(
         '''<include:empty-props class="btn {{ variant }}" />'''
     ).render(Context({"variant": "primary"}))
-    # The mixed content doesn't render correctly
-    assert 'variant' in output  # Will contain literal "variant" not "primary"
+    assert output == 'class="btn primary"/'
     
-    # Test 6: Block tags (do NOT work)
+    # Test 2: Mixed content with multiple variables
     output = Template(
-        '<include:empty-props class="btn {% if active %}active{% endif %}" />'
+        '''<include:empty-props data-info="Count: {{ count }} of {{ total }}" />'''
+    ).render(Context({"count": 5, "total": 10}))
+    assert output == 'data-info="Count: 5 of 10"/'
+    
+    # Test 3: Mixed content with filter
+    output = Template(
+        '''<include:empty-props class="btn btn-{{ size|default:'medium' }}" />'''
+    ).render(Context({"size": "large"}))
+    assert output == 'class="btn btn-large"/'
+    
+    # Test 4: URL-like pattern
+    output = Template(
+        '''<include:empty-props href="/products/{{ product_id }}/" />'''
+    ).render(Context({"product_id": 123}))
+    assert output == 'href="/products/123/"/'
+    
+    # Test 5: Block tags in mixed content (should now work!)
+    output = Template(
+        '''<include:empty-props class="btn {% if active %}active{% endif %}" />'''
     ).render(Context({"active": True}))
-    assert '{% if' in output  # Block tag remains unprocessed
+    assert output == 'class="btn active"/'
+    
+    # Test 6: For loop in attribute
+    output = Template(
+        '''<include:empty-props data-items="{% for i in items %}{{ i }}{% if not forloop.last %},{% endif %}{% endfor %}" />'''
+    ).render(Context({"items": ["a", "b", "c"]}))
+    assert output == 'data-items="a,b,c"/'
