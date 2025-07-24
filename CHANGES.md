@@ -4,6 +4,14 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 2.4 (2025-07-24)
+
+### Features
+
+- Add support for JavaScript framework event attributes like `@click`, `v-on:`, `x-on:`, and `:` (binding shorthand) in component attributes
+- Add support for mixed content in component attributes, allowing combinations of static text and Django template syntax (e.g., `class="btn {{ variant }}"`, `href="/products/{{ id }}/"`, and even template tags like `class="{% if active %}active{% endif %}"`).
+
+
 # Version 2.3 (2025-07-23)
 
 ### Features

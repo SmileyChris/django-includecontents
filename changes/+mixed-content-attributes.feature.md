@@ -1,1 +1,0 @@
-Add support for mixed content in component attributes, allowing combinations of static text and Django template syntax (e.g., `class="btn {{ variant }}"`, `href="/products/{{ id }}/"`, and even template tags like `class="{% if active %}active{% endif %}"`).
