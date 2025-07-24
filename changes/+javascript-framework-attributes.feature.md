@@ -1,0 +1,1 @@
+Add support for JavaScript framework event attributes like `@click`, `v-on:`, `x-on:`, and `:` (binding shorthand) in component attributes

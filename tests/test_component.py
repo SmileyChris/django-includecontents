@@ -438,3 +438,82 @@ def test_class_prepend():
   <div></div>
 </section>"""
     )
+
+
+def test_javascript_event_attributes():
+    """Test various JavaScript framework event attributes like @click, v-on:, x-on:, and :bind."""
+    # Test single @click attribute
+    output = Template(
+        """<include:empty-props @click="handleClick()" />"""
+    ).render(Context())
+    assert output == '@click="handleClick()"/'
+    
+    # Test Vue.js v-on: syntax with colons (needs special handling)
+    output = Template(
+        """<include:empty-props v-on:submit="onSubmit" />"""
+    ).render(Context())
+    assert output == 'v-on:submit="onSubmit"/'
+    
+    # Test Alpine.js x-on: syntax
+    output = Template(
+        """<include:empty-props x-on:click="open = !open" />"""
+    ).render(Context())
+    assert output == 'x-on:click="open = !open"/'
+    
+    # Test Alpine.js :bind shorthand
+    output = Template(
+        """<include:empty-props :class="{ 'active': isActive }" />"""
+    ).render(Context())
+    assert output == ':class="{ \'active\': isActive }"/'
+    
+    # Test combined attributes
+    output = Template(
+        """<include:empty-props @click="handleClick()" :disabled="isDisabled" v-model="value" />"""
+    ).render(Context())
+    assert output == '@click="handleClick()" :disabled="isDisabled" v-model="value"/'
+    
+    # Test with inner attributes
+    output = Template(
+        """<include:empty-props @click="outerClick()" inner.@click="innerClick()" inner.:disabled="isDisabled" />"""
+    ).render(Context())
+    assert output == '@click="outerClick()"/@click="innerClick()" :disabled="isDisabled"'
+
+
+def test_template_variables_in_component_attributes():
+    """Test template variable support in component attributes."""
+    # Test 1: Simple variable (works)
+    output = Template(
+        '<include:empty-props data-id="{{ myid }}" />'
+    ).render(Context({"myid": "123"}))
+    assert output == 'data-id="123"/'
+    
+    # Test 2: Variable with filter (works)
+    output = Template(
+        '<include:empty-props data-count="{{ count|add:1 }}" />'
+    ).render(Context({"count": 5}))
+    assert output == 'data-count="6"/'
+    
+    # Test 3: Filter with single quotes (works when entire value is template var)
+    output = Template(
+        '''<include:empty-props title="{{ name|default:'Untitled' }}" />'''
+    ).render(Context({"name": ""}))
+    assert output == 'title="Untitled"/'
+    
+    # Test 4: yesno filter (works when entire value is template var)
+    output = Template(
+        '''<include:empty-props active="{{ is_active|yesno:'true,false' }}" />'''
+    ).render(Context({"is_active": True}))
+    assert output == 'active="true"/'
+    
+    # Test 5: Mixed content (does NOT work correctly)
+    output = Template(
+        '''<include:empty-props class="btn {{ variant }}" />'''
+    ).render(Context({"variant": "primary"}))
+    # The mixed content doesn't render correctly
+    assert 'variant' in output  # Will contain literal "variant" not "primary"
+    
+    # Test 6: Block tags (do NOT work)
+    output = Template(
+        '<include:empty-props class="btn {% if active %}active{% endif %}" />'
+    ).render(Context({"active": True}))
+    assert '{% if' in output  # Block tag remains unprocessed

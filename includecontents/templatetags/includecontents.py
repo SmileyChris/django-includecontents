@@ -102,12 +102,22 @@ def includecontents(parser, token):
         for i, bit in enumerate(bits):
             if i < 3:
                 new_bits.append(bit)
-            elif match := re.match(r"(^\w+[.:][-.\w:]+)(?:=(.+))?$", bit):
+            elif bit.startswith("@") or (bit.startswith(":") and not bit.startswith("class:")) or bit.startswith("v-") or bit.startswith("x-"):
+                # JavaScript framework attributes (Vue, Alpine.js) can't be handled by the standard include.
+                # This includes: @ (Vue events), : (Vue/Alpine bind), v- (Vue directives), x- (Alpine directives)
+                # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
+                if "=" in bit:
+                    attr, value = bit.split("=", 1)
+                else:
+                    attr, value = bit, ""
+                advanced_attrs[attr] = parser.compile_filter(value or "True")
+            elif match := re.match(r"(^\w+\.[-.@:\w]+)(?:=(.+))?$", bit):
                 # Nested attrs can't be handled by the standard include tag.
                 attr, value = match.groups()
                 advanced_attrs[attr] = parser.compile_filter(value or "True")
-            elif "-" in bit:
-                # Attributes with a dash also can't be handled by the standard include.
+            elif "-" in bit or ":" in bit:
+                # Attributes with a dash or colon also can't be handled by the standard include.
+                # This includes class:something for conditional classes
                 if "=" in bit:
                     attr, value = bit.split("=", 1)
                 else:
@@ -504,6 +514,12 @@ class Attrs(MutableMapping):
             nested_key, key = key.split(".", 1)
             nested_attrs = self._nested_attrs.setdefault(nested_key, Attrs())
             nested_attrs[key] = value
+            return
+        # Check if this is a JavaScript framework attribute that should be preserved as-is
+        # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
+        if (key.startswith("@") or (key.startswith(":") and not key.startswith("class:")) or key.startswith("v-") or key.startswith("x-")):
+            # Store these attributes without any special processing
+            self._attrs[key] = value
             return
         if ":" in key:
             key, extend = key.split(":", 1)
