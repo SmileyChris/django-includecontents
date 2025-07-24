@@ -305,6 +305,61 @@ HTML boolean attributes are handled correctly:
 <input type="text" required disabled readonly>
 ```
 
+## Optional Attributes
+
+Attributes with `None` values are completely removed from the output. This is useful for conditionally including attributes:
+
+```html
+{# props #}
+<a {% attrs href="#" target="_blank" rel="noopener" %}>
+    {{ contents }}
+</a>
+```
+
+**Usage:**
+```html
+<!-- With all attributes -->
+<include:link href="/about" target="_blank">About</include:link>
+<!-- Output: <a href="/about" target="_blank" rel="noopener">About</a> -->
+
+<!-- Removing attributes with None -->
+<include:link href="/home" target="{{ None }}" rel="{{ None }}">Home</include:link>
+<!-- Output: <a href="/home">Home</a> -->
+```
+
+### Common Patterns for Optional Attributes
+
+```html
+<!-- Using conditional expressions -->
+<include:button 
+    disabled="{{ is_loading or None }}"
+    data-id="{{ object.id if object else None }}"
+>
+    Save
+</include:button>
+
+<!-- Using the yesno filter for boolean attributes -->
+<include:input 
+    required="{{ is_required|yesno:'required,' }}"
+    readonly="{{ is_readonly|yesno:'readonly,' }}"
+/>
+
+<!-- Using template logic -->
+<include:link 
+    href="/profile"
+    target="{% if external %}_blank{% else %}{{ None }}{% endif %}"
+>
+    Profile
+</include:link>
+```
+
+!!! note "Falsy Values"
+    Only `None` removes attributes. Other falsy values are rendered as strings:
+    - `False` renders as `attr="False"`
+    - `""` (empty string) renders as `attr=""`
+    - `0` renders as `attr="0"`
+    - `True` renders as just `attr` (boolean attribute)
+
 ## Advanced Examples
 
 ### Card Component with Full Props System
