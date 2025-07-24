@@ -4,6 +4,13 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 2.4.1 (2025-07-24)
+
+### Bugfixes
+
+- Fix object passing in component attributes to preserve actual objects instead of string representations when using pure variable syntax like `deck="{{ deck }}"`.
+
+
 # Version 2.4 (2025-07-24)
 
 ### Features

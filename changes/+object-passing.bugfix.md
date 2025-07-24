@@ -1,1 +1,0 @@
-Fix object passing in component attributes to preserve actual objects instead of string representations when using pure variable syntax like `deck="{{ deck }}"`.
