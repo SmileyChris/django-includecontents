@@ -35,6 +35,20 @@ class TemplateAttributeExpression:
         return self._template.render(context)
 
 
+def is_pure_variable_expression(value):
+    """
+    Check if a value is a pure variable expression like "{{ variable }}" 
+    with no other content. Returns the variable expression if true, None otherwise.
+    """
+    if not value:
+        return None
+    
+    stripped = value.strip()
+    if stripped.startswith('{{') and stripped.endswith('}}'):
+        return stripped[2:-2].strip()
+    return None
+
+
 @register.filter(name="not")
 def not_filter(value):
     """Template filter to negate a boolean value."""
@@ -164,11 +178,10 @@ def includecontents(parser, token):
                             if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
                                 (orig_value.startswith("'") and orig_value.endswith("'"))):
                                 orig_value = orig_value[1:-1]
-                            # Check if this is a class: attribute with only a variable (no mixed content)
-                            # These should use FilterExpression to get boolean values
-                            if attr.startswith('class:') and orig_value.strip().startswith('{{') and orig_value.strip().endswith('}}'):
-                                # This is a pure variable expression, use FilterExpression
-                                advanced_attrs[attr] = parser.compile_filter(value or "True")
+                            # Check if this is a pure variable expression
+                            if var_expr := is_pure_variable_expression(orig_value):
+                                # Use FilterExpression to preserve the actual object
+                                advanced_attrs[attr] = parser.compile_filter(var_expr)
                             else:
                                 # Use TemplateAttributeExpression for mixed content
                                 advanced_attrs[attr] = TemplateAttributeExpression(orig_value)
@@ -197,8 +210,13 @@ def includecontents(parser, token):
                     if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
                         (orig_value.startswith("'") and orig_value.endswith("'"))):
                         orig_value = orig_value[1:-1]
-                    # Use TemplateAttributeExpression for mixed content
-                    advanced_attrs[attr] = TemplateAttributeExpression(orig_value)
+                    # Check if this is a pure variable expression
+                    if var_expr := is_pure_variable_expression(orig_value):
+                        # Use FilterExpression to preserve the actual object
+                        advanced_attrs[attr] = parser.compile_filter(var_expr)
+                    else:
+                        # Use TemplateAttributeExpression for mixed content
+                        advanced_attrs[attr] = TemplateAttributeExpression(orig_value)
                 else:
                     # In tag mode, attributes without a value are treated as boolean flags.
                     if "=" not in bit:
@@ -568,9 +586,14 @@ class Attrs(MutableMapping):
         self._prepended: dict[str, dict[str, bool]] = {}
 
     def __getattr__(self, key):
-        if key not in self._nested_attrs:
+        # First check if it's a nested attribute group
+        if key in self._nested_attrs:
+            return self._nested_attrs[key]
+        # Then check if it's a regular attribute (converting from camelCase if needed)
+        try:
+            return self[key]
+        except KeyError:
             raise AttributeError(key)
-        return self._nested_attrs[key]
 
     def __getitem__(self, key):
         if key not in self._attrs:

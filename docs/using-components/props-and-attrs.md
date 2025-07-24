@@ -100,6 +100,59 @@ Props with default values are optional:
 </include:article>
 ```
 
+## Data Types and Object Passing
+
+### Passing Objects
+
+When using pure variable syntax, objects are passed directly to components without string conversion:
+
+```html
+<!-- Objects passed directly -->
+<include:user-card user="{{ user_object }}" />
+<include:product-grid products="{{ product_queryset }}" />
+<include:data-viewer data="{{ complex_data }}" />
+```
+
+In the component, you can access object properties and methods:
+
+```html
+{# props user #}
+<div class="user-card">
+    <h3>{{ user.get_full_name }}</h3>
+    <p>{{ user.email }}</p>
+    <ul>
+    {% for group in user.groups.all %}
+        <li>{{ group.name }}</li>
+    {% endfor %}
+    </ul>
+</div>
+```
+
+### String Conversion
+
+Objects are only preserved with pure variable syntax. Any additional content causes string conversion:
+
+```html
+<!-- ✅ Object passed directly -->
+<include:viewer data="{{ my_object }}" />
+
+<!-- ❌ Converted to string -->
+<include:viewer title="Data: {{ my_object }}" />
+<include:viewer info="{{ my_object.id }}: {{ my_object.name }}" />
+```
+
+### Filters with Objects
+
+Filters work correctly with object passing:
+
+```html
+<!-- Object or fallback object -->
+<include:profile user="{{ current_user|default:anonymous_user }}" />
+
+<!-- First item from queryset -->
+<include:featured product="{{ products|first }}" />
+```
+
 ## The `attrs` Variable
 
 Attributes not defined in props are collected in the `attrs` variable, which can be rendered as HTML attributes.

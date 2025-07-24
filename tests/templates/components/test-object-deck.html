@@ -1,0 +1,10 @@
+{# props deck #}
+<div class="card-display">
+    <h3>{{ deck.name }}</h3>
+    <p>Cards: {{ deck.card_count }}</p>
+    <ul>
+    {% for card in deck.cards %}
+        <li>{{ card }}</li>
+    {% endfor %}
+    </ul>
+</div>

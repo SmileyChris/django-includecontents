@@ -255,6 +255,43 @@ Use any Django template tag including `{% if %}`, `{% for %}`, and `{% url %}`:
 </include:link>
 ```
 
+### Object Passing
+
+When using pure variable syntax (just a variable with no other content), objects are passed directly without string conversion:
+
+```html
+<!-- Object is passed directly, not converted to string -->
+<include:user-detail user="{{ current_user }}" />
+<include:product-list products="{{ queryset }}" />
+<include:data-table data="{{ complex_object }}" />
+```
+
+This allows components to access object properties and methods:
+
+```html
+{# props user #}
+<div class="user-detail">
+    <h3>{{ user.get_full_name }}</h3>
+    <p>Email: {{ user.email }}</p>
+    <p>Joined: {{ user.date_joined|date:"F j, Y" }}</p>
+    {% if user.is_staff %}
+        <span class="badge">Staff</span>
+    {% endif %}
+</div>
+```
+
+!!! note "String Conversion"
+    Objects are only preserved with pure variable syntax. Mixed content is always rendered as a string:
+    
+    ```html
+    <!-- Object passed directly -->
+    <include:card data="{{ my_object }}" />
+    
+    <!-- String representation -->
+    <include:card title="Object: {{ my_object }}" />
+    <include:card info="{{ my_object.name }} ({{ my_object.id }})" />
+    ```
+
 ### Complex Example
 
 Here's a real-world example combining multiple template features:
