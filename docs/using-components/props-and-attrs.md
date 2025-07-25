@@ -629,6 +629,24 @@ props:
 </div>
 ```
 
+## Spreading Attributes
+
+You can use the `...attrs` syntax to forward undefined attributes from a parent component to its children:
+
+```html
+{# components/wrapper.html #}
+{# props title #}
+<div class="wrapper">
+    <h2>{{ title }}</h2>
+    <!-- Forward all undefined attrs to the child -->
+    <include:card ...attrs>
+        {{ contents }}
+    </include:card>
+</div>
+```
+
+This is particularly useful for creating flexible wrapper components. For detailed information about attribute spreading, see [Advanced Props - Attribute Spreading](../building-components/advanced-props.md#attribute-spreading).
+
 ## Next Steps
 
 - Learn about [Advanced Props](../building-components/advanced-props.md) for enum validation and complex prop handling

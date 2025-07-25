@@ -150,6 +150,10 @@ def includecontents(parser, token):
         for i, bit in enumerate(bits):
             if i < 3:
                 new_bits.append(bit)
+            elif bit.startswith("..."):
+                # Handle spread syntax - strip the ... prefix
+                spread_value = bit[3:]
+                advanced_attrs["..."] = parser.compile_filter(spread_value)
             elif bit.startswith("@") or (bit.startswith(":") and not bit.startswith("class:")) or bit.startswith("v-") or bit.startswith("x-"):
                 # JavaScript framework attributes (Vue, Alpine.js) can't be handled by the standard include.
                 # This includes: @ (Vue events), : (Vue/Alpine bind), v- (Vue directives), x- (Alpine directives)
@@ -347,8 +351,20 @@ class IncludeContentsNode(template.Node):
         component_props = self.get_component_props(template)
         if component_props is not None:
             undefined_attrs = Attrs()
+        
+        # First, handle spread syntax
+        spread_attrs = None
         for key, value in self.all_attrs():
-            if component_props is None:
+            if key == "...":
+                # Resolve the spread expression (e.g., attrs or attrs.button)
+                spread_attrs = value.resolve(context)
+                break
+        
+        for key, value in self.all_attrs():
+            if key == "...":
+                # Skip the spread syntax itself
+                continue
+            elif component_props is None:
                 if "." in key or ":" in key:
                     raise TemplateSyntaxError(
                         f"Advanced attribute {key!r} only allowed if component template"
@@ -395,6 +411,14 @@ class IncludeContentsNode(template.Node):
                     undefined_attrs[key] = value.resolve(context)
 
         if component_props is not None:
+            # If we have spread attrs, merge them into undefined_attrs
+            if spread_attrs and isinstance(spread_attrs, Attrs):
+                # Merge spread attrs into undefined_attrs
+                for key, value in spread_attrs.all_attrs():
+                    # Only add if not already defined (local attrs take precedence)
+                    if key not in undefined_attrs:
+                        undefined_attrs[key] = value
+            
             new_context["attrs"] = undefined_attrs
 
             # Put default values in the new context.
@@ -740,7 +764,7 @@ def attrs(parser: Parser, token):
 
     fallbacks = {}
     for bit in bits:
-        match = re.match(r"^(\w+(?::[-\w]+)?)(?:=(.+?))?$", bit)
+        match = re.match(r"^([\w.-]+(?::[-\w]+)?)(?:=(.+?))?$", bit)
         if not match:
             raise TemplateSyntaxError(f"Invalid {tag_name!r} tag attribute: {bit!r}")
         key, value = match.groups()
