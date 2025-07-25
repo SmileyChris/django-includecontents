@@ -4,6 +4,13 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 2.5 (2025-07-25)
+
+### Features
+
+- Add `...attrs` spread syntax to forward undefined attributes from parent to child components
+
+
 # Version 2.4.1 (2025-07-24)
 
 ### Bugfixes

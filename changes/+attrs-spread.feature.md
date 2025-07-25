@@ -1,1 +1,0 @@
-Add `...attrs` spread syntax to forward undefined attributes from parent to child components
