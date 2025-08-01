@@ -625,16 +625,17 @@ class Attrs(MutableMapping):
         return self._attrs[key]
 
     def __setitem__(self, key, value):
+        # Check if this is a JavaScript framework attribute that should be preserved as-is
+        # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
+        # This check must come BEFORE dot splitting to handle event modifiers like @click.stop
+        if (key.startswith("@") or (key.startswith(":") and not key.startswith("class:")) or key.startswith("v-") or key.startswith("x-")):
+            # Store these attributes without any special processing
+            self._attrs[key] = value
+            return
         if "." in key:
             nested_key, key = key.split(".", 1)
             nested_attrs = self._nested_attrs.setdefault(nested_key, Attrs())
             nested_attrs[key] = value
-            return
-        # Check if this is a JavaScript framework attribute that should be preserved as-is
-        # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
-        if (key.startswith("@") or (key.startswith(":") and not key.startswith("class:")) or key.startswith("v-") or key.startswith("x-")):
-            # Store these attributes without any special processing
-            self._attrs[key] = value
             return
         if ":" in key:
             key, extend = key.split(":", 1)

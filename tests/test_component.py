@@ -477,6 +477,24 @@ def test_javascript_event_attributes():
         """<include:empty-props @click="outerClick()" inner.@click="innerClick()" inner.:disabled="isDisabled" />"""
     ).render(Context())
     assert output == '@click="outerClick()"/@click="innerClick()" :disabled="isDisabled"'
+    
+    # Test Vue.js event modifiers like @click.stop
+    output = Template(
+        """<include:empty-props @click.stop="handleClick()" />"""
+    ).render(Context())
+    assert output == '@click.stop="handleClick()"/'
+    
+    # Test multiple Vue.js event modifiers
+    output = Template(
+        """<include:empty-props @click.stop.prevent="handleClick()" />"""
+    ).render(Context())
+    assert output == '@click.stop.prevent="handleClick()"/'
+    
+    # Test Vue.js keyup modifiers
+    output = Template(
+        """<include:empty-props @keyup.enter="handleEnter()" />"""
+    ).render(Context())
+    assert output == '@keyup.enter="handleEnter()"/'
 
 
 def test_template_variables_in_component_attributes():
