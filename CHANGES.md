@@ -4,6 +4,13 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 2.5.1 (2025-08-01)
+
+### Bugfixes
+
+- Fix JavaScript event modifiers like @click.stop not being passed to child components
+
+
 # Version 2.5 (2025-07-25)
 
 ### Features

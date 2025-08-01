@@ -1,1 +1,0 @@
-Fix JavaScript event modifiers like @click.stop not being passed to child components
