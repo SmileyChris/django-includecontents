@@ -353,14 +353,20 @@ Components have access to these automatic context variables:
 - `contents` - Main content block
 - `contents.block_name` - Named content blocks  
 - `attrs` - Undefined attributes object
-- `csrf_token` - CSRF token (when available in parent context)
 - Any explicitly passed props/attributes
+
+**Context processor variables are automatically available:**
+- `request` - HTTP request object (from `context_processors.request`)
+- `user` - Current user (from `context_processors.auth`)
+- `csrf_token` - CSRF token (from Django's CSRF middleware)
+- Any custom context processor variables
 
 ### Context Isolation
 
 Components run in isolated context:
 - Parent template variables are NOT inherited
 - Only explicitly passed variables are available
+- **Exception:** Context processor variables are always available
 - Ensures predictable, reusable components
 
 ## Error Handling

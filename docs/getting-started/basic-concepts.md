@@ -85,7 +85,11 @@ Unlike Django's standard `{% include %}` tag, components run in an **isolated co
 
 - ✅ **Only explicitly passed props are available** in the component
 - ❌ **Parent template variables are not automatically inherited**
+- ✅ **Django context processors remain available** (like `request`, `user`, `csrf_token`)
 - ✅ **Components are predictable and self-contained**
+
+!!! note "Context Processors Exception"
+    While parent template variables are isolated, **context processor variables** are automatically available in all components. This includes Django's built-in processors (`request`, `user`, `csrf_token`, etc.) and any custom context processors you've configured.
 
 ### Example
 
@@ -101,9 +105,10 @@ Unlike Django's standard `{% include %}` tag, components run in an **isolated co
 **Component (templates/components/greeting.html):**
 ```html
 <div class="greeting">
-    <h1>Hello, {{ name }}!</h1>  <!-- ✅ Available: passed as prop -->
-    <p>{{ contents }}</p>        <!-- ✅ Available: component content -->
-    <p>{{ user_name }}</p>       <!-- ❌ Empty: not passed explicitly -->
+    <h1>Hello, {{ name }}!</h1>     <!-- ✅ Available: passed as prop -->
+    <p>{{ contents }}</p>           <!-- ✅ Available: component content -->
+    <p>{{ user_name }}</p>          <!-- ❌ Empty: not passed explicitly -->
+    <p>User: {{ user.username }}</p> <!-- ✅ Available: from context processor -->
 </div>
 ```
 

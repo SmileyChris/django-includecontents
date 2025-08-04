@@ -45,4 +45,16 @@ class ContextProcessorTest(TestCase):
         # It should also render the content we passed
         self.assertIn("<p>Content here</p>", content)
 
+    def test_context_processor_in_nested_components(self):
+        """Test that context processors are available in nested components."""
+        content = render_to_string(
+            'test_nested_context_processor.html',
+            context={},
+            request=self.client.request().wsgi_request
+        )
+        
+        # Both outer and inner components should have access to processor_var
+        self.assertIn("Outer: from_processor", content)
+        self.assertIn("Inner: from_processor", content)
+
 

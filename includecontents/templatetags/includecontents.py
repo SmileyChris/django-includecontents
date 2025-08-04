@@ -309,6 +309,9 @@ class IncludeContentsNode(template.Node):
             if processors_index is not None and hasattr(context, "dicts"):
                 # Get the already-computed processor values from Django's RequestContext
                 processor_data = context.dicts[processors_index].copy()
+            elif hasattr(context, "_processor_data"):
+                # If this is a nested component, get processor data from the parent context
+                processor_data = context._processor_data.copy()
 
             # Ensure request and csrf_token are available (if not already provided by processors)
             if request := context.get("request"):
@@ -319,6 +322,8 @@ class IncludeContentsNode(template.Node):
             # Create new isolated context and inject all processor data at once
             new_context = context.new()
             new_context.update(processor_data)
+            # Store processor data for nested components to access
+            new_context._processor_data = processor_data
         else:
             new_context = context
         with new_context.push():

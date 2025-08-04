@@ -1,0 +1,1 @@
+Fix context processor variables not being available in nested HTML components
