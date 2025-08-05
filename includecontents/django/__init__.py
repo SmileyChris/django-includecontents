@@ -14,12 +14,5 @@ class DjangoTemplates(django.template.backends.django.DjangoTemplates):
         options.setdefault("file_charset", "utf-8")
         super().__init__(params)
         options["libraries"] = self.engine.libraries
-        # Add the includecontents template tag to the builtins list.
-        if "builtins" in options:
-            builtins = options["builtins"].copy()
-        else:
-            builtins = []
-        if "includecontents.templatetags.includecontents" not in builtins:
-            builtins = ["includecontents.templatetags.includecontents"] + builtins
-        options["builtins"] = builtins
+        # The Engine class handles all builtin template tag registration
         self.engine = Engine(self.dirs, self.app_dirs, **options)

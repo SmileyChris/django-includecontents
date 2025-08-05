@@ -17,6 +17,7 @@ class Engine(django.template.Engine):
         context_processors=None,
         debug=False,
         loaders=None,
+        builtins=None,
         *args,
         **kwargs,
     ):
@@ -30,12 +31,31 @@ class Engine(django.template.Engine):
                 raise ImproperlyConfigured(
                     "app_dirs must not be set when loaders is defined."
                 )
+
+        # Add all includecontents template tags to builtins so they're automatically available
+        if builtins is None:
+            builtins = []
+        else:
+            builtins = list(builtins)
+
+        # Define all includecontents builtin template tag modules in priority order
+        includecontents_builtins = [
+            "includecontents.templatetags.includecontents",  # Core tags: includecontents, contents, wrapif, attrs
+            "includecontents.icons.templatetags.icons",  # Icon tags: icon, icons_inline, icon_sprite_url
+        ]
+
+        # Add each builtin module if not already present (prepend to maintain priority)
+        for builtin_module in reversed(includecontents_builtins):
+            if builtin_module not in builtins:
+                builtins = [builtin_module] + builtins
+
         super().__init__(
             dirs=dirs,
             app_dirs=False,
             context_processors=context_processors,
             debug=debug,
             loaders=loaders,
+            builtins=builtins,
             *args,
             **kwargs,
         )
