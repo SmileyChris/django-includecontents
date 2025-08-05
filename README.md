@@ -11,6 +11,7 @@ Component-like Django template tags with HTML syntax support.
 - **🎯 Props System**: Define required and optional props with validation
 - **🎨 Advanced Styling**: Conditional classes, extended classes, and CSS utilities
 - **🔀 Conditional Wrapping**: Clean conditional HTML wrapper syntax with `{% wrapif %}`
+- **🎭 Icon System**: SVG sprite generation from Iconify icons and local SVG files (`<icon:home>`)
 
 ## Quick Start
 
@@ -121,6 +122,33 @@ If you prefer traditional Django template syntax:
 <include:button variant="primary" {disabled} class:loading="{{ is_processing }}">
     {% if is_processing %}Processing...{% else %}Submit{% endif %}  
 </include:button>
+```
+
+### Icons
+
+```python
+# settings.py
+STATICFILES_FINDERS = [
+    'includecontents.icons.finders.IconSpriteFinder',  # Must be first for icons
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+INCLUDECONTENTS_ICONS = {
+    'icons': [
+        'mdi:home',        # Use as <icon:home>
+        'tabler:user',     # Use as <icon:user>
+        'icons/logo.svg'   # Use as <icon:logo>
+    ]
+}
+```
+
+> **Note:** Icon names auto-generate from config: `'mdi:home'` → `<icon:home>`, `'icons/logo.svg'` → `<icon:logo>`
+
+```html
+<icon:home class="w-6 h-6" />
+<icon:user class="avatar" use.role="img" />
+<icon:logo class="brand" />
 ```
 
 ## Requirements

@@ -104,6 +104,43 @@ Both should output:
 <div>Hello, World! Welcome to Django IncludeContents!</div>
 ```
 
+## Icons Setup (Optional)
+
+If you plan to use the icon system, add the icon finder to your static files configuration:
+
+```python
+# settings.py
+STATICFILES_FINDERS = [
+    'includecontents.icons.finders.IconSpriteFinder',  # Must be first for icons
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+```
+
+!!! important "Order Matters"
+    The `IconSpriteFinder` must be **first** in the list to prevent source SVG files from being served twice.
+
+Then configure your icons:
+
+```python
+# settings.py
+INCLUDECONTENTS_ICONS = {
+    'icons': [
+        'mdi:home',
+        'tabler:user',
+        # ... more icons
+    ]
+}
+```
+
+Now you can use icons in your templates:
+
+```html
+<icon:home class="w-6 h-6" />
+```
+
+For complete icon documentation, see the [Icons Guide](../icons.md).
+
 ## Development Installation
 
 If you want to contribute to the project or run the tests:

@@ -85,6 +85,91 @@ Render component attributes with defaults and class handling.
 - **Conditional classes**: `{% attrs class:active=is_active %}`
 - **Grouped attributes**: `{% attrs.group attr=value %}`
 
+### `{% icon %}`
+
+Render an icon from the configured icon sprite.
+
+**Syntax:**
+```django
+{% icon icon_name [attr=value] [use.attr=value] [as variable_name] %}
+```
+
+**Parameters:**
+- `icon_name`: Name of the icon (string or variable)
+- `attr=value`: Attributes for the SVG element
+- `use.attr=value`: Attributes for the USE element (prefixed with `use.`)
+- `as variable_name`: Store the SVG in a context variable instead of rendering
+
+**Example:**
+```django
+{% load icons %}
+{% icon "home" class="w-6 h-6" %}
+{% icon "user" class="avatar" use.role="img" use.aria-label="Profile" %}
+
+{# Store in variable for conditional rendering #}
+{% icon "optional-icon" class="w-4 h-4" as my_icon %}
+{% if my_icon %}{{ my_icon }}{% endif %}
+```
+
+**Generated output:**
+```html
+<svg class="w-6 h-6"><use href="#home"></use></svg>
+<svg class="avatar"><use role="img" aria-label="Profile" href="#user"></use></svg>
+```
+
+**Behavior:**
+- Invalid/non-existent icons render nothing (empty string)
+- With `as variable`: invalid icons store empty string in the variable
+
+### `{% icons_inline %}`
+
+Output the entire SVG sprite sheet inline in the page.
+
+**Syntax:**
+```django
+{% icons_inline %}
+```
+
+**Usage:**
+- Use in development mode for immediate icon updates
+- Place before closing `</body>` tag for best performance
+- Not needed in production when sprites are served as static files
+
+**Example:**
+```html
+{% load icons %}
+<!DOCTYPE html>
+<html>
+<body>
+    <!-- Page content -->
+    {% icons_inline %}
+</body>
+</html>
+```
+
+
+### `{% icon_sprite_url %}`
+
+Get the URL to the generated sprite file.
+
+**Syntax:**
+```django
+{% icon_sprite_url %}
+```
+
+**Usage:**
+- Returns the URL in production mode when sprites are on disk
+- Returns empty string in development mode
+- Useful for preloading or custom sprite loading
+
+**Example:**
+```html
+{% icon_sprite_url as sprite_url %}
+{% if sprite_url %}
+    <link rel="preload" href="{{ sprite_url }}" as="image" type="image/svg+xml">
+{% endif %}
+```
+
 ### Template Filters
 
 #### `|not`
@@ -129,6 +214,37 @@ Components are discovered from `templates/components/` directory:
 | `components/card.html` | `<include:card>` |
 | `components/forms/field.html` | `<include:forms:field>` |
 | `components/ui/button.html` | `<include:ui:button>` |
+
+### Icon Tags
+
+**Syntax:**
+```html
+<icon:icon-name [attributes] [use.attributes] />
+```
+
+**Parameters:**
+- `icon-name`: Name of the configured icon
+- `attributes`: Attributes for the SVG element
+- `use.attributes`: Attributes for the USE element (prefixed with `use.`)
+
+**Examples:**
+```html
+<!-- Basic icon -->
+<icon:home class="w-6 h-6" />
+
+<!-- With accessibility attributes -->
+<icon:user class="avatar" use.role="img" use.aria-label="User profile" />
+
+<!-- With dynamic classes -->
+<icon:star class="icon" class:filled="{{ is_favorite }}" />
+```
+
+**Generated output:**
+```html
+<svg class="w-6 h-6"><use href="#mdi-home"></use></svg>
+<svg class="avatar"><use role="img" aria-label="User profile" href="#tabler-user"></use></svg>
+<svg class="icon filled"><use href="#lucide-star"></use></svg>
+```
 
 ### Attribute Syntax
 
@@ -301,8 +417,9 @@ When using the custom template engine, these tags are automatically available:
 - `wrapif`, `wrapelif`, `wrapelse`
 - `attrs`
 - `not` filter
+- `icon`, `icons_inline`, `icon_sprite_url` (icon tags)
 
-No need to use `{% load includecontents %}`.
+No need to use `{% load includecontents %}` or `{% load icons %}`.
 
 ## Configuration
 
@@ -343,6 +460,49 @@ Then load tags in templates:
 ```django
 {% load includecontents %}
 ```
+
+### Icons Configuration
+
+Configure the icons system in your settings:
+
+```python
+INCLUDECONTENTS_ICONS = {
+    # Required: List of icons to include
+    'icons': [
+        'mdi:home',                      # Iconify icons
+        'tabler:user',
+        ('custom-name', 'mdi:house'),    # Custom names with tuples
+        'icons/logo.svg',                # Local SVG files from static files
+        ('brand', 'logos/company.svg'),
+    ],
+    
+    # Optional: Development mode (default: DEBUG)
+    'dev_mode': True,
+    
+    # Optional: Cache timeout in seconds (default: 3600)
+    'cache_timeout': 3600,
+    
+    # Optional: Iconify API base URL (default: 'https://api.iconify.design')
+    'api_base': 'https://api.iconify.design',
+    
+    # Optional: Storage backend (default: DjangoFileIconStorage)
+    'storage': 'includecontents.icons.storages.DjangoFileIconStorage',
+    'storage_options': {
+        'location': 'icons/',  # Path within static storage
+    },
+}
+```
+
+**Icon sources:**
+- **Iconify icons**: Use prefix notation like `mdi:home`, `tabler:calendar`
+- **Local SVG files**: Place in static directories, reference by path
+- **Custom names**: Use tuples for custom component names
+
+**Storage backends:**
+- `DjangoFileIconStorage`: Uses Django's static file storage (default)
+- `MemoryIconStorage`: In-memory storage for development
+- `FileSystemIconStorage`: Direct file system storage
+- Custom backends by extending `BaseIconStorage`
 
 ## Context Variables
 
