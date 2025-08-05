@@ -14,24 +14,24 @@ def process_component_with_template_tags(token_string, position, lineno):
     self_closing = content.endswith("/")
     if self_closing:
         content = content[:-1].strip()
-    
+
     bits = list(smart_split(content))
     tag_name = bits.pop(0)
-    
+
     # Check if any attributes contain template tags
     has_template_tags = False
     processed_attrs = []
-    
+
     for attr in bits:
-        if '=' in attr and ('"' in attr or "'" in attr):
+        if "=" in attr and ('"' in attr or "'" in attr):
             # Check for template tags in this attribute
-            attr_name, quoted_value = attr.split('=', 1)
-            if ((quoted_value.startswith('"') and quoted_value.endswith('"')) or 
-                (quoted_value.startswith("'") and quoted_value.endswith("'"))):
-                
+            attr_name, quoted_value = attr.split("=", 1)
+            if (quoted_value.startswith('"') and quoted_value.endswith('"')) or (
+                quoted_value.startswith("'") and quoted_value.endswith("'")
+            ):
                 inner_content = quoted_value[1:-1]
                 template_tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#})", re.DOTALL)
-                
+
                 if template_tag_re.search(inner_content):
                     has_template_tags = True
                     # For now, keep the attribute as-is - Django will process the template tags
@@ -45,7 +45,7 @@ def process_component_with_template_tags(token_string, position, lineno):
             if group := re.match(r"([-:.\w]+)=\{(.+)\}", attr):
                 attr = f"{group[1]}={group[2]}"
             processed_attrs.append(attr)
-    
+
     # Build the includecontents tag
     content_parts = [
         "includecontents",
@@ -55,7 +55,44 @@ def process_component_with_template_tags(token_string, position, lineno):
     if processed_attrs:
         content_parts.append("with")
         content_parts.extend(processed_attrs)
-    
+
+    return django.template.base.Token(
+        django.template.base.TokenType.BLOCK,
+        " ".join(content_parts),
+        position,
+        lineno,
+    )
+
+
+def process_icon_tag(token_string, position, lineno):
+    """
+    Process an icon tag and convert it to an icon template tag.
+    Returns a token for the icon template tag.
+    """
+    # Parse the icon tag: <icon:name attr=value use.class="value" />
+    content = token_string[1:-1].strip()
+    if content.endswith("/"):
+        content = content[:-1].strip()
+
+    bits = list(smart_split(content))
+
+    if not bits or not bits[0].startswith("icon:"):
+        raise django.template.base.TemplateSyntaxError(
+            f"Invalid icon tag: {token_string}"
+        )
+
+    # Extract icon name (remove 'icon:' prefix)
+    icon_name = bits[0][5:]
+
+    # Build the icon template tag
+    content_parts = ["icon", f'"{icon_name}"']
+
+    for attr in bits[1:]:
+        # Handle deprecated {} syntax
+        if group := re.match(r"([-:.\w]+)=\{(.+)\}", attr):
+            attr = f"{group[1]}={group[2]}"
+        content_parts.append(attr)
+
     return django.template.base.Token(
         django.template.base.TokenType.BLOCK,
         " ".join(content_parts),
@@ -99,7 +136,8 @@ class Template(django.template.base.Template):
 
 
 tag_re = re.compile(
-    r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:(?:\"[^\"]*\"|'[^']*'|[^>])*?>|</?content:[-\w]+\s*>)", re.DOTALL
+    r"({%.*?%}|{{.*?}}|{#.*?#}|</?include:(?:\"[^\"]*\"|'[^']*'|[^>])*?>|</?content:[-\w]+\s*>|<icon:[-\w:]+(?:\s[^>]*)?\s*/>)",
+    re.DOTALL,
 )
 
 
@@ -147,10 +185,10 @@ class Lexer(django.template.base.Lexer):
         elif in_tag and token_string.startswith("</include:"):
             # Normalize closing tags by removing any whitespace before the closing >
             # Handle cases like "</include:item\n>" -> "</include:item>"
-            if token_string.endswith('>'):
+            if token_string.endswith(">"):
                 # Find the position of > and remove any whitespace before it
                 content = token_string[:-1].rstrip()  # Everything except the >
-                cleaned = content + '>'
+                cleaned = content + ">"
             else:
                 cleaned = token_string
             return django.template.base.Token(
@@ -161,6 +199,8 @@ class Lexer(django.template.base.Lexer):
             )
         elif in_tag and token_string.startswith("<include:"):
             return process_component_with_template_tags(token_string, position, lineno)
+        elif in_tag and token_string.startswith("<icon:"):
+            return process_icon_tag(token_string, position, lineno)
         return super().create_token(token_string, position, lineno, in_tag)
 
 
