@@ -401,19 +401,25 @@ def test_get_icon_names_from_definitions():
 
 
 def test_memory_cache_operations():
-    """Test memory cache operations with IconMemoryCache class."""
-    # Test the IconMemoryCache class directly
-    cache = builder.IconMemoryCache()
+    """Test sprite cache operations using Django cache."""
+    from includecontents.icons.cache import sprite_cache
+    
     test_hash = 'test123'
     test_content = '<svg>test</svg>'
     
+    # Clear any existing cache first
+    sprite_cache.delete(test_hash)
+    
     # Should not exist initially
-    assert cache.get(test_hash) is None
+    assert sprite_cache.get(test_hash) is None
     
     # Store and retrieve
-    cache.set(test_hash, test_content)
-    result = cache.get(test_hash)
+    sprite_cache.set(test_hash, test_content)
+    result = sprite_cache.get(test_hash)
     assert result == test_content
+    
+    # Clean up
+    sprite_cache.delete(test_hash)
 
 
 def test_sprite_filename_generation():

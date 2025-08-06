@@ -100,8 +100,9 @@ def test_render_local_svg_icon():
 def test_local_svg_with_invalid_path_fails():
     """Test that referencing non-existent local SVG files fails loudly."""
     import pytest
+    from includecontents.icons.exceptions import IconNotFoundError
     
-    with pytest.raises(FileNotFoundError) as exc_info:
+    with pytest.raises(IconNotFoundError) as exc_info:
         load_local_svg('icons/does-not-exist.svg')
     
     assert 'SVG file not found' in str(exc_info.value)
@@ -113,6 +114,7 @@ def test_local_svg_with_invalid_content_fails():
     import pytest
     from pathlib import Path
     import tempfile
+    from includecontents.icons.exceptions import IconBuildError
     
     # Create a temporary invalid SVG file
     with tempfile.NamedTemporaryFile(mode='w', suffix='.svg', dir='tests/static/icons', delete=False) as f:
@@ -121,7 +123,7 @@ def test_local_svg_with_invalid_content_fails():
     
     try:
         svg_filename = Path(temp_path).name
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(IconBuildError) as exc_info:
             load_local_svg(f'icons/{svg_filename}')
         
         assert 'Invalid SVG content' in str(exc_info.value)

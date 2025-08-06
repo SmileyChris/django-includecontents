@@ -14,7 +14,6 @@ from includecontents.icons.exceptions import (
     IconNotFoundError,
     IconBuildError,
     IconAPIError,
-    IconOptimizationError,
 )
 
 
@@ -85,31 +84,3 @@ def test_collectstatic_fails_on_sprite_error():
         
         assert "Invalid INCLUDECONTENTS_ICONS configuration" in str(exc_info.value)
 
-
-@patch('includecontents.icons.builder.subprocess.run')
-def test_optimization_command_failure_fails_loudly(mock_run):
-    """Test that SVG optimization command failures cause loud failures."""
-    # Mock a failed optimization command
-    mock_run.return_value.returncode = 1
-    mock_run.return_value.stdout = "Optimization failed"
-    mock_run.return_value.stderr = "Invalid SVG"
-    
-    with override_settings(INCLUDECONTENTS_ICONS={
-        'icons': [],  # Empty icons is valid
-        'optimize_command': 'fake-optimizer --input={input} --output={output}',
-    }):
-        # Empty icons with optimization should still try to optimize the empty sprite
-        # Since we have no icons, this won't actually run, so let's test with a direct build
-        from includecontents.icons.builder import build_sprite
-        
-        with patch('includecontents.icons.builder.fetch_iconify_icons') as mock_fetch:
-            mock_fetch.return_value = {'home': {'body': '<path/>', 'viewBox': '0 0 24 24'}}
-            
-            with pytest.raises(IconOptimizationError) as exc_info:
-                build_sprite(
-                    ['mdi:home'],
-                    optimize_command='fake-optimizer --input={input} --output={output}'
-                )
-            
-            assert "Optimization command failed" in str(exc_info.value)
-            assert "Invalid SVG" in str(exc_info.value)

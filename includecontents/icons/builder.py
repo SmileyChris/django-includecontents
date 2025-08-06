@@ -7,7 +7,6 @@ import inspect
 import json
 import os
 import re
-import subprocess
 import tempfile
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
@@ -17,53 +16,25 @@ from urllib.request import urlopen
 from xml.etree import ElementTree as ET
 
 from django.conf import settings
-from django.contrib.staticfiles.finders import get_finder
 
 from .exceptions import (
     IconNotFoundError,
     IconBuildError,
     IconConfigurationError,
     IconAPIError,
-    IconOptimizationError,
 )
 
 
-class IconMemoryCache:
-    """
-    Simple in-memory cache for icon sprites.
-    Used for fast access during development and request handling.
-    """
-
-    def __init__(self):
-        self._cache = {}
-
-    def get(self, key: str) -> Optional[str]:
-        """Get cached sprite content by hash."""
-        return self._cache.get(key)
-
-    def set(self, key: str, content: str) -> None:
-        """Cache sprite content by hash."""
-        self._cache[key] = content
-
-    def clear(self) -> None:
-        """Clear all cached content."""
-        self._cache.clear()
-
-    def has(self, key: str) -> bool:
-        """Check if key exists in cache."""
-        return key in self._cache
-
-
-# Global memory cache instance
-_memory_cache = IconMemoryCache()
+# Import Django cache integration for better caching
+from .cache import sprite_cache
 
 
 def find_source_svg(path: str) -> Optional[str]:
     """
-    Find a source SVG file using staticfiles finders, but skip IconSpriteFinder.
-
-    This prevents conflicts where IconSpriteFinder adds source SVG files to ignore
-    patterns, making them unfindable by the regular finders.find() function.
+    Find a source SVG file using Django's staticfiles finders.
+    
+    Uses standard Django staticfiles finders but ensures we get actual
+    source SVG files, not generated sprites.
 
     Args:
         path: Static file path to find
@@ -71,21 +42,32 @@ def find_source_svg(path: str) -> Optional[str]:
     Returns:
         Absolute path to the found file, or None if not found
     """
-    for finder_path in getattr(settings, "STATICFILES_FINDERS", []):
-        # Skip our own IconSpriteFinder to avoid ignore pattern conflicts
-        if "IconSpriteFinder" in finder_path:
-            continue
-
-        try:
-            finder = get_finder(finder_path)
-            result = finder.find(path, find_all=False)
-            if result:
-                return result
-        except Exception:
-            # Continue to next finder if this one fails
-            continue
-
-    return None
+    from django.contrib.staticfiles import finders
+    
+    # First try standard Django finder
+    result = finders.find(path)
+    
+    # Handle case where find() returns a list (shouldn't happen but be safe)
+    if isinstance(result, list):
+        result = result[0] if result else None
+    
+    # Verify it's not a generated sprite file
+    if result and os.path.basename(result).startswith("sprite-"):
+        # This is a generated sprite, look for the actual source
+        # by checking finders directly
+        for finder in finders.get_finders():
+            # Skip our own sprite finder
+            if finder.__class__.__name__ == "IconSpriteFinder":
+                continue
+            try:
+                found = finder.find(path, find_all=False)
+                if found and not os.path.basename(found).startswith("sprite-"):
+                    return found
+            except Exception:
+                continue
+        return None
+    
+    return result
 
 
 def generate_icon_hash(icons: List[str]) -> str:
@@ -384,83 +366,11 @@ def is_local_svg_path(icon_name: str) -> bool:
     return icon_name.endswith(".svg") or "/" in icon_name
 
 
-def optimize_svg_content(svg_content: str, optimize_command: str) -> str:
-    """
-    Optimize SVG content using a shell command.
-
-    Args:
-        svg_content: Raw SVG content to optimize
-        optimize_command: Shell command with {input} and {output} placeholders
-
-    Returns:
-        Optimized SVG content
-
-    Raises:
-        subprocess.CalledProcessError: If optimization command fails
-        ValueError: If command format is invalid
-    """
-    if not optimize_command.strip():
-        return svg_content
-
-    # Validate command format
-    if "{input}" not in optimize_command or "{output}" not in optimize_command:
-        raise IconOptimizationError(
-            "Optimization command must contain {input} and {output} placeholders"
-        )
-
-    # Create temporary files for input and output
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".svg", delete=False
-    ) as input_file:
-        input_file.write(svg_content)
-        input_path = input_file.name
-
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".svg", delete=False
-        ) as output_file:
-            output_path = output_file.name
-
-        # Format the command with actual file paths
-        command = optimize_command.format(input=input_path, output=output_path)
-
-        # Execute the optimization command
-        result = subprocess.run(
-            command,
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=30,  # 30 second timeout for safety
-        )
-
-        # Check if command succeeded
-        if result.returncode != 0:
-            raise IconOptimizationError(
-                f"Optimization command failed with code {result.returncode}: {result.stderr}"
-            )
-
-        # Read the optimized content
-        with open(output_path, "r", encoding="utf-8") as f:
-            optimized_content = f.read()
-
-        return optimized_content
-
-    finally:
-        # Clean up temporary files
-        try:
-            os.unlink(input_path)
-        except OSError:
-            pass
-        try:
-            os.unlink(output_path)
-        except OSError:
-            pass
 
 
 def build_sprite(
     icons: List[str],
     api_base: str = "https://api.iconify.design",
-    optimize_command: str = "",
     component_map: Optional[Dict[str, str]] = None,
 ) -> str:
     """
@@ -469,7 +379,6 @@ def build_sprite(
     Args:
         icons: List of icon names (e.g., ["mdi:home", "icons/my-icon.svg", "static/custom.svg"])
         api_base: Base URL for Iconify API
-        optimize_command: Optional shell command for SVG optimization
         component_map: Optional mapping from component names to icon names for symbol IDs
 
     Returns:
@@ -559,10 +468,6 @@ def build_sprite(
         + "\n</svg>"
     )
 
-    # Apply SVG optimization if command is provided
-    if optimize_command:
-        sprite_content = optimize_svg_content(sprite_content, optimize_command)
-
     return sprite_content
 
 
@@ -587,7 +492,7 @@ def cache_sprite(sprite_hash: str, content: str) -> None:
         sprite_hash: Hash of sprite content
         content: SVG sprite content
     """
-    _memory_cache.set(sprite_hash, content)
+    sprite_cache.set(sprite_hash, content)
 
 
 def get_cached_sprite(sprite_hash: str) -> Optional[str]:
@@ -600,12 +505,12 @@ def get_cached_sprite(sprite_hash: str) -> Optional[str]:
     Returns:
         Sprite content or None if not found
     """
-    return _memory_cache.get(sprite_hash)
+    return sprite_cache.get(sprite_hash)
 
 
 def clear_sprite_cache() -> None:
     """Clear the memory cache."""
-    _memory_cache.clear()
+    sprite_cache.clear()
 
 
 def get_sprite_settings() -> Dict:
@@ -623,7 +528,6 @@ def get_sprite_settings() -> Dict:
         "api_base": "https://api.iconify.design",
         "dev_mode": getattr(settings, "DEBUG", True),
         "cache_timeout": 3600,
-        "optimize_command": "",  # Optional SVG optimization command
     }
 
     user_settings = getattr(settings, "INCLUDECONTENTS_ICONS", {})
@@ -716,7 +620,6 @@ def get_or_create_sprite() -> Tuple[str, str]:
         sprite_content = build_sprite(
             icons,
             sprite_settings["api_base"],
-            sprite_settings.get("optimize_command", ""),
             component_map,
         )
 
@@ -728,6 +631,6 @@ def get_or_create_sprite() -> Tuple[str, str]:
     except Exception as e:
         # Fail loudly - a broken sprite build is a serious configuration error
         # that should be fixed immediately, not silently ignored
-        if isinstance(e, (IconNotFoundError, IconBuildError, IconConfigurationError, IconAPIError, IconOptimizationError)):
+        if isinstance(e, (IconNotFoundError, IconBuildError, IconConfigurationError, IconAPIError)):
             raise  # Re-raise our custom exceptions as-is
         raise IconBuildError(f"Failed to build icon sprite: {e}") from e

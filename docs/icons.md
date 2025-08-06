@@ -139,32 +139,8 @@ INCLUDECONTENTS_ICONS = {
     'dev_mode': True,                    # Development features
     'cache_timeout': 3600,               # Cache timeout (seconds)
     'api_base': 'https://api.iconify.design',  # Iconify API URL
-    'optimize_command': '',              # SVG optimization command (e.g., "svgo --input={input} --output={output}")
 }
 ```
-
-### SVG Optimization
-
-You can optionally optimize generated sprite sheets using external tools:
-
-```python
-INCLUDECONTENTS_ICONS = {
-    'icons': ['mdi:home', 'tabler:user'],
-    
-    # Optional: Use SVGO to optimize sprites
-    'optimize_command': 'svgo --input={input} --output={output}',
-    
-    # Or use other optimization tools
-    'optimize_command': 'svgcleaner {input} {output}',
-}
-```
-
-The `{input}` and `{output}` placeholders are replaced with temporary file paths. The command runs after sprite generation. If the optimization command fails, the build fails (strict mode).
-
-**Requirements:**
-- The optimization tool must be installed and available in PATH
-- The command must support input/output file arguments
-- The tool should preserve SVG structure and symbol IDs
 
 ## Template Usage
 

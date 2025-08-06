@@ -9,7 +9,7 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 
 from ..builder import get_or_create_sprite, get_sprite_hash, get_sprite_settings, get_sprite_filename
-from ..utils import parse_icon_definitions
+from ..utils import parse_icon_definitions, format_attributes
 
 # Import Attrs from the main templatetags module
 try:
@@ -36,26 +36,6 @@ def get_sprite_url(sprite_hash):
 
     return static(f"{location}{sprite_filename}")
 
-
-def format_attributes(attrs_dict):
-    """
-    Format a dictionary of attributes into HTML attribute string.
-    Similar to how Attrs.__str__ works.
-    """
-    if not attrs_dict:
-        return ""
-
-    attr_parts = []
-    for key, value in attrs_dict.items():
-        if value is None or value is False:
-            continue
-        elif value is True:
-            attr_parts.append(key)
-        else:
-            escaped_value = conditional_escape(str(value))
-            attr_parts.append(f'{key}="{escaped_value}"')
-
-    return " ".join(attr_parts)
 
 
 class IconNode(template.Node):

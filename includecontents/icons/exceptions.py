@@ -28,6 +28,3 @@ class IconAPIError(IconError):
     pass
 
 
-class IconOptimizationError(IconError):
-    """Raised when SVG optimization fails."""
-    pass
