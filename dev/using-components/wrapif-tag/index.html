@@ -1,0 +1,2557 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Component-like Django template tags with HTML syntax">
+      
+      
+      
+        <link rel="canonical" href="https://smileychris.github.io/django-includecontents/latest/using-components/wrapif-tag/">
+      
+      
+        <link rel="prev" href="../named-content-blocks/">
+      
+      
+        <link rel="next" href="../../building-components/component-patterns/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>Wrapif Tag - Django IncludeContents</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="green">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#wrapif-tag" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Django IncludeContents" class="md-header__button md-logo" aria-label="Django IncludeContents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Django IncludeContents
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Wrapif Tag
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="green"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="green" data-md-color-accent="green"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/SmileyChris/django-includecontents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    django-includecontents
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../html-syntax/" class="md-tabs__link">
+          
+  
+  
+  Using Components
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../building-components/component-patterns/" class="md-tabs__link">
+          
+  
+  
+  Building Components
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../icons/" class="md-tabs__link">
+          
+  
+  
+  Icons
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tooling-integration/prettier-formatting/" class="md-tabs__link">
+          
+  
+  
+  Tooling & Integration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/api-reference/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Django IncludeContents" class="md-nav__button md-logo" aria-label="Django IncludeContents" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Django IncludeContents
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/SmileyChris/django-includecontents" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    django-includecontents
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/basic-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Basic Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Using Components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Using Components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../html-syntax/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    HTML Syntax
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../template-tag-syntax/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Template Tag Syntax
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../props-and-attrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Props & Attributes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../named-content-blocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Named Content Blocks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Wrapif Tag
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Wrapif Tag
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#standard-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standard Syntax
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shorthand-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shorthand Syntax
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simple-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Simple Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Simple Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-conditional-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Conditional Wrapping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#traditional-vs-wrapif" class="md-nav__link">
+    <span class="md-ellipsis">
+      Traditional vs Wrapif
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complex-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complex Wrappers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditional-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional Variants
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conditional Variants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wrapelse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrapelse
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrapelif" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrapelif
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complex-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complex Conditions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Attributes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-wrapif" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nested Wrapif
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-named-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multiple Named Contents
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conditional-links" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional Links
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-headings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Headings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#responsive-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Responsive Containers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permission-based-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission-Based Wrapping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#form-field-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Form Field Validation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boolean-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Boolean Attributes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Considerations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Handling
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Invalid Syntax
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#malformed-elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Malformed Elements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best Practices
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-use-descriptive-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Use Descriptive Conditions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-keep-wrapper-logic-simple" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Keep Wrapper Logic Simple
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-combine-with-other-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Combine with Other Tags
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Building Components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Building Components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../building-components/component-patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Component Patterns
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../building-components/advanced-props/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Advanced Props
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../building-components/css-and-styling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CSS & Styling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../building-components/best-practices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Best Practices
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Icons
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Icons
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../icons/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../icons/styling-with-css-variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Styling with CSS Variables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tooling & Integration
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Tooling & Integration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling-integration/prettier-formatting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prettier Formatting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling-integration/tailwind-css/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tailwind CSS
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling-integration/custom-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Custom Engine
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling-integration/multiline-tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-line Tags
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tooling-integration/vscode-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    VS Code Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/migration-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migration Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#standard-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standard Syntax
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shorthand-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shorthand Syntax
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simple-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Simple Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Simple Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-conditional-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Conditional Wrapping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#traditional-vs-wrapif" class="md-nav__link">
+    <span class="md-ellipsis">
+      Traditional vs Wrapif
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complex-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complex Wrappers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditional-variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional Variants
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conditional Variants">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wrapelse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrapelse
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrapelif" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wrapelif
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complex-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complex Conditions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Attributes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-wrapif" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nested Wrapif
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-named-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multiple Named Contents
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conditional-links" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional Links
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-headings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Headings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#responsive-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Responsive Containers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permission-based-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission-Based Wrapping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#form-field-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Form Field Validation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boolean-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Boolean Attributes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Considerations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Handling
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invalid-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      Invalid Syntax
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#malformed-elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Malformed Elements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best Practices
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-use-descriptive-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Use Descriptive Conditions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-keep-wrapper-logic-simple" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Keep Wrapper Logic Simple
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-combine-with-other-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Combine with Other Tags
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="wrapif-tag">Wrapif Tag<a class="headerlink" href="#wrapif-tag" title="Permanent link">&para;</a></h1>
+<p>The <code>{% wrapif %}</code> tag provides a clean way to conditionally wrap content with HTML elements, eliminating the need to repeat opening and closing tags in conditional blocks. This tag solves the common problem where you need to wrap content in an element only under certain conditions - without it, you'd have to duplicate your content in both the "if" and "else" branches. With wrapif, you write your content once and the wrapping happens conditionally.</p>
+<h2 id="standard-syntax">Standard Syntax<a class="headerlink" href="#standard-syntax" title="Permanent link">&para;</a></h2>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">{%</span> <span class="k">load</span> <span class="nv">includecontents</span> <span class="cp">%}</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">condition</span> <span class="cp">%}</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="x">    &lt;wrapper-element attribute=&quot;value&quot;&gt;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">Default content</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="x">    &lt;/wrapper-element&gt;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<h2 id="shorthand-syntax">Shorthand Syntax<a class="headerlink" href="#shorthand-syntax" title="Permanent link">&para;</a></h2>
+<p>For simple cases, use the compact <code>then</code> syntax:</p>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">condition</span> <span class="nv">then</span> <span class="s2">&quot;element&quot;</span> <span class="nv">attribute</span><span class="o">=</span><span class="s2">&quot;value&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="x">    Content to wrap</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<h2 id="simple-examples">Simple Examples<a class="headerlink" href="#simple-examples" title="Permanent link">&para;</a></h2>
+<h3 id="basic-conditional-wrapping">Basic Conditional Wrapping<a class="headerlink" href="#basic-conditional-wrapping" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Standard Syntax</label><label for="__tabbed_1_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.is_authenticated</span> <span class="cp">%}</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="x">    &lt;a href=&quot;/dashboard&quot; class=&quot;user-link&quot;&gt;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">Welcome, </span><span class="cp">{{</span> <span class="nv">user.name</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="x">    &lt;/a&gt;</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.is_authenticated</span> <span class="nv">then</span> <span class="s2">&quot;a&quot;</span> <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;/dashboard&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;user-link&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="x">    Welcome, </span><span class="cp">{{</span> <span class="nv">user.name</span> <span class="cp">}}</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p><strong>When <code>user.is_authenticated</code> is True:</strong>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/dashboard&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;user-link&quot;</span><span class="p">&gt;</span>Welcome, John<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span></code></pre></div></p>
+<p><strong>When <code>user.is_authenticated</code> is False:</strong>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Welcome, John
+</span></code></pre></div></p>
+<h3 id="traditional-vs-wrapif">Traditional vs Wrapif<a class="headerlink" href="#traditional-vs-wrapif" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Without Wrapif (Repetitive)</label><label for="__tabbed_2_2">With Wrapif - Standard Syntax</label><label for="__tabbed_2_3">With Wrapif - Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="cp">{%</span> <span class="k">if</span> <span class="nv">show_link</span> <span class="cp">%}</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="x">    &lt;a href=&quot;</span><span class="cp">{{</span> <span class="nv">url</span> <span class="cp">}}</span><span class="x">&quot; class=&quot;link&quot;&gt;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="x">        Click here for </span><span class="cp">{{</span> <span class="nv">title</span> <span class="cp">}}</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="x">    &lt;/a&gt;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="cp">{%</span> <span class="k">else</span> <span class="cp">%}</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="x">    Click here for </span><span class="cp">{{</span> <span class="nv">title</span> <span class="cp">}}</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_link</span> <span class="cp">%}</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="x">    &lt;a href=&quot;</span><span class="cp">{{</span> <span class="nv">url</span> <span class="cp">}}</span><span class="x">&quot; class=&quot;link&quot;&gt;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">Click here for </span><span class="cp">{{</span> <span class="nv">title</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="x">    &lt;/a&gt;</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_link</span> <span class="nv">then</span> <span class="s2">&quot;a&quot;</span> <span class="nv">href</span><span class="o">=</span><span class="nv">url</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;link&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="x">    Click here for </span><span class="cp">{{</span> <span class="nv">title</span> <span class="cp">}}</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h2 id="complex-wrappers">Complex Wrappers<a class="headerlink" href="#complex-wrappers" title="Permanent link">&para;</a></h2>
+<p>For complex wrappers that need more than a single element, use the standard syntax with full templates:</p>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.is_premium</span> <span class="cp">%}</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="x">    &lt;div class=&quot;premium-content&quot;&gt;</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="x">        &lt;div class=&quot;premium-badge&quot;&gt;Premium&lt;/div&gt;</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="x">        &lt;div class=&quot;content&quot;&gt;</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}{{</span> <span class="nv">article.content</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="x">        &lt;/div&gt;</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="x">        &lt;div class=&quot;premium-footer&quot;&gt;</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">contents</span> <span class="nv">footer</span> <span class="cp">%}</span><span class="x">Exclusive content</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="x">        &lt;/div&gt;</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<h2 id="conditional-variants">Conditional Variants<a class="headerlink" href="#conditional-variants" title="Permanent link">&para;</a></h2>
+<h3 id="wrapelse">Wrapelse<a class="headerlink" href="#wrapelse" title="Permanent link">&para;</a></h3>
+<p>Provide an alternative wrapper when the condition is false:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Standard Syntax</label><label for="__tabbed_3_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.is_active</span> <span class="cp">%}</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="x">    &lt;a href=&quot;/profile&quot;&gt;</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}{{</span> <span class="nv">user.name</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="x">    &lt;/a&gt;</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="cp">%}</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="x">    &lt;span class=&quot;disabled&quot;&gt;</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="x">    &lt;/span&gt;</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.is_active</span> <span class="nv">then</span> <span class="s2">&quot;a&quot;</span> <span class="nv">href</span><span class="o">=</span><span class="s2">&quot;/profile&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">user.name</span> <span class="cp">}}</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="s2">&quot;span&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;disabled&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<p>Note: In shorthand syntax, the content comes <strong>before</strong> the <code>wrapelse</code> tag</p>
+</div>
+</div>
+</div>
+<p><strong>When active:</strong>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/profile&quot;</span><span class="p">&gt;</span>John Doe<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span></code></pre></div></p>
+<p><strong>When inactive:</strong>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;disabled&quot;</span><span class="p">&gt;</span>John Doe<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></code></pre></div></p>
+<h3 id="wrapelif">Wrapelif<a class="headerlink" href="#wrapelif" title="Permanent link">&para;</a></h3>
+<p>Handle multiple conditions with <code>{% wrapelif %}</code>:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Standard Syntax</label><label for="__tabbed_4_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">priority</span> <span class="o">==</span> <span class="s2">&quot;high&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="x">    &lt;strong class=&quot;text-red&quot;&gt;</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}{{</span> <span class="nv">task.title</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="x">    &lt;/strong&gt;</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">priority</span> <span class="o">==</span> <span class="s2">&quot;medium&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="x">    &lt;em class=&quot;text-yellow&quot;&gt;</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="x">    &lt;/em&gt;</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">priority</span> <span class="o">==</span> <span class="s2">&quot;low&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="x">    &lt;span class=&quot;text-gray&quot;&gt;</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="x">    &lt;/span&gt;</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="cp">%}</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="x">    &lt;span&gt;</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="x">    &lt;/span&gt;</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">priority</span> <span class="o">==</span> <span class="s2">&quot;high&quot;</span> <span class="nv">then</span> <span class="s2">&quot;strong&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;text-red&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">task.title</span> <span class="cp">}}</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">priority</span> <span class="o">==</span> <span class="s2">&quot;medium&quot;</span> <span class="nv">then</span> <span class="s2">&quot;em&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;text-yellow&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">priority</span> <span class="o">==</span> <span class="s2">&quot;low&quot;</span> <span class="nv">then</span> <span class="s2">&quot;span&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;text-gray&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="s2">&quot;span&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<p>Note: In shorthand syntax, the content is placed after the first condition and is reused for all conditions</p>
+</div>
+</div>
+</div>
+<h3 id="complex-conditions">Complex Conditions<a class="headerlink" href="#complex-conditions" title="Permanent link">&para;</a></h3>
+<p>The tag supports all Django template conditional operators:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Standard Syntax</label><label for="__tabbed_5_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.is_authenticated</span> <span class="k">and</span> <span class="nv">user.is_staff</span> <span class="cp">%}</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="x">    &lt;div class=&quot;admin-panel&quot;&gt;</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">Admin controls</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">price</span> <span class="o">&gt;</span> <span class="m">100</span> <span class="cp">%}</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="x">    &lt;span class=&quot;expensive&quot;&gt;</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">$</span><span class="cp">{{</span> <span class="nv">price</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="x">    &lt;/span&gt;</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.is_authenticated</span> <span class="k">and</span> <span class="nv">user.is_staff</span> <span class="nv">then</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;admin-panel&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="x">    Admin controls</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">price</span> <span class="o">&gt;</span> <span class="m">100</span> <span class="nv">then</span> <span class="s2">&quot;span&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;expensive&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="x">    $</span><span class="cp">{{</span> <span class="nv">price</span> <span class="cp">}}</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h2 id="advanced-usage">Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permanent link">&para;</a></h2>
+<h3 id="dynamic-attributes">Dynamic Attributes<a class="headerlink" href="#dynamic-attributes" title="Permanent link">&para;</a></h3>
+<p>Use template variables for dynamic attributes:</p>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_button</span> <span class="nv">then</span> <span class="s2">&quot;button&quot;</span> <span class="nv">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="nv">button_class</span> <span class="nv">data-action</span><span class="o">=</span><span class="nv">action</span> <span class="cp">%}</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">button_text</span> <span class="cp">}}</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<h3 id="nested-wrapif">Nested Wrapif<a class="headerlink" href="#nested-wrapif" title="Permanent link">&para;</a></h3>
+<p>Wrapif tags can be nested for complex conditional structures:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Standard Syntax</label><label for="__tabbed_6_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_section</span> <span class="cp">%}</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="x">    &lt;section class=&quot;main-content&quot;&gt;</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_header</span> <span class="cp">%}</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="x">                &lt;header class=&quot;section-header&quot;&gt;</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="x">                    </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">&lt;h1&gt;</span><span class="cp">{{</span> <span class="nv">section.title</span> <span class="cp">}}</span><span class="x">&lt;/h1&gt;</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="x">                &lt;/header&gt;</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="x">            &lt;div class=&quot;section-body&quot;&gt;</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="x">                </span><span class="cp">{{</span> <span class="nv">section.content</span> <span class="cp">}}</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="x">            &lt;/div&gt;</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_footer</span> <span class="cp">%}</span>
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="x">                &lt;footer class=&quot;section-footer&quot;&gt;</span>
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="x">                    </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">&lt;p&gt;Updated: </span><span class="cp">{{</span> <span class="nv">section.updated_at</span><span class="o">|</span><span class="nf">date</span> <span class="cp">}}</span><span class="x">&lt;/p&gt;</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="x">                &lt;/footer&gt;</span>
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="x">    &lt;/section&gt;</span>
+</span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_section</span> <span class="nv">then</span> <span class="s2">&quot;section&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;main-content&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_header</span> <span class="nv">then</span> <span class="s2">&quot;header&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;section-header&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="x">        &lt;h1&gt;</span><span class="cp">{{</span> <span class="nv">section.title</span> <span class="cp">}}</span><span class="x">&lt;/h1&gt;</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="x">    &lt;div class=&quot;section-body&quot;&gt;</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">section.content</span> <span class="cp">}}</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_footer</span> <span class="nv">then</span> <span class="s2">&quot;footer&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;section-footer&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="x">        &lt;p&gt;Updated: </span><span class="cp">{{</span> <span class="nv">section.updated_at</span><span class="o">|</span><span class="nf">date</span> <span class="cp">}}</span><span class="x">&lt;/p&gt;</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="multiple-named-contents">Multiple Named Contents<a class="headerlink" href="#multiple-named-contents" title="Permanent link">&para;</a></h3>
+<p>When using standard syntax, you can have multiple named content blocks:</p>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_card</span> <span class="cp">%}</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="x">    &lt;div class=&quot;card&quot;&gt;</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">contents.header</span> <span class="cp">%}</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="x">            &lt;div class=&quot;card-header&quot;&gt;</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="x">                </span><span class="cp">{{</span> <span class="nv">contents.header</span> <span class="cp">}}</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="x">            &lt;/div&gt;</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="x">        &lt;div class=&quot;card-body&quot;&gt;</span>
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">Main content</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="x">        &lt;/div&gt;</span>
+</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a>
+</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">contents.footer</span> <span class="cp">%}</span>
+</span><span id="__span-21-14"><a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a><span class="x">            &lt;div class=&quot;card-footer&quot;&gt;</span>
+</span><span id="__span-21-15"><a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="x">                </span><span class="cp">{{</span> <span class="nv">contents.footer</span> <span class="cp">}}</span>
+</span><span id="__span-21-16"><a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a><span class="x">            &lt;/div&gt;</span>
+</span><span id="__span-21-17"><a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</span><span id="__span-21-18"><a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-21-19"><a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<p><strong>Usage:</strong>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.has_premium</span> <span class="cp">%}</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">contents</span> <span class="nv">header</span> <span class="cp">%}</span><span class="x">Premium Feature</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="x">    This content is only shown to premium users.</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">contents</span> <span class="nv">footer</span> <span class="cp">%}</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="x">        &lt;a href=&quot;/upgrade&quot;&gt;Upgrade your account&lt;/a&gt;</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div></p>
+<h2 id="example-use-cases">Example Use Cases<a class="headerlink" href="#example-use-cases" title="Permanent link">&para;</a></h2>
+<h3 id="conditional-links">Conditional Links<a class="headerlink" href="#conditional-links" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:2"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Standard Syntax</label><label for="__tabbed_7_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">article.url</span> <span class="cp">%}</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="x">    &lt;a href=&quot;</span><span class="cp">{{</span> <span class="nv">article.url</span> <span class="cp">}}</span><span class="x">&quot; target=&quot;_blank&quot;&gt;</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}{{</span> <span class="nv">article.title</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="x">    &lt;/a&gt;</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">article.url</span> <span class="nv">then</span> <span class="s2">&quot;a&quot;</span> <span class="nv">href</span><span class="o">=</span><span class="nv">article.url</span> <span class="nv">target</span><span class="o">=</span><span class="s2">&quot;_blank&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">article.title</span> <span class="cp">}}</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="dynamic-headings">Dynamic Headings<a class="headerlink" href="#dynamic-headings" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:2"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><input id="__tabbed_8_2" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Standard Syntax</label><label for="__tabbed_8_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">level</span> <span class="o">==</span> <span class="m">1</span> <span class="cp">%}</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="x">    &lt;h1&gt;</span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}{{</span> <span class="nv">heading_text</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span><span class="x">&lt;/h1&gt;</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">level</span> <span class="o">==</span> <span class="m">2</span> <span class="cp">%}</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="x">    &lt;h2&gt;</span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span><span class="x">&lt;/h2&gt;</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">level</span> <span class="o">==</span> <span class="m">3</span> <span class="cp">%}</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="x">    &lt;h3&gt;</span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span><span class="x">&lt;/h3&gt;</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="cp">%}</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="x">    &lt;p&gt;</span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span><span class="x">&lt;/p&gt;</span>
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">level</span> <span class="o">==</span> <span class="m">1</span> <span class="nv">then</span> <span class="s2">&quot;h1&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">heading_text</span> <span class="cp">}}</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">level</span> <span class="o">==</span> <span class="m">2</span> <span class="nv">then</span> <span class="s2">&quot;h2&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="cp">{%</span> <span class="k">wrapelif</span> <span class="nv">level</span> <span class="o">==</span> <span class="m">3</span> <span class="nv">then</span> <span class="s2">&quot;h3&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="s2">&quot;p&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="responsive-containers">Responsive Containers<a class="headerlink" href="#responsive-containers" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="9:2"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><input id="__tabbed_9_2" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Standard Syntax</label><label for="__tabbed_9_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">is_mobile</span> <span class="cp">%}</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="x">    &lt;div class=&quot;mobile-container&quot;&gt;</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}{{</span> <span class="nv">content</span> <span class="cp">}}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="cp">%}</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="x">    &lt;div class=&quot;desktop-container&quot;&gt;</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">is_mobile</span> <span class="nv">then</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;mobile-container&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">content</span> <span class="cp">}}</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;desktop-container&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="permission-based-wrapping">Permission-Based Wrapping<a class="headerlink" href="#permission-based-wrapping" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="10:2"><input checked="checked" id="__tabbed_10_1" name="__tabbed_10" type="radio" /><input id="__tabbed_10_2" name="__tabbed_10" type="radio" /><div class="tabbed-labels"><label for="__tabbed_10_1">Standard Syntax</label><label for="__tabbed_10_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.can_edit</span> <span class="cp">%}</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="x">    &lt;div class=&quot;editable&quot; data-edit-url=&quot;</span><span class="cp">{{</span> <span class="nv">edit_url</span> <span class="cp">}}</span><span class="x">&quot;&gt;</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="x">            </span><span class="cp">{{</span> <span class="nv">content</span> <span class="cp">}}</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">user.can_edit</span> <span class="cp">%}</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="x">                &lt;button class=&quot;edit-btn&quot;&gt;Edit&lt;/button&gt;</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-29-10"><a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.can_edit</span> <span class="nv">then</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;editable&quot;</span> <span class="nv">data-edit-url</span><span class="o">=</span><span class="nv">edit_url</span> <span class="cp">%}</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">content</span> <span class="cp">}}</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">user.can_edit</span> <span class="cp">%}</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="x">        &lt;button class=&quot;edit-btn&quot;&gt;Edit&lt;/button&gt;</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="form-field-validation">Form Field Validation<a class="headerlink" href="#form-field-validation" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="11:2"><input checked="checked" id="__tabbed_11_1" name="__tabbed_11" type="radio" /><input id="__tabbed_11_2" name="__tabbed_11" type="radio" /><div class="tabbed-labels"><label for="__tabbed_11_1">Standard Syntax</label><label for="__tabbed_11_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">field.errors</span> <span class="cp">%}</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="x">    &lt;div class=&quot;field-group error&quot;&gt;</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="x">            &lt;label for=&quot;</span><span class="cp">{{</span> <span class="nv">field.id_for_label</span> <span class="cp">}}</span><span class="x">&quot;&gt;</span><span class="cp">{{</span> <span class="nv">field.label</span> <span class="cp">}}</span><span class="x">&lt;/label&gt;</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="x">            </span><span class="cp">{{</span> <span class="nv">field</span> <span class="cp">}}</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">field.errors</span> <span class="cp">%}</span>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="x">                &lt;div class=&quot;error-messages&quot;&gt;</span>
+</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="x">                    </span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">error</span> <span class="k">in</span> <span class="nv">field.errors</span> <span class="cp">%}</span>
+</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a><span class="x">                        &lt;span class=&quot;error&quot;&gt;</span><span class="cp">{{</span> <span class="nv">error</span> <span class="cp">}}</span><span class="x">&lt;/span&gt;</span>
+</span><span id="__span-31-10"><a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a><span class="x">                    </span><span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+</span><span id="__span-31-11"><a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a><span class="x">                &lt;/div&gt;</span>
+</span><span id="__span-31-12"><a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</span><span id="__span-31-13"><a id="__codelineno-31-13" name="__codelineno-31-13" href="#__codelineno-31-13"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-31-14"><a id="__codelineno-31-14" name="__codelineno-31-14" href="#__codelineno-31-14"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-31-15"><a id="__codelineno-31-15" name="__codelineno-31-15" href="#__codelineno-31-15"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="cp">%}</span>
+</span><span id="__span-31-16"><a id="__codelineno-31-16" name="__codelineno-31-16" href="#__codelineno-31-16"></a><span class="x">    &lt;div class=&quot;field-group&quot;&gt;</span>
+</span><span id="__span-31-17"><a id="__codelineno-31-17" name="__codelineno-31-17" href="#__codelineno-31-17"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">contents</span> <span class="cp">}}</span>
+</span><span id="__span-31-18"><a id="__codelineno-31-18" name="__codelineno-31-18" href="#__codelineno-31-18"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-31-19"><a id="__codelineno-31-19" name="__codelineno-31-19" href="#__codelineno-31-19"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">field.errors</span> <span class="nv">then</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;field-group error&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="x">    &lt;label for=&quot;</span><span class="cp">{{</span> <span class="nv">field.id_for_label</span> <span class="cp">}}</span><span class="x">&quot;&gt;</span><span class="cp">{{</span> <span class="nv">field.label</span> <span class="cp">}}</span><span class="x">&lt;/label&gt;</span>
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">field</span> <span class="cp">}}</span>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">field.errors</span> <span class="cp">%}</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="x">        &lt;div class=&quot;error-messages&quot;&gt;</span>
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">error</span> <span class="k">in</span> <span class="nv">field.errors</span> <span class="cp">%}</span>
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="x">                &lt;span class=&quot;error&quot;&gt;</span><span class="cp">{{</span> <span class="nv">error</span> <span class="cp">}}</span><span class="x">&lt;/span&gt;</span>
+</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+</span><span id="__span-32-9"><a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a><span class="x">        &lt;/div&gt;</span>
+</span><span id="__span-32-10"><a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</span><span id="__span-32-11"><a id="__codelineno-32-11" name="__codelineno-32-11" href="#__codelineno-32-11"></a><span class="cp">{%</span> <span class="k">wrapelse</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;field-group&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-32-12"><a id="__codelineno-32-12" name="__codelineno-32-12" href="#__codelineno-32-12"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h2 id="boolean-attributes">Boolean Attributes<a class="headerlink" href="#boolean-attributes" title="Permanent link">&para;</a></h2>
+<p>The wrapif tag properly handles boolean HTML attributes:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="12:2"><input checked="checked" id="__tabbed_12_1" name="__tabbed_12" type="radio" /><input id="__tabbed_12_2" name="__tabbed_12" type="radio" /><div class="tabbed-labels"><label for="__tabbed_12_1">Standard Syntax</label><label for="__tabbed_12_2">Shorthand Syntax</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">is_required</span> <span class="cp">%}</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="x">    &lt;input type=&quot;text&quot; required&gt;</span>
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="x">        </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="x">    &lt;/input&gt;</span>
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-django highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">is_required</span> <span class="nv">then</span> <span class="s2">&quot;input&quot;</span> <span class="nv">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nv">required</span> <span class="cp">%}</span>
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p>When <code>is_required</code> is <code>True</code>, outputs:
+<div class="language-html highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text&quot;</span> <span class="na">required</span><span class="p">&gt;</span>
+</span></code></pre></div></p>
+<p>When <code>is_required</code> is <code>False</code>, the input element is not rendered at all (for standard syntax) or rendered without the wrapper (for shorthand with content).</p>
+<h2 id="performance-considerations">Performance Considerations<a class="headerlink" href="#performance-considerations" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Condition evaluation</strong>: Conditions are evaluated once per render</li>
+<li><strong>Content rendering</strong>: Content is only rendered when the condition matches</li>
+<li><strong>Template caching</strong>: Wrapper templates benefit from Django's template caching</li>
+</ul>
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<h3 id="invalid-syntax">Invalid Syntax<a class="headerlink" href="#invalid-syntax" title="Permanent link">&para;</a></h3>
+<p><div class="language-django highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="cp">%}</span><span class="x">  &lt;!-- Missing condition --&gt;</span>
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="x">    Content</span>
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+Raises <code>TemplateSyntaxError: wrapif tag requires a condition</code>.</p>
+<h3 id="malformed-elements">Malformed Elements<a class="headerlink" href="#malformed-elements" title="Permanent link">&para;</a></h3>
+<p><div class="language-django highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="kp">True</span> <span class="nv">then</span> <span class="s2">&quot;invalid-element-name&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="x">    Content</span>
+</span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+Outputs HTML as-is, but may not be valid HTML.</p>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="1-use-descriptive-conditions">1. Use Descriptive Conditions<a class="headerlink" href="#1-use-descriptive-conditions" title="Permanent link">&para;</a></h3>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">user.can_edit_article</span> <span class="nv">then</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;editable&quot;</span> <span class="cp">%}</span><span class="x">    &lt;!-- ✅ Good --&gt;</span>
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">flag</span> <span class="nv">then</span> <span class="s2">&quot;div&quot;</span> <span class="cp">%}</span><span class="x">                                      &lt;!-- ❌ Unclear --&gt;</span>
+</span></code></pre></div>
+<h3 id="2-keep-wrapper-logic-simple">2. Keep Wrapper Logic Simple<a class="headerlink" href="#2-keep-wrapper-logic-simple" title="Permanent link">&para;</a></h3>
+<p>For complex wrappers, consider creating a dedicated component instead:</p>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="x">&lt;!-- ✅ Good: Simple wrapper --&gt;</span>
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">is_featured</span> <span class="nv">then</span> <span class="s2">&quot;mark&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;featured&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="x">    </span><span class="cp">{{</span> <span class="nv">title</span> <span class="cp">}}</span>
+</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>
+</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a><span class="x">&lt;!-- ❌ Consider a component: Too complex for wrapif --&gt;</span>
+</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_complex_layout</span> <span class="cp">%}</span>
+</span><span id="__span-39-8"><a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a><span class="x">    &lt;div class=&quot;complex&quot;&gt;</span>
+</span><span id="__span-39-9"><a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a><span class="x">        &lt;div class=&quot;header&quot;&gt;</span>
+</span><span id="__span-39-10"><a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a><span class="x">            &lt;span class=&quot;icon&quot;&gt;&lt;/span&gt;</span>
+</span><span id="__span-39-11"><a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a><span class="x">            &lt;h3&gt;</span><span class="cp">{{</span> <span class="nv">title</span> <span class="cp">}}</span><span class="x">&lt;/h3&gt;</span>
+</span><span id="__span-39-12"><a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a><span class="x">        &lt;/div&gt;</span>
+</span><span id="__span-39-13"><a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a><span class="x">        &lt;div class=&quot;body&quot;&gt;</span>
+</span><span id="__span-39-14"><a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a><span class="x">            </span><span class="cp">{%</span> <span class="k">contents</span> <span class="cp">%}</span><span class="x">...</span><span class="cp">{%</span> <span class="k">endcontents</span> <span class="cp">%}</span>
+</span><span id="__span-39-15"><a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a><span class="x">        &lt;/div&gt;</span>
+</span><span id="__span-39-16"><a id="__codelineno-39-16" name="__codelineno-39-16" href="#__codelineno-39-16"></a><span class="x">    &lt;/div&gt;</span>
+</span><span id="__span-39-17"><a id="__codelineno-39-17" name="__codelineno-39-17" href="#__codelineno-39-17"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<h3 id="3-combine-with-other-tags">3. Combine with Other Tags<a class="headerlink" href="#3-combine-with-other-tags" title="Permanent link">&para;</a></h3>
+<p>Wrapif works well with other Django IncludeContents features:</p>
+<div class="language-django highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="cp">{%</span> <span class="k">wrapif</span> <span class="nv">show_container</span> <span class="nv">then</span> <span class="s2">&quot;div&quot;</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;container&quot;</span> <span class="cp">%}</span>
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">includecontents</span> <span class="s2">&quot;components/card.html&quot;</span> <span class="nv">title</span><span class="o">=</span><span class="nv">title</span> <span class="cp">%}</span>
+</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a><span class="x">        </span><span class="cp">{{</span> <span class="nv">content</span> <span class="cp">}}</span>
+</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="x">    </span><span class="cp">{%</span> <span class="k">endincludecontents</span> <span class="cp">%}</span>
+</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="cp">{%</span> <span class="k">endwrapif</span> <span class="cp">%}</span>
+</span></code></pre></div>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Explore <a href="../html-syntax/">HTML Component Syntax</a> for modern component development</li>
+<li>Learn about <a href="../props-and-attrs/">Props &amp; Attrs</a> for component attributes</li>
+<li>Check out <a href="../../building-components/component-patterns/">Component Patterns</a> for advanced techniques</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/SmileyChris/django-includecontents" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/django-includecontents/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.path", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
