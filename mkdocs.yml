@@ -72,7 +72,9 @@ nav:
     - Advanced Props: building-components/advanced-props.md
     - CSS & Styling: building-components/css-and-styling.md
     - Best Practices: building-components/best-practices.md
-  - Icons: icons.md
+  - Icons: 
+    - Overview: icons.md
+    - Styling with CSS Variables: icons/styling-with-css-variables.md
   - Tooling & Integration:
     - Prettier Formatting: tooling-integration/prettier-formatting.md
     - Tailwind CSS: tooling-integration/tailwind-css.md

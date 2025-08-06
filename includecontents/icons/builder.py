@@ -175,12 +175,15 @@ def clean_svg_for_sprite(element):
         "height",
         "x",
         "y",  # Positioning/sizing handled by symbol
-        "style",  # Inline styles can conflict
         "class",  # CSS classes may not exist in sprite context
         "id",  # IDs can conflict when multiple sprites exist
     }
 
     for attr, value in element.attrib.items():
+        # Special handling for style attribute - keep it if it uses CSS variables
+        if attr == "style" and "var(--" in value:
+            new_element.set(attr, value)
+            continue
         # Skip if it's a problematic attribute
         if attr in problematic_attrs:
             continue

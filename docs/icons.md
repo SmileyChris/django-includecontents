@@ -95,7 +95,15 @@ Place SVG files in your static directories:
 
 Files are found using Django's static file system (`staticfiles`).
 
-**Automatic SVG Cleaning**: Local SVG files are automatically cleaned when added to sprites. This removes metadata, comments, and non-essential elements (like Inkscape-specific data) while preserving all drawing elements. The cleaning ensures your icons work correctly in sprite sheets and reduces file size.
+**Automatic SVG Cleaning**: Local SVG files are automatically cleaned when added to sprites. The cleaning process:
+- Removes metadata, comments, and non-essential elements (like Inkscape-specific data)
+- Strips problematic attributes: `width`, `height`, `x`, `y`, `class`, `id`
+- Removes namespaced attributes (e.g., `inkscape:*`, `sodipodi:*`)
+- **Preserves** `style` attributes that contain CSS variables (e.g., `style="fill: var(--icon-color)"`)
+- Removes regular inline styles without CSS variables to prevent conflicts
+- Keeps all drawing elements (`path`, `circle`, `rect`, `g`, `defs`, gradients, filters, etc.)
+
+This ensures your icons work correctly in sprite sheets, reduces file size, and enables advanced styling with CSS variables (see [Styling with CSS Variables](icons/styling-with-css-variables.md)).
 
 **Component Naming:**
 The component name is the filename without extension:

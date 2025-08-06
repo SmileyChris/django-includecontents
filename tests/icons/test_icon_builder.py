@@ -87,6 +87,51 @@ def test_clean_svg_for_sprite_removes_problematic_attributes():
     assert cleaned.get('id') is None
 
 
+def test_clean_svg_for_sprite_preserves_css_variable_styles():
+    """Test that clean_svg_for_sprite preserves style attributes with CSS variables."""
+    elem = ET.Element('path')
+    elem.set('d', 'M10 10 L20 20')
+    elem.set('style', 'fill: var(--icon-color)')  # Should be preserved
+    elem.set('fill', 'currentColor')
+    
+    cleaned = clean_svg_for_sprite(elem)
+    
+    # Check that CSS variable style is preserved
+    assert cleaned.get('style') == 'fill: var(--icon-color)'
+    assert cleaned.get('d') == 'M10 10 L20 20'
+    assert cleaned.get('fill') == 'currentColor'
+    
+    # Test with multiple CSS variables
+    elem2 = ET.Element('g')
+    elem2.set('style', 'transform: var(--icon-transform, none); fill: var(--icon-primary)')
+    
+    cleaned2 = clean_svg_for_sprite(elem2)
+    assert cleaned2.get('style') == 'transform: var(--icon-transform, none); fill: var(--icon-primary)'
+    
+    # Test that regular styles without CSS variables are kept (but not specially handled)
+    elem3 = ET.Element('circle')
+    elem3.set('style', 'fill: red; stroke: blue')  # Will be kept as normal attribute
+    elem3.set('r', '10')
+    
+    cleaned3 = clean_svg_for_sprite(elem3)
+    # Style without CSS variables is kept as a normal attribute
+    assert cleaned3.get('style') == 'fill: red; stroke: blue'
+    assert cleaned3.get('r') == '10'
+    
+    # Test mixed styles (CSS vars and regular)
+    elem4 = ET.Element('rect')
+    elem4.set('style', 'fill: var(--icon-bg); stroke: blue; transform: var(--icon-transform)')
+    elem4.set('width', '20')
+    elem4.set('height', '20')
+    
+    cleaned4 = clean_svg_for_sprite(elem4)
+    # Mixed styles with CSS variables should be preserved entirely
+    assert cleaned4.get('style') == 'fill: var(--icon-bg); stroke: blue; transform: var(--icon-transform)'
+    # Problematic attributes should still be removed
+    assert cleaned4.get('width') is None
+    assert cleaned4.get('height') is None
+
+
 def test_clean_svg_for_sprite_removes_namespaced_attributes():
     """Test that clean_svg_for_sprite removes namespaced attributes."""
     elem = ET.Element('path')
