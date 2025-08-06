@@ -1,7 +1,6 @@
 """
 Tests for SVG cleaning functionality used in sprite generation.
 """
-import pytest
 from includecontents.icons.builder import parse_svg_content, clean_svg_for_sprite, is_drawing_element
 from xml.etree import ElementTree as ET
 
@@ -108,14 +107,14 @@ def test_clean_svg_for_sprite_preserves_css_variable_styles():
     cleaned2 = clean_svg_for_sprite(elem2)
     assert cleaned2.get('style') == 'transform: var(--icon-transform, none); fill: var(--icon-primary)'
     
-    # Test that regular styles without CSS variables are kept (but not specially handled)
+    # Test that regular styles without CSS variables are removed
     elem3 = ET.Element('circle')
-    elem3.set('style', 'fill: red; stroke: blue')  # Will be kept as normal attribute
+    elem3.set('style', 'fill: red; stroke: blue')  # Should be removed (no CSS vars)
     elem3.set('r', '10')
     
     cleaned3 = clean_svg_for_sprite(elem3)
-    # Style without CSS variables is kept as a normal attribute
-    assert cleaned3.get('style') == 'fill: red; stroke: blue'
+    # Style without CSS variables is removed
+    assert cleaned3.get('style') is None
     assert cleaned3.get('r') == '10'
     
     # Test mixed styles (CSS vars and regular)
