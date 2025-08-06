@@ -3,6 +3,7 @@ name: Deploy Documentation
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
@@ -16,16 +17,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: "docs-${{ github.ref }}"
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,27 +44,45 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
-      - name: Build documentation
+      - name: Configure Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Build and test on pull requests
+      - name: Build documentation (PR)
+        if: github.event_name == 'pull_request'
         run: mkdocs build --clean --strict
 
-      - name: Setup Pages
+      # Deploy dev docs from main branch
+      - name: Deploy dev docs (main)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/configure-pages@v4
+        run: |
+          mike deploy dev --push --update-aliases
 
-      - name: Upload artifact
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
+      # Deploy versioned docs from tags
+      - name: Extract version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: extract_version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/v}
+          # Extract major.minor version (e.g., 3.1.1 -> 3.1)
+          VERSION=$(echo $TAG | sed -E 's/^([0-9]+\.[0-9]+).*/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying documentation for version $VERSION"
 
-  deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy versioned docs (tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION=${{ steps.extract_version.outputs.VERSION }}
+          # Check if this is the latest version by comparing with other tags
+          LATEST_TAG=$(git tag -l 'v*' | sort -V | tail -1)
+          CURRENT_TAG=${GITHUB_REF#refs/tags/}
+          
+          if [ "$CURRENT_TAG" = "$LATEST_TAG" ]; then
+            echo "This is the latest version, updating latest alias"
+            mike deploy $VERSION latest --push --update-aliases
+          else
+            echo "Not the latest version, deploying without latest alias"
+            mike deploy $VERSION --push --update-aliases
+          fi
