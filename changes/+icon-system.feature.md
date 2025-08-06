@@ -1,1 +1,0 @@
-Add icon system with automatic SVG sprite generation. Features `{% icon %}` template tag and `<icon:name>` HTML syntax support.

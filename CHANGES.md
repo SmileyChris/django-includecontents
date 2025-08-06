@@ -4,6 +4,13 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 3.0 (2025-08-06)
+
+### Features
+
+- Add icon system with automatic SVG sprite generation. Features `{% icon %}` template tag and `<icon:name>` HTML syntax support.
+
+
 # Version 2.5.2 (2025-08-04)
 
 ### Bugfixes
