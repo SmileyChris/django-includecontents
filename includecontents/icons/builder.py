@@ -298,16 +298,80 @@ def load_local_svg(svg_path: str) -> Dict[str, str]:
         raise IconBuildError(f"Invalid SVG content in {svg_path}: {e}")
 
 
+def get_cached_iconify_icon(prefix: str, icon_name: str, cache_static_path: str) -> Optional[Dict[str, str]]:
+    """
+    Try to load a cached Iconify icon from static files.
+    
+    Args:
+        prefix: Icon prefix (e.g., "mdi", "tabler")
+        icon_name: Icon name without prefix (e.g., "home")
+        cache_static_path: Static files path for cache (e.g., ".icon_cache")
+    
+    Returns:
+        Icon data dictionary or None if not cached
+    """
+    if not cache_static_path:
+        return None
+    
+    # Build cache file path: .icon_cache/mdi/home.json
+    cache_file = f"{cache_static_path}/{prefix}/{icon_name}.json"
+    
+    # Try to find in static files
+    cached_file = find_source_svg(cache_file)
+    if not cached_file:
+        return None
+    
+    try:
+        with open(cached_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        # Invalid or corrupted cache file, ignore it
+        return None
+
+
+def save_iconify_icon_to_cache(prefix: str, icon_name: str, icon_data: Dict[str, str], cache_root: str) -> None:
+    """
+    Save an Iconify icon to the filesystem cache.
+    
+    Args:
+        prefix: Icon prefix (e.g., "mdi", "tabler")
+        icon_name: Icon name without prefix (e.g., "home")
+        icon_data: Icon data dictionary with body, viewBox, etc.
+        cache_root: Filesystem path for writing cache files
+    """
+    if not cache_root:
+        return
+    
+    from pathlib import Path
+    
+    # Build cache file path
+    cache_dir = Path(cache_root) / prefix
+    cache_file = cache_dir / f"{icon_name}.json"
+    
+    # Create directory if it doesn't exist
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Write icon data to cache
+    try:
+        with open(cache_file, "w", encoding="utf-8") as f:
+            json.dump(icon_data, f, separators=(",", ":"))
+    except IOError:
+        # Failed to write cache, silently ignore
+        pass
+
+
 def fetch_iconify_icons(
-    prefix: str, icon_names: List[str], api_base: str
+    prefix: str, icon_names: List[str], api_base: str, cache_root: Optional[str] = None, cache_static_path: Optional[str] = None
 ) -> Dict[str, str]:
     """
-    Fetch icon data from Iconify API for a specific prefix.
+    Fetch icon data from Iconify API for a specific prefix, using cache when available.
 
     Args:
         prefix: Icon prefix (e.g., "mdi", "tabler")
         icon_names: List of icon names without prefix (e.g., ["home", "account"])
         api_base: Base URL for Iconify API
+        cache_root: Optional filesystem path for writing cached icons
+        cache_static_path: Optional static files path for reading cached icons
 
     Returns:
         Dictionary mapping icon names to their SVG bodies
@@ -316,8 +380,26 @@ def fetch_iconify_icons(
         URLError: If API request fails
         ValueError: If API response is invalid
     """
-    # Build API URL
-    icons_param = ",".join(icon_names)
+    icon_data = {}
+    icons_to_fetch = []
+    
+    # First, check cache for each icon
+    for icon_name in icon_names:
+        if cache_static_path:
+            cached_icon = get_cached_iconify_icon(prefix, icon_name, cache_static_path)
+            if cached_icon:
+                icon_data[icon_name] = cached_icon
+                continue
+        
+        # Icon not in cache, need to fetch it
+        icons_to_fetch.append(icon_name)
+    
+    # If all icons were cached, return early
+    if not icons_to_fetch:
+        return icon_data
+    
+    # Build API URL for missing icons
+    icons_param = ",".join(icons_to_fetch)
     url = urljoin(api_base.rstrip("/") + "/", f"{prefix}.json?icons={icons_param}")
 
     try:
@@ -329,10 +411,9 @@ def fetch_iconify_icons(
     if "icons" not in data:
         raise IconAPIError(f"Invalid API response from {url}: missing 'icons' field")
 
-    icon_data = {}
     icons = data["icons"]
 
-    for icon_name in icon_names:
+    for icon_name in icons_to_fetch:
         if icon_name not in icons:
             continue
 
@@ -346,13 +427,20 @@ def fetch_iconify_icons(
         # Add default viewBox if not present
         viewbox = icon_info.get("viewBox", "0 0 24 24")
 
-        # Store with viewBox info for later use
-        icon_data[icon_name] = {
+        # Create icon data
+        single_icon_data = {
             "body": body,
             "viewBox": viewbox,
             "width": icon_info.get("width", 24),
             "height": icon_info.get("height", 24),
         }
+        
+        # Store in result
+        icon_data[icon_name] = single_icon_data
+        
+        # Save to cache if configured
+        if cache_root:
+            save_iconify_icon_to_cache(prefix, icon_name, single_icon_data, cache_root)
 
     return icon_data
 
@@ -374,6 +462,8 @@ def build_sprite(
     icons: List[str],
     api_base: str = "https://api.iconify.design",
     component_map: Optional[Dict[str, str]] = None,
+    cache_root: Optional[str] = None,
+    cache_static_path: Optional[str] = None,
 ) -> str:
     """
     Build an SVG sprite sheet from a list of icon names (Iconify or local SVG files).
@@ -382,6 +472,8 @@ def build_sprite(
         icons: List of icon names (e.g., ["mdi:home", "icons/my-icon.svg", "static/custom.svg"])
         api_base: Base URL for Iconify API
         component_map: Optional mapping from component names to icon names for symbol IDs
+        cache_root: Optional filesystem path for writing cached icons
+        cache_static_path: Optional static files path for reading cached icons
 
     Returns:
         Complete SVG sprite sheet as string
@@ -429,7 +521,7 @@ def build_sprite(
     # Fetch Iconify icon data - fail fast on any errors
     all_icon_data = {}
     for prefix, names in iconify_groups.items():
-        icon_data = fetch_iconify_icons(prefix, names, api_base)
+        icon_data = fetch_iconify_icons(prefix, names, api_base, cache_root, cache_static_path)
         for name, data in icon_data.items():
             full_name = f"{prefix}:{name}"
             all_icon_data[full_name] = data
@@ -530,6 +622,8 @@ def get_sprite_settings() -> Dict:
         "api_base": "https://api.iconify.design",
         "dev_mode": getattr(settings, "DEBUG", True),
         "cache_timeout": 3600,
+        "api_cache_root": None,  # Filesystem path for writing cached icons
+        "api_cache_static_path": None,  # Static files path for reading cached icons
     }
 
     user_settings = getattr(settings, "INCLUDECONTENTS_ICONS", {})
@@ -623,6 +717,8 @@ def get_or_create_sprite() -> Tuple[str, str]:
             icons,
             sprite_settings["api_base"],
             component_map,
+            sprite_settings.get("api_cache_root"),
+            sprite_settings.get("api_cache_static_path"),
         )
 
         # Cache the result in memory

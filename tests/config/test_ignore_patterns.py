@@ -9,7 +9,7 @@ from includecontents.icons.finders import IconSpriteFinder
 
 def mock_iconify_api():
     """Mock Iconify API responses for tests."""
-    def mock_fetch(prefix, names, api_base):
+    def mock_fetch(prefix, names, api_base, cache_root=None, cache_static_path=None):
         if prefix == 'mdi':
             return {'home': {'body': '<path/>', 'viewBox': '0 0 24 24'}}
         elif prefix == 'tabler':
@@ -64,8 +64,53 @@ def test_no_ignore_patterns_for_iconify_only(mock_fetch):
     # Call list() which should modify ignore_patterns
     list(finder.list(ignore_patterns))
     
-    # Should not have added any patterns for Iconify icons
+    # Should not have added any patterns for Iconify icons without cache
     assert len(ignore_patterns) == 0
+
+
+@override_settings(INCLUDECONTENTS_ICONS={
+    'icons': [
+        'mdi:home',
+        'tabler:user',
+    ],
+    'api_cache_static_path': '.icon_cache',
+})
+@patch('includecontents.icons.builder.fetch_iconify_icons')
+def test_cache_directory_added_to_ignore_patterns(mock_fetch):
+    """Test that cache directory is added to ignore patterns when configured."""
+    mock_fetch.side_effect = mock_iconify_api()
+    
+    finder = IconSpriteFinder()
+    ignore_patterns = []
+    
+    # Call list() which should modify ignore_patterns
+    list(finder.list(ignore_patterns))
+    
+    # Check that cache directory is in ignore patterns
+    assert '.icon_cache/*' in ignore_patterns
+
+
+@override_settings(INCLUDECONTENTS_ICONS={
+    'icons': [
+        'mdi:home',
+        'icons/logo.svg',
+    ],
+    'api_cache_static_path': '.icon_cache',
+})
+@patch('includecontents.icons.builder.fetch_iconify_icons')
+def test_both_local_svgs_and_cache_ignored(mock_fetch):
+    """Test that both local SVGs and cache directory are ignored when both are present."""
+    mock_fetch.side_effect = mock_iconify_api()
+    
+    finder = IconSpriteFinder()
+    ignore_patterns = []
+    
+    # Call list() which should modify ignore_patterns
+    list(finder.list(ignore_patterns))
+    
+    # Check that both are in ignore patterns
+    assert 'icons/logo.svg' in ignore_patterns
+    assert '.icon_cache/*' in ignore_patterns
 
 
 @override_settings(INCLUDECONTENTS_ICONS={

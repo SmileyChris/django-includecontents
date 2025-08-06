@@ -5,7 +5,7 @@ Tests both HTML component syntax and template tag usage.
 import pytest
 from unittest.mock import patch
 from django.template.loader import render_to_string
-from django.template import Context, Template
+from django.template import Context
 
 from includecontents.django.base import Template as CustomTemplate
 from includecontents.icons import builder, utils
@@ -19,7 +19,7 @@ def mock_all_iconify_fetches():
     Create a mock function that handles all iconify fetches for tests.
     This prevents errors with our strict approach that builds all icons at once.
     """
-    def mock_fetch_fn(prefix, icon_names, api_base):
+    def mock_fetch_fn(prefix, icon_names, api_base, cache_root=None, cache_static_path=None):
         if prefix == 'mdi':
             return {'home': {'body': '<path d="M10 10"/>', 'viewBox': '0 0 24 24'}}
         elif prefix == 'tabler':

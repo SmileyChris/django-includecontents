@@ -49,7 +49,7 @@ def test_build_sprite_with_mixed_sources():
     """Test building a sprite with both local SVGs and Iconify icons."""
     from unittest.mock import patch
     
-    def mock_fetch(prefix, names, api_base):
+    def mock_fetch(prefix, names, api_base, cache_root=None, cache_static_path=None):
         if prefix == 'mdi':
             return {'home': {'body': '<path d="M10 20v-6"/>', 'viewBox': '0 0 24 24'}}
         return {}

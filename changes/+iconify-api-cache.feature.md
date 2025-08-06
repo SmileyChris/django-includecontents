@@ -1,0 +1,1 @@
+Add file-based caching system for Iconify API responses to improve performance and enable offline development. Icons fetched from the Iconify API can now be cached locally and reused in subsequent builds, configured via `api_cache_root` and `api_cache_static_path` settings.

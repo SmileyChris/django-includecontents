@@ -127,7 +127,7 @@ class IconSpriteFinder(BaseFinder):
             raise IconBuildError(f"Failed to generate icon sprite during collectstatic: {e}") from e
 
     def _add_source_files_to_ignore_patterns(self, ignore_patterns):
-        """Add source SVG files to ignore patterns to prevent duplicate serving."""
+        """Add source SVG files and cache files to ignore patterns to prevent duplicate serving."""
         try:
             sprite_settings = get_sprite_settings()
             icon_definitions = sprite_settings.get("icons", [])
@@ -147,6 +147,13 @@ class IconSpriteFinder(BaseFinder):
                 except (ValueError, TypeError):
                     # Skip invalid definitions
                     continue
+
+            # Also ignore cached icon files if cache is configured
+            cache_static_path = sprite_settings.get("api_cache_static_path")
+            if cache_static_path:
+                # Add the entire cache directory to ignore patterns
+                # This prevents cached JSON files from being served as static files
+                ignore_patterns.append(f"{cache_static_path}/*")
 
         except Exception:
             # If anything goes wrong, don't break the finder

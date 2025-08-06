@@ -129,6 +129,46 @@ INCLUDECONTENTS_ICONS = {
 - **Consistent naming**: `('user', 'mdi:account')` → `<icon:user>` instead of `<icon:account>`
 - **Avoid conflicts**: When two icons would have the same auto-generated name
 
+## Iconify API Caching (Optional)
+
+To reduce API calls and enable offline development, you can cache Iconify icons locally:
+
+```python
+# settings.py
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+INCLUDECONTENTS_ICONS = {
+    'icons': [...],
+    
+    # Cache configuration
+    'api_cache_root': BASE_DIR / 'static' / '.icon_cache',  # Where to write cached icons
+    'api_cache_static_path': '.icon_cache',                 # Where to read cached icons from static files
+}
+```
+
+This creates a cache structure like:
+```
+static/.icon_cache/
+├── mdi/
+│   ├── home.json
+│   └── account.json
+├── tabler/
+│   └── user.json
+```
+
+**Benefits:**
+- Icons are fetched from Iconify API only once
+- Subsequent builds use local cached copies
+- Works offline after initial fetch
+- Can be committed to version control for reproducible builds
+
+**Notes:**
+- Cache is optional - leave settings undefined to disable
+- Only caches Iconify icons, not local SVG files
+- Each icon cached individually for incremental updates
+
 ## Configuration Options
 
 All available configuration options for `INCLUDECONTENTS_ICONS`:
@@ -147,6 +187,10 @@ INCLUDECONTENTS_ICONS = {
     'dev_mode': True,                    # Development features
     'cache_timeout': 3600,               # Cache timeout (seconds)
     'api_base': 'https://api.iconify.design',  # Iconify API URL
+    
+    # Optional cache settings (see Iconify API Caching section above)
+    'api_cache_root': Path('static/.icon_cache'),      # Filesystem path for writing cached icons
+    'api_cache_static_path': '.icon_cache',            # Static files path for reading cached icons
 }
 ```
 

@@ -12,13 +12,12 @@ pytest -m "not integration"
 import os
 import pytest
 from django.test import TestCase
-from django.conf import settings
 
 from includecontents.icons.builder import fetch_iconify_icons, build_sprite
 
 
 # Skip these tests unless explicitly enabled via environment variable
-skip_integration = not os.environ.get('TEST_ICONIFY_API', '').lower() in ('1', 'true', 'yes')
+skip_integration = os.environ.get('TEST_ICONIFY_API', '').lower() not in ('1', 'true', 'yes')
 
 
 @pytest.mark.integration
