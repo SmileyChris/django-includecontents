@@ -1,1 +1,0 @@
-Improved icon error reporting to show all missing or invalid icons at once, making it easier for developers to fix configuration issues in a single pass

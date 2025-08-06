@@ -4,6 +4,17 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 3.1.1 (2025-08-06)
+
+### Features
+
+- Improved icon error reporting to show all missing or invalid icons at once, making it easier for developers to fix configuration issues in a single pass
+
+### Bugfixes
+
+- Fixed compatibility issue with Django 5.2 where invalid icons could cause a TypeError in static file serving instead of returning a proper 404 error
+
+
 # Version 3.1 (2025-08-06)
 
 ### Features
