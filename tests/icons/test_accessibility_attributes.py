@@ -19,7 +19,6 @@ def mock_iconify_fetch():
 
 @override_settings(INCLUDECONTENTS_ICONS={
     'icons': [('home', 'mdi:home')],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 @patch('includecontents.icons.builder.fetch_iconify_icons')
 def test_aria_attributes_on_svg_element(mock_fetch):
@@ -43,7 +42,6 @@ def test_aria_attributes_on_svg_element(mock_fetch):
 
 @override_settings(INCLUDECONTENTS_ICONS={
     'icons': [('home', 'mdi:home')],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 @patch('includecontents.icons.builder.fetch_iconify_icons')
 def test_aria_attributes_on_use_element(mock_fetch):
@@ -64,7 +62,6 @@ def test_aria_attributes_on_use_element(mock_fetch):
 
 @override_settings(INCLUDECONTENTS_ICONS={
     'icons': [('star', 'mdi:star')],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 @patch('includecontents.icons.builder.fetch_iconify_icons')
 def test_mixed_attribute_placement(mock_fetch):
@@ -94,7 +91,6 @@ def test_mixed_attribute_placement(mock_fetch):
 
 @override_settings(INCLUDECONTENTS_ICONS={
     'icons': [('icon', 'mdi:home')],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 @patch('includecontents.icons.builder.fetch_iconify_icons')
 def test_decorative_icon_pattern(mock_fetch):
@@ -112,7 +108,6 @@ def test_decorative_icon_pattern(mock_fetch):
 
 @override_settings(INCLUDECONTENTS_ICONS={
     'icons': [('save', 'mdi:content-save')],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 @patch('includecontents.icons.builder.fetch_iconify_icons')
 def test_meaningful_icon_pattern(mock_fetch):

@@ -15,7 +15,6 @@ def test_finder_modifies_ignore_patterns():
             'icons/nav/home.svg',
             ('brand', 'assets/brand.svg'),
         ],
-        'storage': 'includecontents.icons.storages.MemoryIconStorage',
     }
     
     with override_settings(INCLUDECONTENTS_ICONS=config):
@@ -59,7 +58,6 @@ def test_finder_order_importance_documentation():
     
     config = {
         'icons': ['icons/test.svg'],
-        'storage': 'includecontents.icons.storages.MemoryIconStorage',
     }
     
     with override_settings(INCLUDECONTENTS_ICONS=config):

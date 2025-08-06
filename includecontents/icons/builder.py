@@ -536,10 +536,6 @@ def get_sprite_settings() -> Dict:
     default_settings = {
         "icons": [],
         "api_base": "https://api.iconify.design",
-        "storage": "includecontents.icons.storages.DjangoFileIconStorage",
-        "storage_options": {
-            "location": "icons/",
-        },
         "dev_mode": getattr(settings, "DEBUG", True),
         "cache_timeout": 3600,
         "optimize_command": "",  # Optional SVG optimization command
@@ -561,33 +557,6 @@ def get_sprite_settings() -> Dict:
     return merged_settings
 
 
-def get_icon_storage():
-    """
-    Get the configured storage backend instance.
-
-    Returns:
-        Storage backend instance
-    """
-    sprite_settings = get_sprite_settings()
-    storage_class_path = sprite_settings["storage"]
-    storage_options = sprite_settings.get("storage_options", {})
-
-    # Import the storage class
-    if isinstance(storage_class_path, str):
-        from django.utils.module_loading import import_string
-
-        storage_class = import_string(storage_class_path)
-
-        # Handle storage classes that don't accept any options (like MemoryIconStorage)
-        sig = inspect.signature(storage_class.__init__)
-        # If __init__ only accepts 'self', don't pass any options
-        if len(sig.parameters) == 1:  # Only 'self' parameter
-            return storage_class()
-        else:
-            return storage_class(**storage_options)
-    else:
-        # Assume it's already an instance
-        return storage_class_path
 
 
 def get_sprite_hash() -> str:
@@ -670,14 +639,6 @@ def get_or_create_sprite() -> Tuple[str, str]:
 
         # Cache the result in memory
         cache_sprite(sprite_hash, sprite_content)
-
-        # Save to persistent storage if it doesn't exist
-        from .storage import get_sprite_filename
-
-        storage = get_icon_storage()
-        sprite_filename = get_sprite_filename(sprite_hash)
-        if not storage.exists(sprite_filename):
-            storage.save(sprite_filename, sprite_content)
 
         return sprite_hash, sprite_content
 

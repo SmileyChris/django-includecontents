@@ -50,5 +50,4 @@ INCLUDECONTENTS_ICONS = {
     ],
     "dev_mode": True,
     "cache_timeout": 3600,
-    "storage": "includecontents.icons.storages.MemoryIconStorage",
 }

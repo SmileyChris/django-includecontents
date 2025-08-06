@@ -484,25 +484,13 @@ INCLUDECONTENTS_ICONS = {
     
     # Optional: Iconify API base URL (default: 'https://api.iconify.design')
     'api_base': 'https://api.iconify.design',
-    
-    # Optional: Storage backend (default: DjangoFileIconStorage)
-    'storage': 'includecontents.icons.storages.DjangoFileIconStorage',
-    'storage_options': {
-        'location': 'icons/',  # Path within static storage
-    },
 }
 ```
 
 **Icon sources:**
 - **Iconify icons**: Use prefix notation like `mdi:home`, `tabler:calendar`
-- **Local SVG files**: Place in static directories, reference by path
+- **Local SVG files**: Place in static directories, reference by path (must end with `.svg`)
 - **Custom names**: Use tuples for custom component names
-
-**Storage backends:**
-- `DjangoFileIconStorage`: Uses Django's static file storage (default)
-- `MemoryIconStorage`: In-memory storage for development
-- `FileSystemIconStorage`: Direct file system storage
-- Custom backends by extending `BaseIconStorage`
 
 ## Context Variables
 

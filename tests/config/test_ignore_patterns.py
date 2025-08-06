@@ -13,7 +13,6 @@ from includecontents.icons.finders import IconSpriteFinder
         ('brand', 'assets/brand.svg'),  # Local SVG with custom name - should be ignored
         ('nav-home', 'tabler:house'),  # Iconify with custom name - shouldn't be ignored
     ],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 def test_ignore_patterns_added_for_local_svgs():
     """Test that local SVG files are added to ignore patterns."""
@@ -37,7 +36,6 @@ def test_ignore_patterns_added_for_local_svgs():
         'mdi:home',
         'tabler:user',
     ],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 def test_no_ignore_patterns_for_iconify_only():
     """Test that no ignore patterns are added when only using Iconify icons."""
@@ -58,7 +56,6 @@ def test_no_ignore_patterns_for_iconify_only():
         'logos/brand.svg',
         ('custom-logo', 'logos/company.svg'),
     ],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 def test_ignore_patterns_for_nested_paths():
     """Test that nested SVG file paths are correctly added to ignore patterns."""
@@ -82,7 +79,6 @@ def test_ignore_patterns_for_nested_paths():
 
 @override_settings(INCLUDECONTENTS_ICONS={
     'icons': [],  # Empty configuration
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 def test_empty_configuration_no_ignore_patterns():
     """Test that empty configuration doesn't add any ignore patterns."""
@@ -112,7 +108,6 @@ def test_invalid_configuration_doesnt_break():
         'icons/test.svg',     # Normal local file
         'assets/other.svg',   # Another local file
     ],
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 })
 def test_edge_cases_in_local_file_detection():
     """Test edge cases in detecting local vs remote icons."""

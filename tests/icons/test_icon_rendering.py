@@ -382,14 +382,6 @@ def test_sprite_filename_generation():
     assert filename == f'sprite-{test_hash}.svg'
 
 
-def test_sprite_url_generation():
-    """Test sprite URL generation."""
-    test_hash = 'abcd1234'
-    
-    # When sprite doesn't exist in storage, should return None
-    url = storage.get_sprite_url(test_hash)
-    assert url is None
-
 
 @patch('includecontents.icons.builder.fetch_iconify_icons')
 def test_cache_bust_parameter(mock_fetch):

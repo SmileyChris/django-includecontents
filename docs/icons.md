@@ -140,9 +140,6 @@ INCLUDECONTENTS_ICONS = {
     'cache_timeout': 3600,               # Cache timeout (seconds)
     'api_base': 'https://api.iconify.design',  # Iconify API URL
     'optimize_command': '',              # SVG optimization command (e.g., "svgo --input={input} --output={output}")
-    
-    # Storage backend (for caching - usually memory storage is sufficient)
-    'storage': 'includecontents.icons.storages.MemoryIconStorage',
 }
 ```
 
@@ -162,7 +159,7 @@ INCLUDECONTENTS_ICONS = {
 }
 ```
 
-The `{input}` and `{output}` placeholders are replaced with temporary file paths. The command runs after sprite generation and before storage. If the optimization command fails, the build fails (strict mode).
+The `{input}` and `{output}` placeholders are replaced with temporary file paths. The command runs after sprite generation. If the optimization command fails, the build fails (strict mode).
 
 **Requirements:**
 - The optimization tool must be installed and available in PATH

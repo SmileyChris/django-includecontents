@@ -29,18 +29,8 @@ class IconSpriteFinder(BaseFinder):
         super().__init__(*args, **kwargs)
 
     def _get_sprite_path_prefix(self):
-        """Get the configured sprite path prefix (e.g., 'icons/')."""
-        sprite_settings = get_sprite_settings()
-        storage_options = sprite_settings.get("storage_options", {})
-        location = storage_options.get("location", "icons/")
-
-        # Handle empty location - fallback to default
-        if not location or not location.strip():
-            location = "icons/"
-        elif not location.endswith("/"):
-            location += "/"
-
-        return location
+        """Get the sprite path prefix (always 'icons/')."""
+        return "icons/"
 
     def find(self, path, all=False, find_all=None):
         """
@@ -75,43 +65,26 @@ class IconSpriteFinder(BaseFinder):
 
             # Check if the requested hash matches current sprite
             if sprite_hash == expected_hash:
-                # Get the sprite filename and storage
-                from .builder import get_icon_storage
-                from .storage import get_sprite_filename
+                # Create a temporary file to serve the sprite
+                import tempfile
 
-                sprite_filename = get_sprite_filename(sprite_hash)
-                storage = get_icon_storage()
-
-                # Try to get a file system path if the storage supports it
-                if hasattr(storage, "path"):
-                    # FileSystemIconStorage has a path() method
-                    file_path = str(storage.path(sprite_filename))
+                temp_fd, temp_path = tempfile.mkstemp(
+                    suffix=".svg", prefix="sprite-"
+                )
+                try:
+                    with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
+                        f.write(sprite_content)
                     if find_all:
-                        return [file_path]
+                        return [temp_path]
                     else:
-                        return file_path
-                else:
-                    # For non-filesystem storage (like MemoryIconStorage),
-                    # create a temporary file
-                    import tempfile
-
-                    temp_fd, temp_path = tempfile.mkstemp(
-                        suffix=".svg", prefix="sprite-"
-                    )
+                        return temp_path
+                except Exception:
+                    # Clean up temp file on error
                     try:
-                        with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
-                            f.write(sprite_content)
-                        if find_all:
-                            return [temp_path]
-                        else:
-                            return temp_path
-                    except Exception:
-                        # Clean up temp file on error
-                        try:
-                            os.unlink(temp_path)
-                        except OSError:
-                            pass
-                        raise
+                        os.unlink(temp_path)
+                    except OSError:
+                        pass
+                    raise
 
         except Exception:
             # If anything goes wrong, just return empty - don't break static files
@@ -195,31 +168,3 @@ class IconSpriteFinder(BaseFinder):
         filename = os.path.basename(path)  # sprite-abc123.svg
         return filename.replace("sprite-", "").replace(".svg", "")  # abc123
 
-    def _cleanup_old_sprites(self, storage, current_sprite_filename):
-        """
-        Clean up old sprite files that are no longer needed.
-
-        Args:
-            storage: Storage backend instance
-            current_sprite_filename: Current sprite filename to keep
-        """
-        try:
-            import glob
-
-            if hasattr(storage, "location"):
-                sprite_pattern = str(storage.location / "sprite-*.svg")
-                existing_files = glob.glob(sprite_pattern)
-
-                current_path = str(storage.path(current_sprite_filename))
-
-                # Remove old sprite files (keep only the current one)
-                for file_path in existing_files:
-                    if file_path != current_path:
-                        try:
-                            os.unlink(file_path)
-                        except OSError:
-                            # Ignore errors when removing old files
-                            pass
-        except Exception:
-            # Don't let cleanup errors break the finder
-            pass
