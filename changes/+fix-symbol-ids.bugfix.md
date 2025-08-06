@@ -1,1 +1,0 @@
-Fixed icon symbol IDs to use component names (e.g., "home") instead of full identifiers (e.g., "mdi-home"). Icons are now consistently referenced by their component names in both templates and generated sprites.

@@ -1,1 +1,0 @@
-Icon sprite build failures now fail loudly with clear error messages instead of silently returning empty SVGs. This makes configuration errors, missing files, and API failures immediately visible during development and deployment.

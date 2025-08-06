@@ -4,6 +4,25 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 3.0.1 (2025-08-06)
+
+### Features
+
+- Icon sprite build failures now fail loudly with clear error messages instead of silently returning empty SVGs. This makes configuration errors, missing files, and API failures immediately visible during development and deployment.
+
+### Bugfixes
+
+- Fixed icon symbol IDs to use component names (e.g., "home") instead of full identifiers (e.g., "mdi-home"). Icons are now consistently referenced by their component names in both templates and generated sprites.
+
+### Deprecations and Removals
+
+- Removed all storage backend classes and configuration. The icon system now uses only in-memory caching with Django's static files system for production serving. This is a breaking change - remove `storage` and `storage_options` from your `INCLUDECONTENTS_ICONS` settings.
+
+### Misc
+
+- Simplified icon system architecture by removing 1,360+ lines of code. Sprites are now cached in memory during development and served from STATIC_ROOT in production via standard Django static files, eliminating the need for complex storage configuration.
+
+
 # Version 3.0 (2025-08-06)
 
 ### Features

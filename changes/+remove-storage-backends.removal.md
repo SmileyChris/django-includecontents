@@ -1,1 +1,0 @@
-Removed all storage backend classes and configuration. The icon system now uses only in-memory caching with Django's static files system for production serving. This is a breaking change - remove `storage` and `storage_options` from your `INCLUDECONTENTS_ICONS` settings.
