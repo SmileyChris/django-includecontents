@@ -643,5 +643,6 @@ def get_or_create_sprite() -> Tuple[str, str]:
         return sprite_hash, sprite_content
 
     except Exception as e:
-        print(f"Error building sprite: {e}")
-        return sprite_hash, '<svg style="display:none"></svg>'
+        # Fail loudly - a broken sprite build is a serious configuration error
+        # that should be fixed immediately, not silently ignored
+        raise RuntimeError(f"Failed to build icon sprite: {e}") from e

@@ -21,9 +21,9 @@ def test_finder_modifies_ignore_patterns():
         finder = IconSpriteFinder()
         ignore_patterns = []
         
-        # When list() is called (as happens during collectstatic), 
-        # it should add our source SVG files to ignore patterns
-        list(finder.list(ignore_patterns))
+        # The _add_source_files_to_ignore_patterns method is what we're testing
+        # We can test it directly without building sprites
+        finder._add_source_files_to_ignore_patterns(ignore_patterns)
         
         # Verify that all source SVG files are now in ignore patterns
         expected_ignored = [
@@ -62,7 +62,7 @@ def test_finder_order_importance_documentation():
     
     with override_settings(INCLUDECONTENTS_ICONS=config):
         ignore_patterns = []
-        list(finder.list(ignore_patterns))
+        finder._add_source_files_to_ignore_patterns(ignore_patterns)
         
         # The source file should be added to ignore patterns
         assert 'icons/test.svg' in ignore_patterns

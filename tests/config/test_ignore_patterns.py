@@ -2,8 +2,21 @@
 Test that IconSpriteFinder adds source SVG files to ignore patterns
 to prevent duplicate serving by other finders.
 """
+from unittest.mock import patch
 from django.test import override_settings
 from includecontents.icons.finders import IconSpriteFinder
+
+
+def mock_iconify_api():
+    """Mock Iconify API responses for tests."""
+    def mock_fetch(prefix, names, api_base):
+        if prefix == 'mdi':
+            return {'home': {'body': '<path/>', 'viewBox': '0 0 24 24'}}
+        elif prefix == 'tabler':
+            return {'house': {'body': '<rect/>', 'viewBox': '0 0 24 24'},
+                    'user': {'body': '<circle/>', 'viewBox': '0 0 24 24'}}
+        return {}
+    return mock_fetch
 
 
 @override_settings(INCLUDECONTENTS_ICONS={
@@ -14,8 +27,11 @@ from includecontents.icons.finders import IconSpriteFinder
         ('nav-home', 'tabler:house'),  # Iconify with custom name - shouldn't be ignored
     ],
 })
-def test_ignore_patterns_added_for_local_svgs():
+@patch('includecontents.icons.builder.fetch_iconify_icons')
+def test_ignore_patterns_added_for_local_svgs(mock_fetch):
     """Test that local SVG files are added to ignore patterns."""
+    mock_fetch.side_effect = mock_iconify_api()
+    
     finder = IconSpriteFinder()
     ignore_patterns = []
     
@@ -37,8 +53,11 @@ def test_ignore_patterns_added_for_local_svgs():
         'tabler:user',
     ],
 })
-def test_no_ignore_patterns_for_iconify_only():
+@patch('includecontents.icons.builder.fetch_iconify_icons')
+def test_no_ignore_patterns_for_iconify_only(mock_fetch):
     """Test that no ignore patterns are added when only using Iconify icons."""
+    mock_fetch.side_effect = mock_iconify_api()
+    
     finder = IconSpriteFinder()
     ignore_patterns = []
     

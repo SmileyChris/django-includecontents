@@ -86,9 +86,12 @@ class IconSpriteFinder(BaseFinder):
                         pass
                     raise
 
-        except Exception:
-            # If anything goes wrong, just return empty - don't break static files
-            pass
+        except Exception as e:
+            # Log the error but don't break static file serving
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to generate icon sprite for {path}: {e}")
+            # Return empty to allow other finders to continue
 
         return [] if find_all else None
 
@@ -116,9 +119,10 @@ class IconSpriteFinder(BaseFinder):
                 storage = FileSystemStorage()
                 yield sprite_path, storage
 
-        except Exception:
-            # If sprite generation fails, don't yield anything
-            pass
+        except Exception as e:
+            # During collectstatic, we want to fail loudly
+            # This is a configuration error that should be fixed
+            raise RuntimeError(f"Failed to generate icon sprite during collectstatic: {e}") from e
 
     def _add_source_files_to_ignore_patterns(self, ignore_patterns):
         """Add source SVG files to ignore patterns to prevent duplicate serving."""
