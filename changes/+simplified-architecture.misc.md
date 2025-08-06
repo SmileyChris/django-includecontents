@@ -1,0 +1,1 @@
+Simplified icon system architecture by removing 1,360+ lines of code. Sprites are now cached in memory during development and served from STATIC_ROOT in production via standard Django static files, eliminating the need for complex storage configuration.
