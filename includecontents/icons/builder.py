@@ -19,6 +19,44 @@ from xml.etree import ElementTree as ET
 from django.conf import settings
 from django.contrib.staticfiles.finders import get_finder
 
+from .exceptions import (
+    IconNotFoundError,
+    IconBuildError,
+    IconConfigurationError,
+    IconAPIError,
+    IconOptimizationError,
+)
+
+
+class IconMemoryCache:
+    """
+    Simple in-memory cache for icon sprites.
+    Used for fast access during development and request handling.
+    """
+
+    def __init__(self):
+        self._cache = {}
+
+    def get(self, key: str) -> Optional[str]:
+        """Get cached sprite content by hash."""
+        return self._cache.get(key)
+
+    def set(self, key: str, content: str) -> None:
+        """Cache sprite content by hash."""
+        self._cache[key] = content
+
+    def clear(self) -> None:
+        """Clear all cached content."""
+        self._cache.clear()
+
+    def has(self, key: str) -> bool:
+        """Check if key exists in cache."""
+        return key in self._cache
+
+
+# Global memory cache instance
+_memory_cache = IconMemoryCache()
+
 
 def find_source_svg(path: str) -> Optional[str]:
     """
@@ -260,20 +298,20 @@ def load_local_svg(svg_path: str) -> Dict[str, str]:
     svg_file_path = find_source_svg(svg_path)
 
     if svg_file_path is None:
-        raise FileNotFoundError(f"SVG file not found in static files: {svg_path}")
+        raise IconNotFoundError(f"SVG file not found in static files: {svg_path}")
 
     # Read the SVG file content
     try:
         with open(svg_file_path, "r", encoding="utf-8") as f:
             svg_content = f.read()
     except Exception as e:
-        raise FileNotFoundError(f"Failed to read SVG file: {svg_path} - {e}")
+        raise IconNotFoundError(f"Failed to read SVG file: {svg_path} - {e}")
 
     # Parse SVG content using helper function
     try:
         return parse_svg_content(svg_content, svg_path)
     except ET.ParseError as e:
-        raise ValueError(f"Invalid SVG content in {svg_path}: {e}")
+        raise IconBuildError(f"Invalid SVG content in {svg_path}: {e}")
 
 
 def fetch_iconify_icons(
@@ -302,10 +340,10 @@ def fetch_iconify_icons(
         with urlopen(url) as response:
             data = json.loads(response.read().decode("utf-8"))
     except (URLError, json.JSONDecodeError) as e:
-        raise URLError(f"Failed to fetch icons from {url}: {e}")
+        raise IconAPIError(f"Failed to fetch icons from {url}: {e}")
 
     if "icons" not in data:
-        raise ValueError(f"Invalid API response from {url}: missing 'icons' field")
+        raise IconAPIError(f"Invalid API response from {url}: missing 'icons' field")
 
     icon_data = {}
     icons = data["icons"]
@@ -366,7 +404,7 @@ def optimize_svg_content(svg_content: str, optimize_command: str) -> str:
 
     # Validate command format
     if "{input}" not in optimize_command or "{output}" not in optimize_command:
-        raise ValueError(
+        raise IconOptimizationError(
             "Optimization command must contain {input} and {output} placeholders"
         )
 
@@ -397,8 +435,8 @@ def optimize_svg_content(svg_content: str, optimize_command: str) -> str:
 
         # Check if command succeeded
         if result.returncode != 0:
-            raise subprocess.CalledProcessError(
-                result.returncode, command, output=result.stdout, stderr=result.stderr
+            raise IconOptimizationError(
+                f"Optimization command failed with code {result.returncode}: {result.stderr}"
             )
 
         # Read the optimized content
@@ -470,7 +508,7 @@ def build_sprite(
         else:
             # This should be an Iconify icon
             if ":" not in icon:
-                raise ValueError(
+                raise IconConfigurationError(
                     f"Invalid icon name '{icon}': must include prefix (e.g., 'mdi:home') or be a valid SVG path"
                 )
 
@@ -494,7 +532,7 @@ def build_sprite(
     symbols = []
     for icon in sorted(icons):  # Sort for deterministic output
         if icon not in all_icon_data:
-            raise ValueError(f"Icon '{icon}' not found in fetched data")
+            raise IconNotFoundError(f"Icon '{icon}' not found in fetched data")
 
         data = all_icon_data[icon]
 
@@ -508,7 +546,7 @@ def build_sprite(
         
         # This should always find a match since we built the map from these icons
         if symbol_id is None:
-            raise ValueError(f"Icon '{icon}' not found in component map")
+            raise IconBuildError(f"Icon '{icon}' not found in component map")
 
         # Create symbol element
         symbol = f'''<symbol id="{symbol_id}" viewBox="{data["viewBox"]}">{data["body"]}</symbol>'''
@@ -526,6 +564,48 @@ def build_sprite(
         sprite_content = optimize_svg_content(sprite_content, optimize_command)
 
     return sprite_content
+
+
+def get_sprite_filename(sprite_hash: str) -> str:
+    """
+    Generate sprite filename from hash.
+
+    Args:
+        sprite_hash: Hash of sprite content
+
+    Returns:
+        Filename for sprite
+    """
+    return f"sprite-{sprite_hash}.svg"
+
+
+def cache_sprite(sprite_hash: str, content: str) -> None:
+    """
+    Store sprite content in memory cache.
+
+    Args:
+        sprite_hash: Hash of sprite content
+        content: SVG sprite content
+    """
+    _memory_cache.set(sprite_hash, content)
+
+
+def get_cached_sprite(sprite_hash: str) -> Optional[str]:
+    """
+    Retrieve sprite content from memory cache.
+
+    Args:
+        sprite_hash: Hash of sprite content
+
+    Returns:
+        Sprite content or None if not found
+    """
+    return _memory_cache.get(sprite_hash)
+
+
+def clear_sprite_cache() -> None:
+    """Clear the memory cache."""
+    _memory_cache.clear()
 
 
 def get_sprite_settings() -> Dict:
@@ -557,7 +637,7 @@ def get_sprite_settings() -> Dict:
         try:
             parse_icon_definitions(icon_definitions)
         except ValueError as e:
-            raise ValueError(f"Invalid INCLUDECONTENTS_ICONS configuration: {e}")
+            raise IconConfigurationError(f"Invalid INCLUDECONTENTS_ICONS configuration: {e}")
 
     return merged_settings
 
@@ -617,9 +697,7 @@ def get_or_create_sprite() -> Tuple[str, str]:
     # Generate hash for current icon set
     sprite_hash = generate_icon_hash(icons)
 
-    # Try to load from storage first
-    from .storage import cache_sprite, get_cached_sprite
-
+    # Try to load from cache first
     cached_content = get_cached_sprite(sprite_hash)
     if cached_content:
         return sprite_hash, cached_content
@@ -650,4 +728,6 @@ def get_or_create_sprite() -> Tuple[str, str]:
     except Exception as e:
         # Fail loudly - a broken sprite build is a serious configuration error
         # that should be fixed immediately, not silently ignored
-        raise RuntimeError(f"Failed to build icon sprite: {e}") from e
+        if isinstance(e, (IconNotFoundError, IconBuildError, IconConfigurationError, IconAPIError, IconOptimizationError)):
+            raise  # Re-raise our custom exceptions as-is
+        raise IconBuildError(f"Failed to build icon sprite: {e}") from e

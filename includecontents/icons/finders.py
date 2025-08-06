@@ -8,8 +8,8 @@ import os
 from django.contrib.staticfiles.finders import BaseFinder
 from django.core.files.storage import FileSystemStorage
 
-from .builder import get_or_create_sprite, get_sprite_settings
-from .storage import get_sprite_filename
+from .builder import get_or_create_sprite, get_sprite_settings, get_sprite_filename
+from .exceptions import IconBuildError
 
 
 class IconSpriteFinder(BaseFinder):
@@ -122,7 +122,9 @@ class IconSpriteFinder(BaseFinder):
         except Exception as e:
             # During collectstatic, we want to fail loudly
             # This is a configuration error that should be fixed
-            raise RuntimeError(f"Failed to generate icon sprite during collectstatic: {e}") from e
+            if isinstance(e, IconBuildError):
+                raise  # Re-raise our custom exception as-is
+            raise IconBuildError(f"Failed to generate icon sprite during collectstatic: {e}") from e
 
     def _add_source_files_to_ignore_patterns(self, ignore_patterns):
         """Add source SVG files to ignore patterns to prevent duplicate serving."""

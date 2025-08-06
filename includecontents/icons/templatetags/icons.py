@@ -8,8 +8,7 @@ from django.templatetags.static import static
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 
-from ..builder import get_or_create_sprite, get_sprite_hash, get_sprite_settings
-from ..storage import get_sprite_filename
+from ..builder import get_or_create_sprite, get_sprite_hash, get_sprite_settings, get_sprite_filename
 from ..utils import parse_icon_definitions
 
 # Import Attrs from the main templatetags module

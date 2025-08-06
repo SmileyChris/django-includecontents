@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.template import Context, Template
 
 from includecontents.django.base import Template as CustomTemplate
-from includecontents.icons import builder, storage, utils
+from includecontents.icons import builder, utils
 
 
 # Tests now use real Django settings from tests/settings.py
@@ -361,7 +361,7 @@ def test_get_icon_names_from_definitions():
 def test_memory_cache_operations():
     """Test memory cache operations with IconMemoryCache class."""
     # Test the IconMemoryCache class directly
-    cache = storage.IconMemoryCache()
+    cache = builder.IconMemoryCache()
     test_hash = 'test123'
     test_content = '<svg>test</svg>'
     
@@ -377,7 +377,7 @@ def test_memory_cache_operations():
 def test_sprite_filename_generation():
     """Test sprite filename generation."""
     test_hash = 'abcd1234'
-    filename = storage.get_sprite_filename(test_hash)
+    filename = builder.get_sprite_filename(test_hash)
     
     assert filename == f'sprite-{test_hash}.svg'
 

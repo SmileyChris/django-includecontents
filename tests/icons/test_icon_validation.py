@@ -6,6 +6,7 @@ import pytest
 from django.test import override_settings
 
 from includecontents.icons.builder import get_sprite_settings
+from includecontents.icons.exceptions import IconConfigurationError
 
 
 def test_duplicate_component_names_raises_error():
@@ -18,7 +19,7 @@ def test_duplicate_component_names_raises_error():
     }
 
     with override_settings(INCLUDECONTENTS_ICONS=duplicate_config):
-        with pytest.raises(ValueError, match="Duplicate component name 'home'"):
+        with pytest.raises(IconConfigurationError, match="Duplicate component name 'home'"):
             get_sprite_settings()
 
 
@@ -32,7 +33,7 @@ def test_duplicate_custom_names_raises_error():
     }
 
     with override_settings(INCLUDECONTENTS_ICONS=duplicate_config):
-        with pytest.raises(ValueError, match="Duplicate component name 'custom-home'"):
+        with pytest.raises(IconConfigurationError, match="Duplicate component name 'custom-home'"):
             get_sprite_settings()
 
 
@@ -47,7 +48,7 @@ def test_mixed_duplicates_raises_error():
     }
 
     with override_settings(INCLUDECONTENTS_ICONS=duplicate_config):
-        with pytest.raises(ValueError, match="Duplicate component name 'home'"):
+        with pytest.raises(IconConfigurationError, match="Duplicate component name 'home'"):
             get_sprite_settings()
 
 
@@ -94,7 +95,7 @@ def test_file_path_conflicts():
     }
 
     with override_settings(INCLUDECONTENTS_ICONS=duplicate_config):
-        with pytest.raises(ValueError, match="Duplicate component name 'home'"):
+        with pytest.raises(IconConfigurationError, match="Duplicate component name 'home'"):
             get_sprite_settings()
 
 

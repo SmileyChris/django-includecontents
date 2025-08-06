@@ -52,7 +52,7 @@ def test_iconify_api():
     try:
         error_sprite = build_sprite(error_icons)
         print(f"   ❌ Should have failed but got: {len(error_sprite)} characters")
-    except ValueError as e:
+    except Exception as e:
         print(f"   ✓ Handled gracefully with error: {e}")
     
     print("\n✅ All tests passed!")
