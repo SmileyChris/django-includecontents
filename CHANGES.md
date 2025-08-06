@@ -4,6 +4,14 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 3.1 (2025-08-06)
+
+### Features
+
+- Add file-based caching system for Iconify API responses to improve performance and enable offline development. Icons fetched from the Iconify API can now be cached locally and reused in subsequent builds, configured via `api_cache_root` and `api_cache_static_path` settings.
+- Icon sprites now preserve `style` attributes containing CSS variables (e.g., `style="fill: var(--icon-color)"`), enabling advanced theming and interactive hover effects that work across the shadow DOM boundary. See the new [Styling with CSS Variables](https://django-includecontents.readthedocs.io/en/latest/icons/styling-with-css-variables/) documentation for examples.
+
+
 # Version 3.0.1 (2025-08-06)
 
 ### Features

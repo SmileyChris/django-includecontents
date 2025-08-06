@@ -1,1 +1,0 @@
-Icon sprites now preserve `style` attributes containing CSS variables (e.g., `style="fill: var(--icon-color)"`), enabling advanced theming and interactive hover effects that work across the shadow DOM boundary. See the new [Styling with CSS Variables](https://django-includecontents.readthedocs.io/en/latest/icons/styling-with-css-variables/) documentation for examples.
