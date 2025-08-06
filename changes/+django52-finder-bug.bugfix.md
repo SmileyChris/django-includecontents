@@ -1,0 +1,1 @@
+Fixed compatibility issue with Django 5.2 where invalid icons could cause a TypeError in static file serving instead of returning a proper 404 error

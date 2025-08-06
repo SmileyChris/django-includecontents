@@ -407,18 +407,51 @@ def fetch_iconify_icons(
             data = json.loads(response.read().decode("utf-8"))
     except (URLError, json.JSONDecodeError) as e:
         raise IconAPIError(f"Failed to fetch icons from {url}: {e}")
+    
+    # Handle case where API returns just an error code (e.g., 404 for invalid prefix)
+    if not isinstance(data, dict):
+        # Invalid prefix returns just an integer like 404
+        if data == 404:
+            # All requested icons are not found for this invalid prefix
+            missing_icons = [f"{prefix}:{name}" for name in icons_to_fetch]
+            if len(missing_icons) == 1:
+                raise IconNotFoundError(f"Icon '{missing_icons[0]}' not found (invalid icon prefix '{prefix}')")
+            else:
+                icons_list = ", ".join(f"'{icon}'" for icon in missing_icons)
+                raise IconNotFoundError(f"Icons not found (invalid icon prefix '{prefix}'): {icons_list}")
+        else:
+            raise IconAPIError(f"Invalid API response from {url}: expected JSON object, got {type(data).__name__}")
 
     if "icons" not in data:
         raise IconAPIError(f"Invalid API response from {url}: missing 'icons' field")
 
     icons = data["icons"]
+    
+    # Track missing icons to report them all at once
+    missing_icons = []
+    icons_without_body = []
+    
+    # Check for icons explicitly marked as not found by the API
+    not_found_list = data.get("not_found", [])
+    if not_found_list:
+        for icon_name in not_found_list:
+            missing_icons.append(f"{prefix}:{icon_name}")
 
     for icon_name in icons_to_fetch:
+        # Skip if already marked as not found
+        if icon_name in not_found_list:
+            continue
+            
         if icon_name not in icons:
+            # Only add to missing if not already in not_found list
+            full_name = f"{prefix}:{icon_name}"
+            if full_name not in missing_icons:
+                missing_icons.append(full_name)
             continue
 
         icon_info = icons[icon_name]
         if "body" not in icon_info:
+            icons_without_body.append(f"{prefix}:{icon_name}")
             continue
 
         # Get the SVG body
@@ -441,6 +474,25 @@ def fetch_iconify_icons(
         # Save to cache if configured
         if cache_root:
             save_iconify_icon_to_cache(prefix, icon_name, single_icon_data, cache_root)
+    
+    # Report all missing icons at once for better developer experience
+    errors = []
+    if missing_icons:
+        if len(missing_icons) == 1:
+            errors.append(f"Icon '{missing_icons[0]}' not found in Iconify API response")
+        else:
+            icons_list = ", ".join(f"'{icon}'" for icon in missing_icons)
+            errors.append(f"Icons not found in Iconify API response: {icons_list}")
+    
+    if icons_without_body:
+        if len(icons_without_body) == 1:
+            errors.append(f"Icon '{icons_without_body[0]}' has no body in API response")
+        else:
+            icons_list = ", ".join(f"'{icon}'" for icon in icons_without_body)
+            errors.append(f"Icons without body in API response: {icons_list}")
+    
+    if errors:
+        raise IconNotFoundError("; ".join(errors))
 
     return icon_data
 
@@ -532,11 +584,22 @@ def build_sprite(
         all_icon_data[full_name] = svg_data
 
     # Build sprite symbols - ensure all icons are available
-    symbols = []
+    # First, check for all missing icons to provide a comprehensive error message
+    missing_icons = []
     for icon in sorted(icons):  # Sort for deterministic output
         if icon not in all_icon_data:
-            raise IconNotFoundError(f"Icon '{icon}' not found in fetched data")
-
+            missing_icons.append(icon)
+    
+    if missing_icons:
+        if len(missing_icons) == 1:
+            raise IconNotFoundError(f"Icon '{missing_icons[0]}' not found in fetched data")
+        else:
+            icons_list = ", ".join(f"'{icon}'" for icon in missing_icons)
+            raise IconNotFoundError(f"Icons not found in fetched data: {icons_list}")
+    
+    # Now build the symbols
+    symbols = []
+    for icon in sorted(icons):
         data = all_icon_data[icon]
 
         # Find component name for this icon from the map

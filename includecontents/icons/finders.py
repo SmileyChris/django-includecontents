@@ -32,22 +32,21 @@ class IconSpriteFinder(BaseFinder):
         """Get the sprite path prefix (always 'icons/')."""
         return "icons/"
 
-    def find(self, path, all=False, find_all=None):
+    def find(self, path, find_all=False, **kwargs):
         """
         Find icon sprite files by generating them on-demand.
 
         Args:
             path: Static file path to find
-            all: DEPRECATED in Django 5.2 - use find_all instead
             find_all: If True, return all matches (currently unused as we only have one sprite per path)
+            **kwargs: For backward compatibility with Django < 5.2 (handles 'all' parameter)
 
         Returns:
-            List of found files or empty list
+            String path if found (when find_all=False), list of paths (when find_all=True), or None/[]
         """
-        # Handle Django 5.2 parameter deprecation: all -> find_all
-        # The 'all' parameter is deprecated in Django 5.2 and will be removed in Django 6.1
-        if find_all is None:
-            find_all = all
+        # Handle Django < 5.2 compatibility where 'all' was used instead of 'find_all'
+        if 'all' in kwargs:
+            find_all = kwargs['all']
 
         # Note: find_all parameter is kept for Django compatibility but not used
         # since we only ever have one sprite file per path
@@ -88,11 +87,25 @@ class IconSpriteFinder(BaseFinder):
 
         except Exception as e:
             # Log the error but don't break static file serving
+            # When icons are misconfigured, we should fail silently and let
+            # Django return a proper 404 rather than breaking the entire
+            # static file serving system
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"Failed to generate icon sprite for {path}: {e}")
-            # Return empty to allow other finders to continue
+            logger.warning(f"Icon sprite generation failed for {path}: {e}")
+            
+            # IMPORTANT: Return a fake file path to stop Django from continuing
+            # to other finders and wrapping None in a list (Django 5.2 bug).
+            # This will cause a proper 404 error instead of a TypeError.
+            if not find_all:
+                # Return a non-existent file path that will trigger a 404
+                import tempfile
+                # Create a path that doesn't exist
+                return os.path.join(tempfile.gettempdir(), 'sprite-error-404.svg')
+            return []
 
+        # Return None/[] when we don't have a matching sprite
+        # This is the normal case when the hash doesn't match
         return [] if find_all else None
 
     def list(self, ignore_patterns):
