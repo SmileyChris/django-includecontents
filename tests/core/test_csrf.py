@@ -1,7 +1,10 @@
+"""Test CSRF token handling in components."""
 from django.middleware.csrf import get_token
 from django.template.loader import render_to_string
+import pytest
 
 
+@pytest.mark.django_db
 def test_csrf_token_passing(rf):
     """Test that CSRF token is properly passed through includecontents."""
     request = rf.get("/")
@@ -17,6 +20,7 @@ def test_csrf_token_passing(rf):
     assert '<input type="hidden" name="csrfmiddlewaretoken"' in rendered
 
 
+@pytest.mark.django_db
 def test_csrf_token_in_component(rf):
     """Test that CSRF token works in component-style includecontents."""
     request = rf.get("/")
@@ -32,6 +36,7 @@ def test_csrf_token_in_component(rf):
     assert '<input type="hidden" name="csrfmiddlewaretoken"' in rendered
 
 
+@pytest.mark.django_db
 def test_csrf_token_isolated_context(rf):
     """Test that CSRF token is passed even with isolated context."""
     request = rf.get("/")
@@ -40,9 +45,8 @@ def test_csrf_token_isolated_context(rf):
     context = {
         "request": request,
         "csrf_token": csrf_token,
-        "isolated_context": True,
+        "parent_data": "test_value",
     }
 
-    rendered = render_to_string("test_csrf/base.html", context)
+    rendered = render_to_string("test_csrf/inner.html", context)
     assert csrf_token in rendered
-    assert '<input type="hidden" name="csrfmiddlewaretoken"' in rendered

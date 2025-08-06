@@ -23,13 +23,13 @@ urlpatterns = [
 
 
 @override_settings(
-    ROOT_URLCONF='tests.test_context_processors',
+    ROOT_URLCONF='tests.core.test_context_processors',
     TEMPLATES=[{
         "BACKEND": "includecontents.django.DjangoTemplates",
         "DIRS": ["tests/templates"],
         "OPTIONS": {
             "context_processors": [
-                "tests.test_context_processors.simple_context_processor",
+                "tests.core.test_context_processors.simple_context_processor",
             ],
         },
     }]
