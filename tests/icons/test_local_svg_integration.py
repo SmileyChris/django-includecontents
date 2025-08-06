@@ -36,9 +36,9 @@ def test_build_sprite_with_local_svgs():
     assert 'style="display:none"' in sprite
     
     # Verify both icons are included as symbols
-    # Local files without component mapping use sanitized full path as ID
-    assert '<symbol id="icons-custom-home-svg"' in sprite
-    assert '<symbol id="icons-custom-star-svg"' in sprite
+    # Component names are extracted from filenames
+    assert '<symbol id="custom-home"' in sprite
+    assert '<symbol id="custom-star"' in sprite
     
     # Verify the actual SVG content is included
     assert 'M12 3l9 7v11' in sprite  # custom-home path
@@ -63,9 +63,9 @@ def test_build_sprite_with_mixed_sources():
         sprite = build_sprite(icons)
         
         # Verify both icon types are included
-        # Without component mapping, IDs are based on the full icon name
-        assert '<symbol id="mdi-home"' in sprite
-        assert '<symbol id="icons-custom-star-svg"' in sprite
+        # Component names are properly extracted
+        assert '<symbol id="home"' in sprite  # mdi:home -> home
+        assert '<symbol id="custom-star"' in sprite  # icons/custom-star.svg -> custom-star
         
         # Verify content from both sources
         assert 'M10 20v-6' in sprite  # Iconify icon

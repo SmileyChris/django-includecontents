@@ -443,6 +443,19 @@ def build_sprite(
     """
     if not icons:
         return '<svg style="display:none"></svg>'
+    
+    # If no component map provided, generate one from the icon names
+    if component_map is None:
+        from .utils import normalize_icon_definition
+        component_map = {}
+        for icon in icons:
+            try:
+                component_name, icon_name = normalize_icon_definition(icon)
+                component_map[component_name] = icon_name
+            except ValueError:
+                # If normalization fails, fall back to sanitized name
+                from .utils import icon_name_to_symbol_id
+                component_map[icon_name_to_symbol_id(icon)] = icon
 
     # Separate icons by type (Iconify vs local)
     iconify_groups = defaultdict(list)
@@ -485,25 +498,17 @@ def build_sprite(
 
         data = all_icon_data[icon]
 
-        # Determine symbol ID - use component name if available, otherwise convert icon name
-        if component_map:
-            # Find component name that maps to this icon
-            symbol_id = None
-            for component_name, icon_name in component_map.items():
-                if icon_name == icon:
-                    symbol_id = component_name
-                    break
-
-            # Fallback to converted icon name if not found in map
-            if symbol_id is None:
-                from .utils import icon_name_to_symbol_id
-
-                symbol_id = icon_name_to_symbol_id(icon)
-        else:
-            # No component map, use converted icon name
-            from .utils import icon_name_to_symbol_id
-
-            symbol_id = icon_name_to_symbol_id(icon)
+        # Find component name for this icon from the map
+        # Since we always have a component_map now, just look it up
+        symbol_id = None
+        for component_name, icon_name in component_map.items():
+            if icon_name == icon:
+                symbol_id = component_name
+                break
+        
+        # This should always find a match since we built the map from these icons
+        if symbol_id is None:
+            raise ValueError(f"Icon '{icon}' not found in component map")
 
         # Create symbol element
         symbol = f'''<symbol id="{symbol_id}" viewBox="{data["viewBox"]}">{data["body"]}</symbol>'''
