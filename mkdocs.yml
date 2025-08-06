@@ -72,9 +72,7 @@ nav:
     - Advanced Props: building-components/advanced-props.md
     - CSS & Styling: building-components/css-and-styling.md
     - Best Practices: building-components/best-practices.md
-  - Icons:
-    - Overview: icons.md
-    - Storage Backends: storage-backends.md
+  - Icons: icons.md
   - Tooling & Integration:
     - Prettier Formatting: tooling-integration/prettier-formatting.md
     - Tailwind CSS: tooling-integration/tailwind-css.md
