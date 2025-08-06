@@ -332,6 +332,29 @@ def test_tuple_parsing():
     assert component_map['custom-home'] == 'mdi:house'
 
 
+def test_icon_dataclass():
+    """Test the Icon dataclass creation and usage."""
+    # Test from Iconify icon
+    icon = utils.Icon.from_definition("mdi:home")
+    assert icon.component_name == "home"
+    assert icon.icon_source == "mdi:home"
+    
+    # Test from local SVG
+    icon = utils.Icon.from_definition("icons/logo.svg")
+    assert icon.component_name == "logo"
+    assert icon.icon_source == "icons/logo.svg"
+    
+    # Test from tuple
+    icon = utils.Icon.from_definition(("custom", "tabler:star"))
+    assert icon.component_name == "custom"
+    assert icon.icon_source == "tabler:star"
+    
+    # Test immutability (frozen=True)
+    icon = utils.Icon.from_definition("mdi:home")
+    with pytest.raises(AttributeError):
+        icon.component_name = "changed"
+
+
 def test_normalize_icon_definition_string():
     """Test normalizing string icon definitions."""
     result = utils.normalize_icon_definition('mdi:home')
@@ -342,6 +365,25 @@ def test_normalize_icon_definition_tuple():
     """Test normalizing tuple icon definitions."""
     result = utils.normalize_icon_definition(('custom-name', 'mdi:house'))
     assert result == ('custom-name', 'mdi:house')
+
+
+def test_parse_icon_definitions_to_icons():
+    """Test parsing icon definitions to Icon objects."""
+    definitions = [
+        'mdi:home',
+        ('custom', 'tabler:star'),
+        'icons/logo.svg',
+    ]
+    
+    icons = utils.parse_icon_definitions_to_icons(definitions)
+    
+    assert len(icons) == 3
+    assert icons[0].component_name == 'home'
+    assert icons[0].icon_source == 'mdi:home'
+    assert icons[1].component_name == 'custom'
+    assert icons[1].icon_source == 'tabler:star'
+    assert icons[2].component_name == 'logo'
+    assert icons[2].icon_source == 'icons/logo.svg'
 
 
 def test_get_icon_names_from_definitions():

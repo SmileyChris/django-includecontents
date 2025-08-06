@@ -3,9 +3,23 @@ Symbol conversion and miscellaneous utilities for icon handling.
 """
 
 import re
+from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
 IconDefinition = Union[str, Tuple[str, str]]
+
+
+@dataclass(frozen=True)
+class Icon:
+    """Internal representation of an icon definition."""
+    component_name: str  # The name used in templates (e.g., "home")
+    icon_source: str     # The icon source (e.g., "mdi:home" or "icons/home.svg")
+    
+    @classmethod
+    def from_definition(cls, definition: IconDefinition) -> "Icon":
+        """Create an Icon from various definition formats."""
+        component_name, icon_source = normalize_icon_definition(definition)
+        return cls(component_name=component_name, icon_source=icon_source)
 
 
 def normalize_icon_definition(icon_def: IconDefinition) -> Tuple[str, str]:
@@ -74,24 +88,64 @@ def parse_icon_definitions(icon_defs: List[IconDefinition]) -> Dict[str, str]:
         ValueError: If there are duplicate component names or invalid definitions
     """
     component_map = {}
+    icons = []
 
     for icon_def in icon_defs:
         try:
-            component_name, icon_name = normalize_icon_definition(icon_def)
+            icon = Icon.from_definition(icon_def)
 
             # Check for duplicate component names
-            if component_name in component_map:
+            if icon.component_name in component_map:
                 raise ValueError(
-                    f"Duplicate component name '{component_name}': "
-                    f"'{component_map[component_name]}' and '{icon_name}'"
+                    f"Duplicate component name '{icon.component_name}': "
+                    f"'{component_map[icon.component_name]}' and '{icon.icon_source}'"
                 )
 
-            component_map[component_name] = icon_name
+            component_map[icon.component_name] = icon.icon_source
+            icons.append(icon)
 
         except ValueError as e:
             raise ValueError(f"Invalid icon definition {icon_def}: {e}")
 
     return component_map
+
+
+def parse_icon_definitions_to_icons(icon_defs: List[IconDefinition]) -> List[Icon]:
+    """
+    Parse a list of icon definitions into Icon objects.
+
+    Args:
+        icon_defs: List of icon definitions (strings or tuples)
+
+    Returns:
+        List of Icon objects
+
+    Raises:
+        ValueError: If there are duplicate component names or invalid definitions
+    """
+    icons = []
+    seen_names = set()
+
+    for icon_def in icon_defs:
+        try:
+            icon = Icon.from_definition(icon_def)
+
+            # Check for duplicate component names
+            if icon.component_name in seen_names:
+                # Find the existing icon with this name for better error message
+                existing = next(i for i in icons if i.component_name == icon.component_name)
+                raise ValueError(
+                    f"Duplicate component name '{icon.component_name}': "
+                    f"'{existing.icon_source}' and '{icon.icon_source}'"
+                )
+
+            seen_names.add(icon.component_name)
+            icons.append(icon)
+
+        except ValueError as e:
+            raise ValueError(f"Invalid icon definition {icon_def}: {e}")
+
+    return icons
 
 
 def get_icon_names_from_definitions(icon_defs: List[IconDefinition]) -> List[str]:
