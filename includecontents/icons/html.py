@@ -2,7 +2,7 @@
 HTML and attribute utilities for icon rendering.
 """
 
-from typing import Any, Dict, Iterable, Union
+from typing import Iterable, Union
 
 try:
     from django.utils.html import conditional_escape

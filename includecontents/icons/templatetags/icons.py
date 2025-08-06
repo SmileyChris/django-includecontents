@@ -5,7 +5,6 @@ Template tags for icon sprites: {% icons_inline %} and {% icon %}.
 from django import template
 from django.template.base import FilterExpression
 from django.templatetags.static import static
-from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 
 from ..builder import get_or_create_sprite, get_sprite_hash, get_sprite_settings, get_sprite_filename
@@ -270,8 +269,6 @@ def icon(parser, token):
         bits = bits[:-2]  # Remove 'as variable_name' from processing
 
     # First argument is the icon name
-    icon_name_expr = parser.compile_filter(bits[1])
-
     # Parse remaining arguments as attributes, supporting dot notation
     attributes = {}
 

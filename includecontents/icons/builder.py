@@ -3,11 +3,9 @@ Core fetch/build/hashing logic for SVG icon sprites.
 """
 
 import hashlib
-import inspect
 import json
 import os
 import re
-import tempfile
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 from urllib.error import URLError
