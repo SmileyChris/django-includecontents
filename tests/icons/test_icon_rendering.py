@@ -87,16 +87,104 @@ def test_template_tag_with_use_attrs(mock_fetch):
 
 
 @patch('includecontents.icons.builder.fetch_iconify_icons')
-def test_tuple_name_mapping(mock_fetch):
-    """Test tuple-based icon name mapping."""
+def test_all_configured_icons_together(mock_fetch):
+    """Test all icons from settings.py work correctly together."""
     mock_fetch.side_effect = mock_all_iconify_fetches()
     
-    template_str = '<icon:custom-home class="w-6 h-6" />'
+    # Test all 5 icons configured in tests/settings.py
+    template_str = '''
+    <icon:home class="icon-1" />
+    <icon:user class="icon-2" />
+    <icon:home2 class="icon-3" />
+    <icon:custom-home class="icon-4" />
+    <icon:my-star class="icon-5" />
+    '''
     template = CustomTemplate(template_str)
     result = template.render(Context())
     
-    # Should use the component name (custom-home) as symbol ID
+    # Verify all icons render with correct symbol IDs
+    assert '#home">' in result
+    assert '#user">' in result
+    assert '#home2">' in result
     assert '#custom-home">' in result
+    assert '#my-star">' in result
+    
+    # Verify classes are applied
+    assert '<svg class="icon-1">' in result
+    assert '<svg class="icon-2">' in result
+    assert '<svg class="icon-3">' in result
+    assert '<svg class="icon-4">' in result
+    assert '<svg class="icon-5">' in result
+
+
+@patch('includecontents.icons.builder.fetch_iconify_icons')
+def test_home2_tuple_icon(mock_fetch):
+    """Test home2 icon defined as tuple ('home2', 'mdi:home')."""
+    mock_fetch.side_effect = mock_all_iconify_fetches()
+    
+    # Test HTML component syntax
+    template_str = '<icon:home2 class="w-8 h-8" />'
+    template = CustomTemplate(template_str)
+    result = template.render(Context())
+    
+    # Should use the component name (home2) as symbol ID
+    assert '#home2">' in result
+    assert '<svg class="w-8 h-8">' in result
+    
+    # Test template tag syntax
+    template_str = '{% icon "home2" class="test-class" %}'
+    template = CustomTemplate(template_str)
+    result = template.render(Context())
+    
+    assert '#home2">' in result
+    assert '<svg class="test-class">' in result
+
+
+@patch('includecontents.icons.builder.fetch_iconify_icons')
+def test_my_star_local_svg_tuple(mock_fetch):
+    """Test my-star icon defined as tuple ('my-star', 'icons/custom-star.svg')."""
+    mock_fetch.side_effect = mock_all_iconify_fetches()
+    
+    # Test HTML component syntax
+    template_str = '<icon:my-star class="star-icon" />'
+    template = CustomTemplate(template_str)
+    result = template.render(Context())
+    
+    # Should use the component name (my-star) as symbol ID
+    assert '#my-star">' in result
+    assert '<svg class="star-icon">' in result
+    
+    # Test template tag syntax
+    template_str = '{% icon "my-star" id="test-star" %}'
+    template = CustomTemplate(template_str)
+    result = template.render(Context())
+    
+    assert '#my-star">' in result
+    assert 'id="test-star"' in result
+
+
+@patch('includecontents.icons.builder.fetch_iconify_icons')
+def test_custom_home_local_svg_direct(mock_fetch):
+    """Test icons/custom-home.svg direct local SVG file reference."""
+    mock_fetch.side_effect = mock_all_iconify_fetches()
+    
+    # For direct SVG files, the component name is derived from the filename
+    # icons/custom-home.svg -> custom-home
+    template_str = '<icon:custom-home class="custom-icon" />'
+    template = CustomTemplate(template_str)
+    result = template.render(Context())
+    
+    # Should use the derived component name (custom-home) as symbol ID
+    assert '#custom-home">' in result
+    assert '<svg class="custom-icon">' in result
+    
+    # Test with template tag
+    template_str = '{% icon "custom-home" aria-label="Custom Home Icon" %}'
+    template = CustomTemplate(template_str)
+    result = template.render(Context())
+    
+    assert '#custom-home">' in result
+    assert 'aria-label="Custom Home Icon"' in result
 
 
 @patch('includecontents.icons.builder.fetch_iconify_icons')
