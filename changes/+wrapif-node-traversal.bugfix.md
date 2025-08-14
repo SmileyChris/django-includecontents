@@ -1,0 +1,1 @@
+Fix WrapIfNode to properly handle node traversal for Django's template debugging tools. The node now correctly implements get_nodes_by_type() to traverse all dynamic content blocks within wrapif tags.
