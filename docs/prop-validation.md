@@ -10,7 +10,7 @@ Define typed props directly in your component template using the enhanced `{# pr
 
 ```django
 {# templates/components/user-card.html #}
-{# props name:text email:email age:int(min=18) role:choice(admin,user,guest)=user #}
+{# props name:text email:email age:int[min=18] role:choice[admin,user,guest]=user #}
 
 <div class="user-card">
     <h3>{{ name }}</h3>
@@ -67,9 +67,9 @@ from includecontents.props import component
 @dataclass
 class UserProfileProps:
     # Required props
-    name: Text(max_length=100)
+    name: Text[{'max_length': 100}]
     email: Email
-    age: Integer(min=18, max=120)
+    age: Integer[{'min': 18, 'max': 120}]
     role: Choice['admin', 'editor', 'viewer']
     
     # Optional props
@@ -90,9 +90,9 @@ The `includecontents.prop_types` module provides component-focused types that le
 
 ### Basic Types
 
-- `Text(max_length=None, min_length=None, pattern=None)` - String with optional validation
-- `Integer(min=None, max=None)` - Integer with optional bounds
-- `Decimal(max_digits=None, decimal_places=None, min=None, max=None)` - Precise decimal numbers
+- `Text[{'max_length': 100, 'min_length': 2, 'pattern': r'^[A-Z]'}]` - String with optional validation
+- `Integer[{'min': 18, 'max': 120}]` - Integer with optional bounds  
+- `Decimal[{'max_digits': 10, 'decimal_places': 2, 'min': 0, 'max': 999.99}]` - Precise decimal numbers
 - `bool` - Boolean values (automatically converts string inputs)
 
 ### Pre-configured Types
@@ -105,14 +105,19 @@ The `includecontents.prop_types` module provides component-focused types that le
 
 ### Django-Specific Types
 
-- `ModelInstance(model)` - Validates Django model instances
-- `QuerySet(model=None)` - Validates Django QuerySets
+- `Model['app.ModelName']` - Validates specific Django model instances
+- `Model[ModelClass]` - Validates instances of a model class
+- `Model` - Validates any Django model instance
+- `QuerySet['app.ModelName']` - Validates QuerySets of a specific model
+- `QuerySet[ModelClass]` - Validates QuerySets of a model class
+- `QuerySet` - Validates any Django QuerySet
+- `User` - Validates instances of the project's user model (AUTH_USER_MODEL)
 
 ### Component-Specific Types
 
 - `Choice['option1', 'option2', ...]` - Restricted string choices (like Literal)
-- `CssClass()` - Validates CSS class names
-- `Color(format='hex')` - Validates CSS colors (hex, rgb, rgba)
+- `CssClass[{'pattern': r'^custom-pattern$'}]` - Validates CSS class names (with optional custom pattern)
+- `Color['hex']` or `Color['rgb']` or `Color['rgba']` - Validates CSS colors with specific format
 - `IconName()` - Validates icon names
 - `Html` - Marker for HTML content (will be marked safe)
 - `Json` - Validates JSON strings
@@ -128,21 +133,45 @@ The `includecontents.prop_types` module provides component-focused types that le
 
 ```django
 {# props name:type #}                    {# Required typed prop #}
-{# props name?:type #}                   {# Optional typed prop #}
-{# props name:type=default #}            {# Prop with default value #}
+{# props name?:type #}                   {# Optional typed prop - can be missing or None #}
+{# props name:type=default #}            {# Prop with default value (also optional) #}
+```
+
+#### Optional Props
+
+The `?` marker makes a prop optional, allowing it to be:
+- Missing from the component call
+- Explicitly set to `None`
+- Set to any falsey value (empty string, 0, false, etc.)
+
+```django
+{# props 
+   title:text                      {# Required - must be provided #}
+   subtitle?:text                  {# Optional - can be missing #}
+   role?:choice[admin,user,guest]  {# Optional choice #}
+   tags?:list[str]                 {# Optional list #}
+#}
 ```
 
 ### Type Parameters
 
+Use square brackets for type parameters (consistent with Python's typing syntax):
+
 ```django
 {# props 
-   title:text(max_length=100)
-   age:int(min=18,max=120)
-   role:choice(admin,user,guest)
-   email:email
-   author:model(auth.User)
-   articles:queryset(blog.Article)
+   title:text[max_length=100]        {# Text with max length #}
+   age:int[min=18,max=120]          {# Integer with bounds #}
+   role:choice[admin,user,guest]     {# Choice from options #}
+   email:email                        {# Pre-configured email type #}
+   author:model[auth.User]           {# Django model instance #}
+   articles:queryset[blog.Article]   {# Django QuerySet #}
+   tags:list[str]                    {# List of strings #}
 #}
+```
+
+For simple types without parameters, just use the type name:
+```django
+{# props name:text email:email age:int active:bool #}
 ```
 
 ### Backward Compatibility
@@ -161,13 +190,14 @@ The original props syntax still works:
 
 ```python
 from dataclasses import dataclass
+from typing import Optional
 from includecontents.prop_types import Text, Email
 from includecontents.props import component
 
 @component('components/contact-card.html')
 @dataclass
 class ContactCardProps:
-    name: Text(min_length=2)
+    name: Text[{'min_length': 2}]
     email: Email
     phone: Optional[str] = None
 ```
@@ -178,8 +208,8 @@ class ContactCardProps:
 @component('components/password-form.html')
 @dataclass
 class PasswordFormProps:
-    password: Text(min_length=8)
-    confirm_password: Text(min_length=8)
+    password: Text[{'min_length': 8}]
+    confirm_password: Text[{'min_length': 8}]
     
     def clean(self):
         """Cross-field validation."""
@@ -190,14 +220,13 @@ class PasswordFormProps:
 ### With Django Models and QuerySets
 
 ```python
-from django.contrib.auth.models import User
 from blog.models import Article
 
 @component('components/author-articles.html')
 @dataclass
 class AuthorArticlesProps:
-    author: ModelInstance(User)  # or ModelInstance('auth.User')
-    articles: QuerySet(Article)  # or QuerySet('blog.Article')
+    author: User  # Automatically uses the project's user model
+    articles: QuerySet[Article]  # or QuerySet['blog.Article']
     show_drafts: bool = False
     
     def clean(self):
@@ -206,9 +235,20 @@ class AuthorArticlesProps:
             raise ValidationError("All articles must belong to the author")
 ```
 
+Or with more flexibility:
+
+```python
+@component('components/content-list.html')
+@dataclass
+class ContentListProps:
+    items: QuerySet  # Any QuerySet
+    owner: Model  # Any Django model instance
+    featured: Model['blog.Article']  # Specific model type
+```
+
 In templates:
 ```django
-{# props author:model(auth.User) articles:queryset(blog.Article) #}
+{# props author:model[auth.User] articles:queryset[blog.Article] #}
 <div class="author-section">
     <h2>{{ author.get_full_name }}</h2>
     <ul>
@@ -231,6 +271,68 @@ class CustomInputProps:
     # Use Annotated to attach validators
     username: Annotated[str, RegexValidator(r'^[a-zA-Z0-9_]+$')]
     bio: Annotated[str, MinLengthValidator(10)]
+```
+
+### Advanced Validation Patterns
+
+#### Requiring Exactly One of Two Props
+
+Sometimes you need exactly one of two optional props to be provided:
+
+```python
+from typing import Optional
+
+@component('components/media-display.html')
+@dataclass
+class MediaDisplayProps:
+    # Either image_url OR video_url must be provided, but not both
+    image_url: Optional[str] = None
+    video_url: Optional[str] = None
+    caption: Optional[str] = None
+    
+    def clean(self):
+        """Ensure exactly one media source is provided."""
+        has_image = self.image_url is not None
+        has_video = self.video_url is not None
+        
+        if has_image and has_video:
+            raise ValidationError(
+                "Provide either image_url or video_url, not both"
+            )
+        if not has_image and not has_video:
+            raise ValidationError(
+                "Either image_url or video_url is required"
+            )
+```
+
+#### Conditional Requirements
+
+Make certain props required based on the value of other props:
+
+```python
+@component('components/notification.html')
+@dataclass
+class NotificationProps:
+    type: Choice['info', 'warning', 'error', 'custom']
+    message: str
+    custom_icon: Optional[str] = None
+    custom_color: Optional[str] = None
+    
+    def clean(self):
+        """Custom notifications require icon and color."""
+        if self.type == 'custom':
+            if not self.custom_icon:
+                raise ValidationError(
+                    "custom_icon is required when type is 'custom'"
+                )
+            if not self.custom_color:
+                raise ValidationError(
+                    "custom_color is required when type is 'custom'"
+                )
+        elif self.custom_icon or self.custom_color:
+            raise ValidationError(
+                "custom_icon and custom_color are only allowed when type is 'custom'"
+            )
 ```
 
 ## Usage in Templates
@@ -284,7 +386,7 @@ The system automatically converts string inputs to the appropriate type:
 Use template-defined props for simple components with basic validation:
 
 ```django
-{# props title:text message:text type:choice(info,warning,error)=info #}
+{# props title:text message:text type:choice[info,warning,error]=info #}
 <div class="alert alert-{{ type }}">
     <h4>{{ title }}</h4>
     <p>{{ message }}</p>
@@ -323,7 +425,7 @@ Start simple with template props, then migrate to Python props as needed:
 {# props title variant=primary,secondary,danger #}
 
 {# After - with validation #}
-{# props title:text variant:choice(primary,secondary,danger) #}
+{# props title:text variant:choice[primary,secondary,danger] #}
 ```
 
 ### From Plain Attributes
@@ -334,7 +436,7 @@ Start simple with template props, then migrate to Python props as needed:
 
 {# After - with validation #}
 {# In card.html: #}
-{# props title:text(max_length=100) #}
+{# props title:text[max_length=100] #}
 ```
 
 ## Advanced Features
@@ -370,6 +472,33 @@ class AdvancedProps:
     tags: List[str]
     metadata: Dict[str, str]
     items: List[int]
+```
+
+#### List Type Coercion
+
+When props are passed from templates, lists often come as comma-separated strings. The validation system automatically handles this:
+
+```python
+@dataclass
+class TaggedProps:
+    tags: List[str]
+    ids: List[int]
+
+# All of these work:
+# From template: tags="python, django, web"
+# From template: ids="1, 2, 3"
+# From code: tags=['python', 'django', 'web']
+# Single value: tags="single-tag" -> ['single-tag']
+```
+
+This makes it easy to use list props in templates:
+
+```django
+{% includecontents "components/tagged-item.html" 
+   tags="python, django, web"
+   ids="1, 2, 3" %}
+   Content here
+{% endincludecontents %}
 ```
 
 ## Testing Props

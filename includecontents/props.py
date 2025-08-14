@@ -9,7 +9,7 @@ This module provides:
 
 import dataclasses
 from dataclasses import dataclass, is_dataclass, fields as dataclass_fields, MISSING
-from typing import Any, Dict, Type, get_type_hints, get_origin, get_args, Optional, Union, Literal
+from typing import Any, Dict, Type, get_type_hints, get_origin, get_args, Optional, Union, Literal, Annotated
 import inspect
 
 from django.core.exceptions import ValidationError
@@ -85,6 +85,13 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
         # Skip private/protected fields
         if field_name.startswith('_'):
             continue
+        
+        # Special handling for Model and QuerySet classes used directly
+        from .prop_types import Model as ModelClass, QuerySet as QuerySetClass
+        if type_hint is ModelClass:
+            type_hint = ModelClass()
+        elif type_hint is QuerySetClass:
+            type_hint = QuerySetClass()
             
         # Get the value or use default
         if field_name in values:
@@ -151,6 +158,41 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
                     value = value.lower() in ('true', '1', 'yes', 'on')
                 else:
                     value = bool(value)
+            
+            # Handle List types - convert comma-separated strings
+            if get_origin(actual_type) is list:
+                if isinstance(value, str):
+                    # Split comma-separated string into list
+                    value = [item.strip() for item in value.split(',') if item.strip()]
+                    # Try to coerce list items to the right type
+                    list_args = get_args(actual_type)
+                    if list_args:
+                        item_type = list_args[0]
+                        coerced_items = []
+                        for item in value:
+                            if item_type is int:
+                                try:
+                                    coerced_items.append(int(item))
+                                except (ValueError, TypeError):
+                                    errors.append(f"{field_name}: Cannot convert '{item}' to integer")
+                                    break
+                            elif item_type is float:
+                                try:
+                                    coerced_items.append(float(item))
+                                except (ValueError, TypeError):
+                                    errors.append(f"{field_name}: Cannot convert '{item}' to float")
+                                    break
+                            elif item_type is bool:
+                                coerced_items.append(item.lower() in ('true', '1', 'yes', 'on'))
+                            else:
+                                # Keep as string
+                                coerced_items.append(item)
+                        else:
+                            # No errors in coercion
+                            value = coerced_items
+                elif not isinstance(value, list):
+                    # Try to convert to list if it's not already
+                    value = [value]
         
         # Run validators from Annotated types
         if hasattr(type_hint, '__metadata__'):
@@ -225,34 +267,173 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
     Examples:
         'text' -> Text
         'int(min=18,max=120)' -> Integer(min=18, max=120)
-        'choice(admin,user,guest)' -> Choice['admin', 'user', 'guest']
-        'model(auth.User)' -> ModelInstance('auth.User')
-        'queryset(blog.Article)' -> QuerySet('blog.Article')
+        'choice[admin,user,guest]' -> Choice['admin', 'user', 'guest']
+        'model[auth.User]' -> Model['auth.User']
+        'queryset[blog.Article]' -> QuerySet['blog.Article']
+        'list[str]' -> List[str]
+        'list[int]' -> List[int]
     """
-    from .prop_types import TYPE_MAP as DEFAULT_TYPE_MAP
+    from .prop_types import TYPE_MAP as DEFAULT_TYPE_MAP, TYPE_CLASSES
     
     type_map = type_map or DEFAULT_TYPE_MAP
     
-    # Check for parameterized type
+    # Handle list type without brackets/parentheses
+    if type_spec == 'list':
+        from typing import List
+        return List[str]
+    
+    # Check for square bracket syntax (new preferred syntax)
+    if '[' in type_spec and type_spec.endswith(']'):
+        type_name, params_str = type_spec[:-1].split('[', 1)
+        
+        # Handle choice with square brackets
+        if type_name == 'choice':
+            choices = [c.strip().strip('\"\'') for c in params_str.split(',')]
+            from .prop_types import Choice
+            return Choice[tuple(choices)]
+        
+        # Handle list with square brackets
+        if type_name == 'list':
+            from typing import List
+            if params_str:
+                item_type_str = params_str.strip().strip('\"\'')
+                item_type = parse_type_spec(item_type_str, type_map)
+                return List[item_type]
+            else:
+                return List[str]
+        
+        # Handle model with square brackets
+        if type_name == 'model':
+            from .prop_types import Model
+            if params_str:
+                model_path = params_str.strip().strip('\"\'')
+                return Model[model_path]
+            else:
+                return Model()
+        
+        # Handle queryset with square brackets
+        if type_name == 'queryset':
+            from .prop_types import QuerySet
+            if params_str:
+                model_path = params_str.strip().strip('\"\'')
+                return QuerySet[model_path]
+            else:
+                return QuerySet()
+        
+        # Handle parameterized types like text[max_length=100], int[min=18,max=120]
+        if type_name in TYPE_CLASSES:
+            # Parse key=value parameters
+            params = {}
+            if params_str:
+                for param in params_str.split(','):
+                    param = param.strip()
+                    if '=' in param:
+                        key, value = param.split('=', 1)
+                        key = key.strip()
+                        value = value.strip().strip('\"\'')
+                        # Try to convert to appropriate type
+                        try:
+                            value = int(value)
+                        except ValueError:
+                            try:
+                                value = float(value)
+                            except ValueError:
+                                pass  # Keep as string
+                        params[key] = value
+            
+            type_class = TYPE_CLASSES[type_name]
+            # Use the square bracket syntax with params dict
+            return type_class[params] if params else type_class()
+        
+        # Handle Color with format like color[hex]
+        if type_name == 'color':
+            from .prop_types import Color
+            # params_str could be a format like 'hex', 'rgb', 'rgba'
+            return Color[params_str.strip().strip('\"\'')]
+    
+    # Check for parameterized type with parentheses
     if '(' in type_spec and type_spec.endswith(')'):
         type_name, params_str = type_spec[:-1].split('(', 1)
         
         # Special handling for choice
         if type_name == 'choice':
             # Parse comma-separated choices
-            choices = [c.strip().strip('"\'') for c in params_str.split(',')]
+            choices = [c.strip().strip('\"\'') for c in params_str.split(',')]
             from .prop_types import Choice
             return Choice[tuple(choices)]
+        
+        # Special handling for list types
+        if type_name == 'list':
+            # List can have an item type: list(str), list(int), etc.
+            from typing import List
+            if params_str:
+                item_type_str = params_str.strip().strip('\"\'')
+                # Recursively parse the item type
+                item_type = parse_type_spec(item_type_str, type_map)
+                return List[item_type]
+            else:
+                # Default to List[str] if no type specified
+                return List[str]
         
         # Special handling for model and queryset
         if type_name in ('model', 'queryset'):
             # These take a model path as a single parameter
-            model_path = params_str.strip().strip('"\'')
-            from .prop_types import ModelInstance, QuerySet
+            model_path = params_str.strip().strip('\"\'')
+            
             if type_name == 'model':
-                return ModelInstance(model_path)
+                if model_path:
+                    # Create validator for specific model
+                    def validate_model(value):
+                        from django.core.exceptions import ValidationError
+                        from django.apps import apps
+                        
+                        try:
+                            app_label, model_name = model_path.split('.')
+                            model_class = apps.get_model(app_label, model_name)
+                        except (ValueError, LookupError):
+                            raise ValidationError(f"Invalid model: {model_path}")
+                        
+                        if value is not None and not isinstance(value, model_class):
+                            raise ValidationError(
+                                f"Expected instance of {model_class.__name__}, got {type(value).__name__}"
+                            )
+                    
+                    return Annotated[object, validate_model]
+                else:
+                    # Return the annotated type for bare Model
+                    from .prop_types import Model
+                    return Model()
             else:
-                return QuerySet(model_path if model_path else None)
+                if model_path:
+                    # Create validator for specific queryset
+                    def validate_queryset(value):
+                        from django.core.exceptions import ValidationError
+                        from django.db.models import QuerySet as DjangoQuerySet
+                        from django.apps import apps
+                        
+                        if value is not None and not isinstance(value, DjangoQuerySet):
+                            raise ValidationError(
+                                f"Expected QuerySet, got {type(value).__name__}"
+                            )
+                        
+                        if value is not None:
+                            try:
+                                app_label, model_name = model_path.split('.')
+                                model_class = apps.get_model(app_label, model_name)
+                            except (ValueError, LookupError):
+                                raise ValidationError(f"Invalid model: {model_path}")
+                            
+                            if value.model != model_class:
+                                raise ValidationError(
+                                    f"Expected QuerySet of {model_class.__name__}, "
+                                    f"got QuerySet of {value.model.__name__}"
+                                )
+                    
+                    return Annotated[object, validate_queryset]
+                else:
+                    # Return the annotated type for bare QuerySet
+                    from .prop_types import QuerySet
+                    return QuerySet()
         
         # Parse key=value parameters
         params = {}
@@ -262,7 +443,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
                 if '=' in param:
                     key, value = param.split('=', 1)
                     key = key.strip()
-                    value = value.strip().strip('"\'')
+                    value = value.strip().strip('\"\'')
                     # Try to convert to appropriate type
                     try:
                         value = int(value)
@@ -273,14 +454,16 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
                             pass  # Keep as string
                     params[key] = value
         
-        # Get the type class and instantiate with params
-        type_class = type_map.get(type_name)
-        if type_class and callable(type_class):
-            try:
-                return type_class(**params)
-            except TypeError:
-                # If it doesn't accept params, return as is
-                return type_class
+        # Check if we have a class that supports parameterization
+        if type_name in TYPE_CLASSES:
+            type_class = TYPE_CLASSES[type_name]
+            # Use the square bracket syntax with params dict
+            return type_class[params] if params else type_class()
+        
+        # Fall back to the default type map
+        type_obj = type_map.get(type_name)
+        if type_obj is not None:
+            return type_obj
     
     # Simple type lookup
     return type_map.get(type_spec, str)  # Default to string
