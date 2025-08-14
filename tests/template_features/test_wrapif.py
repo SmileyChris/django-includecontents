@@ -1,5 +1,6 @@
 import pytest
 from django.template import Context, Template, TemplateSyntaxError
+from django.template.base import VariableNode
 from django.test import SimpleTestCase
 
 
@@ -329,3 +330,66 @@ class TestWrapIfTag(SimpleTestCase):
         })
         self.assertIn('grape', result)
         self.assertNotIn('<span', result)
+    
+    def test_get_nodes_by_type(self):
+        """Test that WrapIfNode properly collects nodes from all contents blocks."""
+        template = """
+        {% load includecontents %}
+        {% wrapif show_all %}
+          <div class="wrapper">
+            {% contents %}
+              Default content with {{ var1 }}
+            {% endcontents %}
+            {% contents header %}
+              Header with {{ var2 }}
+            {% endcontents %}
+            {% contents footer %}
+              Footer with {{ var3 }} and {{ var4 }}
+            {% endcontents %}
+          </div>
+        {% endwrapif %}
+        """
+        # Compile the template to get access to its nodes
+        compiled_template = Template(template)
+        
+        # Find all VariableNodes in the template
+        variable_nodes = compiled_template.nodelist.get_nodes_by_type(VariableNode)
+        
+        # Extract variable names from the nodes
+        var_names = set()
+        for node in variable_nodes:
+            # VariableNode has a filter_expression that contains the variable
+            var_names.add(node.filter_expression.var.var)
+        
+        # Should find all variables from all content blocks
+        expected_vars = {'var1', 'var2', 'var3', 'var4'}
+        self.assertEqual(var_names, expected_vars, 
+                        f"Expected to find variables {expected_vars}, but found {var_names}")
+    
+    def test_get_nodes_by_type_with_nested_tags(self):
+        """Test that get_nodes_by_type works with nested template tags in contents."""
+        template = """
+        {% load includecontents %}
+        {% wrapif condition %}
+          <section>
+            {% contents %}
+              {% if user %}{{ user.name }}{% endif %}
+            {% endcontents %}
+            {% contents sidebar %}
+              {% for item in items %}{{ item }}{% endfor %}
+            {% endcontents %}
+          </section>
+        {% endwrapif %}
+        """
+        compiled_template = Template(template)
+        
+        # Import the specific node types we're looking for
+        from django.template.defaulttags import IfNode, ForNode
+        
+        # Should find the IfNode from the first contents block
+        if_nodes = compiled_template.nodelist.get_nodes_by_type(IfNode)
+        self.assertTrue(len(if_nodes) > 0, "Should find at least one IfNode")
+        
+        # Should find the ForNode from the sidebar contents block  
+        for_nodes = compiled_template.nodelist.get_nodes_by_type(ForNode)
+        self.assertTrue(len(for_nodes) > 0, "Should find at least one ForNode")

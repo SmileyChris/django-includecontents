@@ -838,8 +838,6 @@ class WrapperSpec:
 
 
 class WrapIfNode(Node):
-    child_nodelists = ("contents_nodelists",)
-
     def __init__(self, conditions_and_wrappers, default_wrapper, contents_nodelists):
         self.conditions_and_wrappers = (
             conditions_and_wrappers  # [(condition, wrapper_spec), ...]
@@ -848,6 +846,14 @@ class WrapIfNode(Node):
         self.contents_nodelists = (
             contents_nodelists  # {'default': nodelist, 'header': nodelist, ...}
         )
+    
+    def get_nodes_by_type(self, nodetype):
+        """Collect nodes of given type from all contents nodelists."""
+        nodes = []
+        # Collect nodes from all contents nodelists
+        for nodelist in self.contents_nodelists.values():
+            nodes.extend(nodelist.get_nodes_by_type(nodetype))
+        return nodes
 
     def render(self, context):
         # First, render all contents blocks
