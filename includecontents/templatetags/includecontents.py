@@ -352,7 +352,62 @@ class IncludeContentsNode(template.Node):
         if not self.is_component:
             yield
             return
+        
+        # Check for registered Python props class first
+        from includecontents.props import get_props_class, validate_props
+        
         template = self.get_component_template(context)
+        
+        # Get the template path for props class lookup
+        template_path = None
+        if hasattr(template, 'origin') and hasattr(template.origin, 'name'):
+            template_path = template.origin.name
+        elif hasattr(template, 'name'):
+            template_path = template.name
+        
+        props_class = None
+        if template_path:
+            props_class = get_props_class(template_path)
+        
+        if props_class:
+            # Use Python-defined props class for validation
+            attrs = {}
+            for key, value in self.all_attrs():
+                attrs[key] = value.resolve(context)
+            
+            try:
+                validated = validate_props(props_class, attrs)
+                
+                # Handle extra attrs if present
+                extra_attrs = validated.pop('_extra_attrs', {})
+                
+                # Update context with validated props
+                new_context.update(validated)
+                
+                # Set attrs variable with extra attributes
+                if extra_attrs:
+                    undefined_attrs = Attrs()
+                    for key, value in extra_attrs.items():
+                        undefined_attrs[key] = value
+                    new_context["attrs"] = undefined_attrs
+                else:
+                    new_context["attrs"] = Attrs()
+                
+            except TemplateSyntaxError:
+                raise
+            except Exception as e:
+                raise TemplateSyntaxError(
+                    f"Component {self.token_name} validation failed: {e}"
+                )
+            
+            # Skip the original props handling
+            extra_context = self.include_node.extra_context
+            self.include_node.extra_context = {}
+            yield
+            self.include_node.extra_context = extra_context
+            return
+        
+        # Fall back to template-defined props
         component_props = self.get_component_props(template)
         if component_props is not None:
             undefined_attrs = Attrs()
@@ -380,8 +435,39 @@ class IncludeContentsNode(template.Node):
                 if key in component_props:
                     resolved_value = value.resolve(context)
                     prop_def = component_props[key]
-                    # Validate enum values
-                    if isinstance(prop_def, EnumVariable):
+                    
+                    # Handle new typed props
+                    if isinstance(prop_def, dict) and 'type' in prop_def:
+                        # This is a typed prop from the new syntax
+                        prop_type = prop_def['type']
+                        
+                        # Run validators if it's an Annotated type
+                        if hasattr(prop_type, '__metadata__'):
+                            from django.core.exceptions import ValidationError
+                            for validator in prop_type.__metadata__:
+                                if callable(validator):
+                                    try:
+                                        validator(resolved_value)
+                                    except ValidationError as e:
+                                        msg = str(e.message) if hasattr(e, 'message') else str(e)
+                                        raise TemplateSyntaxError(
+                                            f'Invalid value for "{key}" in {self.token_name}: {msg}'
+                                        )
+                        
+                        # Check Literal types
+                        from typing import get_origin, get_args, Literal
+                        origin = get_origin(prop_type)
+                        if origin is Literal:
+                            allowed = get_args(prop_type)
+                            if resolved_value not in allowed:
+                                raise TemplateSyntaxError(
+                                    f'Invalid value "{resolved_value}" for attribute "{key}" in {self.token_name}. '
+                                    f"Allowed values: {', '.join(repr(v) for v in allowed)}"
+                                )
+                        
+                        new_context[key] = resolved_value
+                    # Validate enum values (original syntax)
+                    elif isinstance(prop_def, EnumVariable):
                         # Support multiple space-separated enum values
                         enum_values = resolved_value.split() if resolved_value else []
 
@@ -466,35 +552,78 @@ class IncludeContentsNode(template.Node):
             first_comment = template.first_comment[4:]
         else:
             return None
+        
+        from includecontents.props import parse_type_spec
+        
         props = {}
         for bit in smart_split(first_comment.strip()):
-            if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
-                attr, value = match.groups()
-                if value is None:
-                    # Check both extra_context and advanced_attrs for required attributes
-                    if (
-                        attr not in self.include_node.extra_context
-                        and attr not in self.advanced_attrs
-                    ):
-                        raise TemplateSyntaxError(
-                            f'Missing required attribute "{attr}" in {self.token_name}'
-                        )
-                    props[attr] = None
-                else:
-                    # Check if value contains comma-separated values (enum) without spaces
-                    if "," in value and " " not in value:
-                        # Strip quotes if present
-                        if (value.startswith('"') and value.endswith('"')) or (
-                            value.startswith("'") and value.endswith("'")
+            # Check for new typed syntax: name:type or name:type(params)
+            if ':' in bit and not bit.startswith('"') and not bit.startswith("'"):
+                parts = bit.split(':', 1)
+                prop_name = parts[0].strip()
+                type_spec = parts[1].strip()
+                
+                # Check for optional marker
+                required = True
+                default_value = None
+                
+                # Check for default value syntax: type=default
+                if '=' in type_spec:
+                    type_spec, default_str = type_spec.split('=', 1)
+                    type_spec = type_spec.strip()
+                    default_value = Variable(default_str.strip())
+                    required = False
+                elif prop_name.endswith('?'):
+                    prop_name = prop_name[:-1]
+                    required = False
+                
+                # Parse the type specification
+                prop_type = parse_type_spec(type_spec)
+                
+                # Store as a special PropDefinition object
+                props[prop_name] = {
+                    'type': prop_type,
+                    'required': required,
+                    'default': default_value,
+                }
+                
+                # Check if required prop is missing
+                if required and (
+                    prop_name not in self.include_node.extra_context
+                    and prop_name not in self.advanced_attrs
+                ):
+                    raise TemplateSyntaxError(
+                        f'Missing required attribute "{prop_name}" in {self.token_name}'
+                    )
+            else:
+                # Original syntax
+                if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
+                    attr, value = match.groups()
+                    if value is None:
+                        # Check both extra_context and advanced_attrs for required attributes
+                        if (
+                            attr not in self.include_node.extra_context
+                            and attr not in self.advanced_attrs
                         ):
-                            value = value[1:-1]
-                        # Parse enum values
-                        enum_values = value.split(",")
-                        # First value empty means optional
-                        required = bool(enum_values[0])
-                        props[attr] = EnumVariable(enum_values, required)
+                            raise TemplateSyntaxError(
+                                f'Missing required attribute "{attr}" in {self.token_name}'
+                            )
+                        props[attr] = None
                     else:
-                        props[attr] = Variable(value)
+                        # Check if value contains comma-separated values (enum) without spaces
+                        if "," in value and " " not in value:
+                            # Strip quotes if present
+                            if (value.startswith('"') and value.endswith('"')) or (
+                                value.startswith("'") and value.endswith("'")
+                            ):
+                                value = value[1:-1]
+                            # Parse enum values
+                            enum_values = value.split(",")
+                            # First value empty means optional
+                            required = bool(enum_values[0])
+                            props[attr] = EnumVariable(enum_values, required)
+                        else:
+                            props[attr] = Variable(value)
         return props
 
     def get_component_template(self, context) -> Template:
