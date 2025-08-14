@@ -22,10 +22,42 @@ Define typed props directly in your component template using the enhanced `{# pr
 
 ### Python-Based Props (Advanced)
 
-For complex components, define props using Python dataclasses with full type hints:
+For complex components, define props using Python dataclasses with full type hints.
+
+#### Where to Put Props Classes
+
+Props classes should be placed where they'll be automatically imported when Django starts:
+
+1. **In your app's `props.py` file** (recommended):
+   ```python
+   # myapp/props.py
+   ```
+   Then import it in your app's `apps.py`:
+   ```python
+   # myapp/apps.py
+   from django.apps import AppConfig
+   
+   class MyAppConfig(AppConfig):
+       default_auto_field = 'django.db.models.BigAutoField'
+       name = 'myapp'
+       
+       def ready(self):
+           # Import props to register them
+           from . import props
+   ```
+
+2. **In your app's `__init__.py`**:
+   ```python
+   # myapp/__init__.py
+   from .props import *  # Register all props classes
+   ```
+
+3. **In any module that's imported at startup** (e.g., models.py, views.py)
+
+#### Example Props Class
 
 ```python
-# myapp/component_props.py
+# myapp/props.py
 from dataclasses import dataclass
 from typing import Optional
 from includecontents.prop_types import Text, Email, Integer, Choice
@@ -71,6 +103,11 @@ The `includecontents.prop_types` module provides component-focused types that le
 - `IPAddress` - Validates IPv4 addresses
 - `IPv6Address` - Validates IPv6 addresses
 
+### Django-Specific Types
+
+- `ModelInstance(model)` - Validates Django model instances
+- `QuerySet(model=None)` - Validates Django QuerySets
+
 ### Component-Specific Types
 
 - `Choice['option1', 'option2', ...]` - Restricted string choices (like Literal)
@@ -103,6 +140,8 @@ The `includecontents.prop_types` module provides component-focused types that le
    age:int(min=18,max=120)
    role:choice(admin,user,guest)
    email:email
+   author:model(auth.User)
+   articles:queryset(blog.Article)
 #}
 ```
 
@@ -146,6 +185,38 @@ class PasswordFormProps:
         """Cross-field validation."""
         if self.password != self.confirm_password:
             raise ValidationError("Passwords don't match")
+```
+
+### With Django Models and QuerySets
+
+```python
+from django.contrib.auth.models import User
+from blog.models import Article
+
+@component('components/author-articles.html')
+@dataclass
+class AuthorArticlesProps:
+    author: ModelInstance(User)  # or ModelInstance('auth.User')
+    articles: QuerySet(Article)  # or QuerySet('blog.Article')
+    show_drafts: bool = False
+    
+    def clean(self):
+        """Ensure articles belong to the author."""
+        if self.articles.exclude(author=self.author).exists():
+            raise ValidationError("All articles must belong to the author")
+```
+
+In templates:
+```django
+{# props author:model(auth.User) articles:queryset(blog.Article) #}
+<div class="author-section">
+    <h2>{{ author.get_full_name }}</h2>
+    <ul>
+    {% for article in articles %}
+        <li>{{ article.title }}</li>
+    {% endfor %}
+    </ul>
+</div>
 ```
 
 ### Using Django Validators Directly
@@ -367,13 +438,43 @@ Ensure all required props are provided when using the component.
 
 Check that the value matches the expected type and validation rules.
 
-### Props class not found
+### Props class not found / not being used
 
-Ensure your props module is imported (e.g., in your app's `__init__.py` or `apps.py`).
+If your Python props class isn't being picked up:
+
+1. **Check that the module is imported at startup:**
+   ```python
+   # In myapp/apps.py
+   class MyAppConfig(AppConfig):
+       def ready(self):
+           from . import props  # Force import
+   ```
+
+2. **Verify the template path matches exactly:**
+   ```python
+   @component('components/user-card.html')  # Must match template path
+   ```
+   The path should be relative to your template directories.
+
+3. **Check Django's template loading order:**
+   If you have multiple apps with the same template path, Django might be loading a different template than expected.
+
+4. **Debug by checking the registry:**
+   ```python
+   from includecontents.props import _registry
+   print(_registry)  # See what's registered
+   ```
 
 ### Type coercion failing
 
 Some types require specific string formats. Check the prop type documentation.
+
+### Import errors on startup
+
+If you get circular import errors:
+- Move props to a separate `props.py` file
+- Import props in `AppConfig.ready()` instead of at module level
+- Avoid importing views or models in your props file
 
 ## Summary
 

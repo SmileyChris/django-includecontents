@@ -94,6 +94,82 @@ class Choice(Generic[T]):
         return Literal[items]
 
 
+# Django-specific prop types
+class ModelInstance:
+    """
+    Validates that the value is an instance of a specific Django model.
+    
+    Usage:
+        user: ModelInstance('auth.User')
+        article: ModelInstance(Article)  # Can pass model class directly
+    """
+    
+    def __new__(cls, model):
+        def validate_model_instance(value):
+            from django.core.exceptions import ValidationError
+            from django.apps import apps
+            
+            # Get the model class
+            if isinstance(model, str):
+                try:
+                    app_label, model_name = model.split('.')
+                    model_class = apps.get_model(app_label, model_name)
+                except (ValueError, LookupError):
+                    raise ValidationError(f"Invalid model: {model}")
+            else:
+                model_class = model
+            
+            # Check if value is an instance of the model
+            if value is not None and not isinstance(value, model_class):
+                raise ValidationError(
+                    f"Expected instance of {model_class.__name__}, got {type(value).__name__}"
+                )
+        
+        return Annotated[object, validate_model_instance]
+
+
+class QuerySet:
+    """
+    Validates that the value is a Django QuerySet.
+    
+    Usage:
+        items: QuerySet()  # Any QuerySet
+        users: QuerySet('auth.User')  # QuerySet of specific model
+    """
+    
+    def __new__(cls, model=None):
+        def validate_queryset(value):
+            from django.core.exceptions import ValidationError
+            from django.db.models import QuerySet as DjangoQuerySet
+            from django.apps import apps
+            
+            # Check if it's a QuerySet
+            if value is not None and not isinstance(value, DjangoQuerySet):
+                raise ValidationError(
+                    f"Expected QuerySet, got {type(value).__name__}"
+                )
+            
+            # Optionally check the model
+            if model and value is not None:
+                if isinstance(model, str):
+                    try:
+                        app_label, model_name = model.split('.')
+                        model_class = apps.get_model(app_label, model_name)
+                    except (ValueError, LookupError):
+                        raise ValidationError(f"Invalid model: {model}")
+                else:
+                    model_class = model
+                
+                # Check if QuerySet is of the correct model
+                if value.model != model_class:
+                    raise ValidationError(
+                        f"Expected QuerySet of {model_class.__name__}, "
+                        f"got QuerySet of {value.model.__name__}"
+                    )
+        
+        return Annotated[object, validate_queryset]
+
+
 # Component-specific prop types
 class CssClass:
     """CSS class name validation."""
@@ -196,4 +272,6 @@ TYPE_MAP = {
     'json': Json,
     'bool': bool,
     'boolean': bool,
+    'model': ModelInstance,
+    'queryset': QuerySet,
 }

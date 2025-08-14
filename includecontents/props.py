@@ -226,6 +226,8 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         'text' -> Text
         'int(min=18,max=120)' -> Integer(min=18, max=120)
         'choice(admin,user,guest)' -> Choice['admin', 'user', 'guest']
+        'model(auth.User)' -> ModelInstance('auth.User')
+        'queryset(blog.Article)' -> QuerySet('blog.Article')
     """
     from .prop_types import TYPE_MAP as DEFAULT_TYPE_MAP
     
@@ -241,6 +243,16 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
             choices = [c.strip().strip('"\'') for c in params_str.split(',')]
             from .prop_types import Choice
             return Choice[tuple(choices)]
+        
+        # Special handling for model and queryset
+        if type_name in ('model', 'queryset'):
+            # These take a model path as a single parameter
+            model_path = params_str.strip().strip('"\'')
+            from .prop_types import ModelInstance, QuerySet
+            if type_name == 'model':
+                return ModelInstance(model_path)
+            else:
+                return QuerySet(model_path if model_path else None)
         
         # Parse key=value parameters
         params = {}
