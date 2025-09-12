@@ -15,6 +15,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
 
 from includecontents.django.base import Template
+from includecontents.props import coerce_value
 
 register = template.Library()
 
@@ -459,6 +460,9 @@ class IncludeContentsNode(template.Node):
                         # This is a typed prop from the new syntax
                         prop_type = prop_def["type"]
 
+                        # Coerce the value to the correct type
+                        resolved_value = coerce_value(resolved_value, prop_type)
+
                         # Run validators if it's an Annotated type
                         if hasattr(prop_type, "__metadata__"):
                             from django.core.exceptions import ValidationError
@@ -492,7 +496,10 @@ class IncludeContentsNode(template.Node):
                         # Recursively mark Html-typed leaves safe
                         try:
                             from includecontents.props import mark_html_recursive
-                            resolved_value = mark_html_recursive(resolved_value, prop_type)
+
+                            resolved_value = mark_html_recursive(
+                                resolved_value, prop_type
+                            )
                         except Exception:
                             # Ignore marking failures silently
                             pass
@@ -571,17 +578,21 @@ class IncludeContentsNode(template.Node):
             yield key, value
 
     def get_component_props(self, template):
-        if not template.first_comment:
+        # Handle both Django backend template and Django template objects
+        django_template = getattr(template, "template", template)
+        first_comment = getattr(django_template, "first_comment", None)
+        if not first_comment:
             return None
         if (
-            template.first_comment.startswith("props ")
-            or template.first_comment == "props"
+            django_template.first_comment.startswith("props ")
+            or django_template.first_comment == "props"
         ):
-            first_comment = template.first_comment[6:]
+            first_comment = django_template.first_comment[6:]
         elif (
-            template.first_comment.startswith("def ") or template.first_comment == "def"
+            django_template.first_comment.startswith("def ")
+            or django_template.first_comment == "def"
         ):
-            first_comment = template.first_comment[4:]
+            first_comment = django_template.first_comment[4:]
         else:
             return None
 
