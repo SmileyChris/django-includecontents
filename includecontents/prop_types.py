@@ -37,9 +37,22 @@ class Text:
         name: Text[pattern=r'^[A-Z]']  # With regex pattern
     """
     
-    def __new__(cls):
-        """Bare Text usage returns plain string type."""
-        return str
+    def __new__(cls, **kwargs):
+        """
+        Support both bare and keyword-parameter usage.
+        Text() -> str
+        Text(max_length=100, min_length=2, pattern=...) -> Annotated[str, validators]
+        """
+        if not kwargs:
+            return str
+        validators = []
+        if 'max_length' in kwargs:
+            validators.append(MaxLengthValidator(kwargs['max_length']))
+        if 'min_length' in kwargs:
+            validators.append(MinLengthValidator(kwargs['min_length']))
+        if 'pattern' in kwargs:
+            validators.append(RegexValidator(kwargs['pattern']))
+        return Annotated[str, *validators] if validators else str
     
     def __class_getitem__(cls, params):
         """Handle Text[...] syntax for validation parameters."""
@@ -67,9 +80,20 @@ class Integer:
         age: Integer[min=18, max=120]  # Min and max bounds
     """
     
-    def __new__(cls):
-        """Bare Integer usage returns plain int type."""
-        return int
+    def __new__(cls, **kwargs):
+        """
+        Support both bare and keyword-parameter usage.
+        Integer() -> int
+        Integer(min=..., max=...) -> Annotated[int, validators]
+        """
+        if not kwargs:
+            return int
+        validators = []
+        if 'min' in kwargs:
+            validators.append(MinValueValidator(kwargs['min']))
+        if 'max' in kwargs:
+            validators.append(MaxValueValidator(kwargs['max']))
+        return Annotated[int, *validators] if validators else int
     
     def __class_getitem__(cls, params):
         """Handle Integer[...] syntax for validation parameters."""
@@ -94,9 +118,22 @@ class Decimal:
         price: Decimal[min=0, max=999.99]  # With bounds
     """
     
-    def __new__(cls):
-        """Bare Decimal usage returns plain Decimal type."""
-        return decimal.Decimal
+    def __new__(cls, **kwargs):
+        """
+        Support both bare and keyword-parameter usage.
+        Decimal() -> Decimal
+        Decimal(min=..., max=..., max_digits=..., decimal_places=...) -> Annotated[Decimal, validators]
+        """
+        if not kwargs:
+            return decimal.Decimal
+        validators = []
+        if 'min' in kwargs:
+            validators.append(MinValueValidator(kwargs['min']))
+        if 'max' in kwargs:
+            validators.append(MaxValueValidator(kwargs['max']))
+        if 'max_digits' in kwargs and 'decimal_places' in kwargs:
+            validators.append(DecimalValidator(kwargs['max_digits'], kwargs['decimal_places']))
+        return Annotated[decimal.Decimal, *validators] if validators else decimal.Decimal
     
     def __class_getitem__(cls, params):
         """Handle Decimal[...] syntax for validation parameters."""
@@ -305,9 +342,23 @@ class Color:
         color: Color['rgba']  # RGBA format only
     """
     
-    def __new__(cls):
-        """Bare Color usage accepts any color format."""
-        return str  # Accept any color format
+    def __new__(cls, **kwargs):
+        """
+        Support both bare and keyword-parameter usage.
+        Color() -> str (any format)
+        Color(format='hex'|'rgb'|'rgba') -> Annotated[str, RegexValidator]
+        """
+        if not kwargs:
+            return str
+        fmt = kwargs.get('format')
+        patterns = {
+            'hex': r'^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$',
+            'rgb': r'^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$',
+            'rgba': r'^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$',
+        }
+        if fmt in patterns:
+            return Annotated[str, RegexValidator(patterns[fmt], f"Invalid {fmt} color")]
+        return str
     
     def __class_getitem__(cls, format):
         """Handle Color[...] syntax for specific formats."""
