@@ -1,0 +1,2 @@
+{# props numbers:list[int]=[1,2,3] #}
+{% for num in numbers %}{{ num }}{% if not forloop.last %},{% endif %}{% endfor %}

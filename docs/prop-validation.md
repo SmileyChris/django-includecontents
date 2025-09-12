@@ -137,6 +137,83 @@ The `includecontents.prop_types` module provides component-focused types that le
 {# props name:type=default #}            {# Prop with default value (also optional) #}
 ```
 
+### Default Values
+
+Props with default values are automatically optional. When the prop isn't provided, the default value is used:
+
+#### Literal Defaults
+
+```django
+{# String defaults #}
+{# props title:str="Welcome" greeting:str=Hello #}
+
+{# Numeric defaults #}
+{# props count:int=10 price:float=99.99 percentage:int=-5 #}
+
+{# Boolean defaults #}
+{# props active:bool=true enabled:bool=false #}
+
+{# List defaults #}
+{# props tags:list[str]=[] categories:list[str]=[news,updates] numbers:list[int]=[1,2,3] #}
+
+{# Choice defaults #}
+{# props role:choice[admin,user,guest]=user status:choice[active,inactive]=active #}
+```
+
+#### Variable Expression Defaults
+
+For simple variable access, use unquoted syntax:
+
+```django
+{# props name:str=user.name theme:str=settings.theme count:int=items.count #}
+```
+
+For complex expressions with filters or spaces, use quoted syntax:
+
+```django
+{# props title:str="{{ page.title|default:'Untitled' }}" greeting:str="{{ 'Hello ' + user.name }}" #}
+```
+
+#### Examples in Context
+
+```django
+{# templates/components/notification.html #}
+{# props 
+   message:str 
+   type:choice[info,warning,error,success]=info 
+   title:str="{{ message|title }}"
+   dismissible:bool=true 
+   timeout:int=5000
+#}
+
+<div class="notification notification-{{ type }}" 
+     {% if dismissible %}data-dismissible="true"{% endif %}
+     {% if timeout > 0 %}data-timeout="{{ timeout }}"{% endif %}>
+    {% if title %}
+        <h4 class="notification-title">{{ title }}</h4>
+    {% endif %}
+    <p class="notification-message">{{ message }}</p>
+</div>
+```
+
+Usage examples:
+
+```django
+{# Uses all defaults except message #}
+{% includecontents "components/notification.html" message="Task completed!" %}{% endincludecontents %}
+
+{# Override some defaults #}
+{% includecontents "components/notification.html" 
+   message="Error occurred" 
+   type="error" 
+   dismissible=false %}{% endincludecontents %}
+
+{# Complex default with context variable #}
+{% includecontents "components/notification.html" 
+   message="Welcome back!" 
+   title="{{ user.first_name|default:'User' }}" %}{% endincludecontents %}
+```
+
 #### Optional Props
 
 The `?` marker makes a prop optional, allowing it to be:

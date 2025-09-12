@@ -368,9 +368,8 @@ class IncludeContentsNode(template.Node):
         component "props" mode, the non-listed attributes will be set as in the
         ``attrs`` variable rather than directly in the new context.
         """
-        if not self.is_component:
-            yield
-            return
+        # NOTE: Template-defined props should work for both components and regular includecontents tags
+        # so we don't return early for non-components
 
         # Check for registered Python props class first
         from includecontents.props import get_props_class, validate_props
@@ -428,7 +427,10 @@ class IncludeContentsNode(template.Node):
 
         # Fall back to template-defined props
         component_props = self.get_component_props(template)
-        if component_props is not None:
+        
+        # Create attrs container for components only
+        undefined_attrs = None
+        if self.is_component and component_props is not None:
             undefined_attrs = Attrs()
 
         # First, handle spread syntax
@@ -538,24 +540,41 @@ class IncludeContentsNode(template.Node):
                     else:
                         new_context[key] = resolved_value
                 else:
-                    undefined_attrs[key] = value.resolve(context)
+                    # Only collect undefined attrs for components
+                    if undefined_attrs is not None:
+                        undefined_attrs[key] = value.resolve(context)
 
         if component_props is not None:
             # If we have spread attrs, merge them into undefined_attrs
-            if spread_attrs and isinstance(spread_attrs, Attrs):
+            if spread_attrs and isinstance(spread_attrs, Attrs) and undefined_attrs is not None:
                 # Merge spread attrs into undefined_attrs
                 for key, value in spread_attrs.all_attrs():
                     # Only add if not already defined (local attrs take precedence)
                     if key not in undefined_attrs:
                         undefined_attrs[key] = value
 
-            new_context["attrs"] = undefined_attrs
+            # Only set attrs variable for components
+            if undefined_attrs is not None:
+                new_context["attrs"] = undefined_attrs
 
             # Put default values in the new context.
             for key, value in component_props.items():
-                if value:
-                    if key in new_context:
-                        continue
+                if key in new_context:
+                    continue
+                    
+                # Handle typed props with defaults
+                if isinstance(value, dict) and "type" in value and "default" in value:
+                    if value["default"] is not None:
+                        # Resolve the default value - handle both Variable and TemplateAttributeExpression
+                        if hasattr(value["default"], "resolve"):
+                            default_resolved = value["default"].resolve(context)
+                        else:
+                            # Literal value (bool, int, list, etc.)
+                            default_resolved = value["default"]
+                        # Apply type coercion to the default
+                        default_coerced = coerce_value(default_resolved, value["type"])
+                        new_context[key] = default_coerced
+                elif value:
                     # Check if it's a required enum that wasn't provided
                     if isinstance(value, EnumVariable) and value.required:
                         raise TemplateSyntaxError(
@@ -614,7 +633,43 @@ class IncludeContentsNode(template.Node):
                 if "=" in type_spec:
                     type_spec, default_str = type_spec.split("=", 1)
                     type_spec = type_spec.strip()
-                    default_value = Variable(default_str.strip())
+                    default_str = default_str.strip()
+                    
+                    # Handle quoted strings (strip quotes and use as template expression)
+                    if ((default_str.startswith('"') and default_str.endswith('"')) or 
+                        (default_str.startswith("'") and default_str.endswith("'"))):
+                        # Remove quotes and treat as template expression
+                        unquoted = default_str[1:-1]
+                        # Use TemplateAttributeExpression for complex template syntax
+                        default_value = TemplateAttributeExpression(unquoted)
+                    # Handle literal values that Django Variable can't resolve
+                    elif default_str in ("true", "True"):
+                        default_value = True
+                    elif default_str in ("false", "False"):
+                        default_value = False
+                    elif default_str in ("null", "None"):
+                        default_value = None
+                    elif default_str == "[]":
+                        default_value = []
+                    elif default_str.startswith("[") and default_str.endswith("]"):
+                        # Simple list parsing: [item1,item2,item3]
+                        items = default_str[1:-1]
+                        if items:
+                            default_value = [item.strip() for item in items.split(",")]
+                        else:
+                            default_value = []
+                    else:
+                        # For unquoted non-literal values, distinguish between literal strings and variables
+                        # Variable expressions contain dots, brackets, or other Django template syntax
+                        if '.' in default_str or '[' in default_str or '|' in default_str:
+                            # This looks like a variable expression (e.g., user.name, items.0, value|default:"x")
+                            default_value = Variable(default_str)
+                        elif default_str.isalnum() or (default_str.replace('_', '').replace('-', '').isalnum()):
+                            # This looks like a simple literal string value (e.g., admin, user, guest)
+                            default_value = default_str
+                        else:
+                            # Try as Variable for other complex expressions (may fail)
+                            default_value = Variable(default_str)
                     required = False
                 elif prop_name.endswith("?"):
                     prop_name = prop_name[:-1]

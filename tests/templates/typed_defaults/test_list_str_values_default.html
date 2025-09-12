@@ -1,0 +1,2 @@
+{# props tags:list[str]=[python,django] #}
+{% for tag in tags %}{{ tag }}{% if not forloop.last %},{% endif %}{% endfor %}
