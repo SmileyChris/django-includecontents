@@ -10,10 +10,12 @@ This module provides:
 import dataclasses
 from dataclasses import dataclass, is_dataclass, fields as dataclass_fields, MISSING
 from typing import Any, Dict, Type, get_type_hints, get_origin, get_args, Optional, Union, Literal, Annotated
+import types as _types
 import inspect
 
 from django.core.exceptions import ValidationError
 from django.template import TemplateSyntaxError
+from django.utils.safestring import mark_safe
 
 
 # Registry for component props classes
@@ -86,12 +88,18 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
         if field_name.startswith('_'):
             continue
         
-        # Special handling for Model and QuerySet classes used directly
-        from .prop_types import Model as ModelClass, QuerySet as QuerySetClass
+        # Special handling for Model, QuerySet, and Html classes used directly
+        from .prop_types import (
+            Model as ModelClass,
+            QuerySet as QuerySetClass,
+            Html as HtmlClass,
+        )
         if type_hint is ModelClass:
             type_hint = ModelClass()
         elif type_hint is QuerySetClass:
             type_hint = QuerySetClass()
+        elif type_hint is HtmlClass:
+            type_hint = HtmlClass()
             
         # Get the value or use default
         if field_name in values:
@@ -219,6 +227,9 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
                     f"{field_name}: Must be one of {', '.join(repr(a) for a in allowed)}"
                 )
         
+        # Recursively mark Html-typed values safe according to type hints
+        value = mark_html_recursive(value, type_hint)
+
         cleaned[field_name] = value
     
     # Check for unexpected props
@@ -258,6 +269,100 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
                 props_class.clean(cleaned)
     
     return cleaned
+
+
+def is_html_type(type_hint: Any) -> bool:
+    """Return True if the type hint is an Html Annotated marker."""
+    try:
+        # Direct Annotated Html marker
+        if hasattr(type_hint, '__metadata__'):
+            from .prop_types import _HTML_MARKER
+            if _HTML_MARKER in getattr(type_hint, '__metadata__', ()):  # type: ignore[attr-defined]
+                return True
+        # Bare Html class reference (e.g., nested in containers: list[Html])
+        try:
+            from .prop_types import Html as HtmlClass
+            if type_hint is HtmlClass:
+                return True
+        except Exception:
+            pass
+        return False
+    except Exception:
+        return False
+
+
+def mark_html_recursive(value: Any, type_hint: Any) -> Any:
+    """
+    Recursively traverse a value according to the provided type hint and
+    mark any Html-typed leaves as safe. Supports Optional/Union, Annotated,
+    list/tuple/set/dict container types, and nested combinations thereof.
+    """
+    if value is None:
+        return None
+
+    # If it's directly an Html type, mark safe
+    try:
+        if is_html_type(type_hint):
+            # Only strings should be marked safe; defensive check
+            return mark_safe(value) if isinstance(value, str) else value
+    except Exception:
+        return value
+
+    origin = get_origin(type_hint)
+    args = get_args(type_hint)
+
+    # Handle Annotated by recursing into its base type (first arg)
+    if origin is Annotated:
+        inner = args[0] if args else Any
+        return mark_html_recursive(value, inner)
+
+    # Handle Optional/Union by selecting the most appropriate arg
+    if origin in (Union, getattr(_types, 'UnionType', Union)):
+        non_none = [a for a in args if a is not type(None)]  # noqa: E721
+        # Try to match container types to value shape first
+        for a in non_none:
+            a_origin = get_origin(a)
+            if a_origin is list and isinstance(value, list):
+                return mark_html_recursive(value, a)
+            if a_origin is tuple and isinstance(value, tuple):
+                return mark_html_recursive(value, a)
+            if a_origin is set and isinstance(value, set):
+                return mark_html_recursive(value, a)
+            if a_origin is dict and isinstance(value, dict):
+                return mark_html_recursive(value, a)
+            if is_html_type(a) and isinstance(value, str):
+                return mark_html_recursive(value, a)
+        # Fallback to first non-none arg
+        if non_none:
+            return mark_html_recursive(value, non_none[0])
+        return value
+
+    # Handle containers
+    if origin is list and isinstance(value, list):
+        item_type = args[0] if args else Any
+        return [mark_html_recursive(v, item_type) for v in value]
+
+    if origin is tuple and isinstance(value, tuple):
+        if args and args[-1] is Ellipsis:
+            # Tuple[T, ...]
+            item_type = args[0] if args else Any
+            return tuple(mark_html_recursive(v, item_type) for v in value)
+        if args and len(args) == len(value):
+            return tuple(mark_html_recursive(v, t) for v, t in zip(value, args))
+        # Fallback: mark items as Html? Keep unchanged to avoid over-marking
+        return value
+
+    if origin is set and isinstance(value, set):
+        item_type = args[0] if args else Any
+        return {mark_html_recursive(v, item_type) for v in value}
+
+    if origin is dict and isinstance(value, dict):
+        # Recurse into values only
+        key_type = args[0] if args else Any
+        val_type = args[1] if len(args) > 1 else Any
+        return {k: mark_html_recursive(v, val_type) for k, v in value.items()}
+
+    return value
 
 
 def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):

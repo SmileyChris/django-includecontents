@@ -24,10 +24,11 @@ class TemplateAttributeExpression:
     A custom expression that evaluates template syntax in attribute values.
     This allows mixed content like 'class="btn {{ variant }}"' to work correctly.
     """
+
     def __init__(self, template_string):
         self.template_string = template_string
         self._template = None
-    
+
     def resolve(self, context):
         if self._template is None:
             # Compile the template once and cache it
@@ -37,14 +38,14 @@ class TemplateAttributeExpression:
 
 def is_pure_variable_expression(value):
     """
-    Check if a value is a pure variable expression like "{{ variable }}" 
+    Check if a value is a pure variable expression like "{{ variable }}"
     with no other content. Returns the variable expression if true, None otherwise.
     """
     if not value:
         return None
-    
+
     stripped = value.strip()
-    if stripped.startswith('{{') and stripped.endswith('}}'):
+    if stripped.startswith("{{") and stripped.endswith("}}"):
         return stripped[2:-2].strip()
     return None
 
@@ -116,7 +117,7 @@ def includecontents(parser, token):
     """
     # Store the original token contents for checking template syntax
     original_contents = token.contents
-    
+
     # Remove template {{ }} only for non-quoted contexts
     # This regex only removes {{ }} when they're not inside quotes
     token.contents = re.sub(r"(['\"]?)\{\{ *(.*?) *\}\}\1", r"\2", token.contents)
@@ -133,12 +134,12 @@ def includecontents(parser, token):
         # Split out nested attributes (those with a dot in the name).
         new_bits = []
         advanced_attrs = {}
-        
+
         # Parse the original token to find attributes with template syntax
         original_bits = list(smart_split(original_contents))
         if len(original_bits) >= 2 and original_bits[1].startswith("_"):
             original_bits = original_bits[2:]  # Skip includecontents and tag name
-        
+
         # Create a mapping of processed bits to original bits for template detection
         bit_to_original = {}
         for orig_bit in original_bits:
@@ -146,7 +147,7 @@ def includecontents(parser, token):
             processed = re.sub(r"(['\"]?)\{\{ *(.*?) *\}\}\1", r"\2", orig_bit)
             if processed in bits:
                 bit_to_original[processed] = orig_bit
-        
+
         for i, bit in enumerate(bits):
             if i < 3:
                 new_bits.append(bit)
@@ -154,7 +155,12 @@ def includecontents(parser, token):
                 # Handle spread syntax - strip the ... prefix
                 spread_value = bit[3:]
                 advanced_attrs["..."] = parser.compile_filter(spread_value)
-            elif bit.startswith("@") or (bit.startswith(":") and not bit.startswith("class:")) or bit.startswith("v-") or bit.startswith("x-"):
+            elif (
+                bit.startswith("@")
+                or (bit.startswith(":") and not bit.startswith("class:"))
+                or bit.startswith("v-")
+                or bit.startswith("x-")
+            ):
                 # JavaScript framework attributes (Vue, Alpine.js) can't be handled by the standard include.
                 # This includes: @ (Vue events), : (Vue/Alpine bind), v- (Vue directives), x- (Alpine directives)
                 # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
@@ -174,13 +180,16 @@ def includecontents(parser, token):
                     attr, value = bit.split("=", 1)
                     # Check if this attribute had template syntax in the original
                     original_bit = bit_to_original.get(bit, bit)
-                    if original_bit and ('{{' in original_bit or '{%' in original_bit):
+                    if original_bit and ("{{" in original_bit or "{%" in original_bit):
                         # Extract the original value with template syntax
-                        if '=' in original_bit:
-                            _, orig_value = original_bit.split('=', 1)
+                        if "=" in original_bit:
+                            _, orig_value = original_bit.split("=", 1)
                             # Remove quotes if present
-                            if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
-                                (orig_value.startswith("'") and orig_value.endswith("'"))):
+                            if (
+                                orig_value.startswith('"') and orig_value.endswith('"')
+                            ) or (
+                                orig_value.startswith("'") and orig_value.endswith("'")
+                            ):
                                 orig_value = orig_value[1:-1]
                             # Check if this is a pure variable expression
                             if var_expr := is_pure_variable_expression(orig_value):
@@ -188,9 +197,13 @@ def includecontents(parser, token):
                                 advanced_attrs[attr] = parser.compile_filter(var_expr)
                             else:
                                 # Use TemplateAttributeExpression for mixed content
-                                advanced_attrs[attr] = TemplateAttributeExpression(orig_value)
+                                advanced_attrs[attr] = TemplateAttributeExpression(
+                                    orig_value
+                                )
                         else:
-                            advanced_attrs[attr] = parser.compile_filter(value or "True")
+                            advanced_attrs[attr] = parser.compile_filter(
+                                value or "True"
+                            )
                     else:
                         advanced_attrs[attr] = parser.compile_filter(value or "True")
                 else:
@@ -207,12 +220,17 @@ def includecontents(parser, token):
             else:
                 # Check if this attribute had template syntax in the original
                 original_bit = bit_to_original.get(bit, bit)
-                if original_bit and "=" in original_bit and ('{{' in original_bit or '{%' in original_bit):
+                if (
+                    original_bit
+                    and "=" in original_bit
+                    and ("{{" in original_bit or "{%" in original_bit)
+                ):
                     # This is a regular attribute with template syntax
-                    attr, orig_value = original_bit.split('=', 1)
+                    attr, orig_value = original_bit.split("=", 1)
                     # Remove quotes if present
-                    if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
-                        (orig_value.startswith("'") and orig_value.endswith("'"))):
+                    if (orig_value.startswith('"') and orig_value.endswith('"')) or (
+                        orig_value.startswith("'") and orig_value.endswith("'")
+                    ):
                         orig_value = orig_value[1:-1]
                     # Check if this is a pure variable expression
                     if var_expr := is_pure_variable_expression(orig_value):
@@ -352,38 +370,38 @@ class IncludeContentsNode(template.Node):
         if not self.is_component:
             yield
             return
-        
+
         # Check for registered Python props class first
         from includecontents.props import get_props_class, validate_props
-        
+
         template = self.get_component_template(context)
-        
+
         # Get the template path for props class lookup
         template_path = None
-        if hasattr(template, 'origin') and hasattr(template.origin, 'name'):
+        if hasattr(template, "origin") and hasattr(template.origin, "name"):
             template_path = template.origin.name
-        elif hasattr(template, 'name'):
+        elif hasattr(template, "name"):
             template_path = template.name
-        
+
         props_class = None
         if template_path:
             props_class = get_props_class(template_path)
-        
+
         if props_class:
             # Use Python-defined props class for validation
             attrs = {}
             for key, value in self.all_attrs():
                 attrs[key] = value.resolve(context)
-            
+
             try:
                 validated = validate_props(props_class, attrs)
-                
+
                 # Handle extra attrs if present
-                extra_attrs = validated.pop('_extra_attrs', {})
-                
+                extra_attrs = validated.pop("_extra_attrs", {})
+
                 # Update context with validated props
                 new_context.update(validated)
-                
+
                 # Set attrs variable with extra attributes
                 if extra_attrs:
                     undefined_attrs = Attrs()
@@ -392,26 +410,26 @@ class IncludeContentsNode(template.Node):
                     new_context["attrs"] = undefined_attrs
                 else:
                     new_context["attrs"] = Attrs()
-                
+
             except TemplateSyntaxError:
                 raise
             except Exception as e:
                 raise TemplateSyntaxError(
                     f"Component {self.token_name} validation failed: {e}"
                 )
-            
+
             # Skip the original props handling
             extra_context = self.include_node.extra_context
             self.include_node.extra_context = {}
             yield
             self.include_node.extra_context = extra_context
             return
-        
+
         # Fall back to template-defined props
         component_props = self.get_component_props(template)
         if component_props is not None:
             undefined_attrs = Attrs()
-        
+
         # First, handle spread syntax
         spread_attrs = None
         for key, value in self.all_attrs():
@@ -419,7 +437,7 @@ class IncludeContentsNode(template.Node):
                 # Resolve the spread expression (e.g., attrs or attrs.button)
                 spread_attrs = value.resolve(context)
                 break
-        
+
         for key, value in self.all_attrs():
             if key == "...":
                 # Skip the spread syntax itself
@@ -435,27 +453,33 @@ class IncludeContentsNode(template.Node):
                 if key in component_props:
                     resolved_value = value.resolve(context)
                     prop_def = component_props[key]
-                    
+
                     # Handle new typed props
-                    if isinstance(prop_def, dict) and 'type' in prop_def:
+                    if isinstance(prop_def, dict) and "type" in prop_def:
                         # This is a typed prop from the new syntax
-                        prop_type = prop_def['type']
-                        
+                        prop_type = prop_def["type"]
+
                         # Run validators if it's an Annotated type
-                        if hasattr(prop_type, '__metadata__'):
+                        if hasattr(prop_type, "__metadata__"):
                             from django.core.exceptions import ValidationError
+
                             for validator in prop_type.__metadata__:
                                 if callable(validator):
                                     try:
                                         validator(resolved_value)
                                     except ValidationError as e:
-                                        msg = str(e.message) if hasattr(e, 'message') else str(e)
+                                        msg = (
+                                            str(e.message)
+                                            if hasattr(e, "message")
+                                            else str(e)
+                                        )
                                         raise TemplateSyntaxError(
                                             f'Invalid value for "{key}" in {self.token_name}: {msg}'
                                         )
-                        
+
                         # Check Literal types
-                        from typing import get_origin, get_args, Literal
+                        from typing import Literal, get_args, get_origin
+
                         origin = get_origin(prop_type)
                         if origin is Literal:
                             allowed = get_args(prop_type)
@@ -464,7 +488,15 @@ class IncludeContentsNode(template.Node):
                                     f'Invalid value "{resolved_value}" for attribute "{key}" in {self.token_name}. '
                                     f"Allowed values: {', '.join(repr(v) for v in allowed)}"
                                 )
-                        
+
+                        # Recursively mark Html-typed leaves safe
+                        try:
+                            from includecontents.props import mark_html_recursive
+                            resolved_value = mark_html_recursive(resolved_value, prop_type)
+                        except Exception:
+                            # Ignore marking failures silently
+                            pass
+
                         new_context[key] = resolved_value
                     # Validate enum values (original syntax)
                     elif isinstance(prop_def, EnumVariable):
@@ -509,7 +541,7 @@ class IncludeContentsNode(template.Node):
                     # Only add if not already defined (local attrs take precedence)
                     if key not in undefined_attrs:
                         undefined_attrs[key] = value
-            
+
             new_context["attrs"] = undefined_attrs
 
             # Put default values in the new context.
@@ -552,41 +584,41 @@ class IncludeContentsNode(template.Node):
             first_comment = template.first_comment[4:]
         else:
             return None
-        
+
         from includecontents.props import parse_type_spec
-        
+
         props = {}
         for bit in smart_split(first_comment.strip()):
             # Check for new typed syntax: name:type or name:type(params)
-            if ':' in bit and not bit.startswith('"') and not bit.startswith("'"):
-                parts = bit.split(':', 1)
+            if ":" in bit and not bit.startswith('"') and not bit.startswith("'"):
+                parts = bit.split(":", 1)
                 prop_name = parts[0].strip()
                 type_spec = parts[1].strip()
-                
+
                 # Check for optional marker
                 required = True
                 default_value = None
-                
+
                 # Check for default value syntax: type=default
-                if '=' in type_spec:
-                    type_spec, default_str = type_spec.split('=', 1)
+                if "=" in type_spec:
+                    type_spec, default_str = type_spec.split("=", 1)
                     type_spec = type_spec.strip()
                     default_value = Variable(default_str.strip())
                     required = False
-                elif prop_name.endswith('?'):
+                elif prop_name.endswith("?"):
                     prop_name = prop_name[:-1]
                     required = False
-                
+
                 # Parse the type specification
                 prop_type = parse_type_spec(type_spec)
-                
+
                 # Store as a special PropDefinition object
                 props[prop_name] = {
-                    'type': prop_type,
-                    'required': required,
-                    'default': default_value,
+                    "type": prop_type,
+                    "required": required,
+                    "default": default_value,
                 }
-                
+
                 # Check if required prop is missing
                 if required and (
                     prop_name not in self.include_node.extra_context
@@ -762,7 +794,12 @@ class Attrs(MutableMapping):
         # Check if this is a JavaScript framework attribute that should be preserved as-is
         # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
         # This check must come BEFORE dot splitting to handle event modifiers like @click.stop
-        if (key.startswith("@") or (key.startswith(":") and not key.startswith("class:")) or key.startswith("v-") or key.startswith("x-")):
+        if (
+            key.startswith("@")
+            or (key.startswith(":") and not key.startswith("class:"))
+            or key.startswith("v-")
+            or key.startswith("x-")
+        ):
             # Store these attributes without any special processing
             self._attrs[key] = value
             return
@@ -975,7 +1012,7 @@ class WrapIfNode(Node):
         self.contents_nodelists = (
             contents_nodelists  # {'default': nodelist, 'header': nodelist, ...}
         )
-    
+
     def get_nodes_by_type(self, nodetype):
         """Collect nodes of given type from all contents nodelists."""
         nodes = []

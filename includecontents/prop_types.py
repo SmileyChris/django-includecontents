@@ -342,19 +342,20 @@ class IconName:
         )]
 
 
+# Unique marker object to tag Html-typed values in Annotated metadata
+_HTML_MARKER = object()
+
+
 class Html:
     """
     Marker type for HTML content that should be marked safe in templates.
-    
-    This is a marker type that indicates the content should be treated
-    as safe HTML and not escaped when rendered.
-    
-    Usage:
-        content: Html  # Content will be marked safe
+
+    This returns an Annotated[str, _HTML_MARKER] which allows downstream
+    validation/templating to detect Html values and mark them safe.
     """
-    
+
     def __new__(cls):
-        return str  # HTML is just a string that gets marked safe in templates
+        return Annotated[str, _HTML_MARKER]
 
 
 class Json:
