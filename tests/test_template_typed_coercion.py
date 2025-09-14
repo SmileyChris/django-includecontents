@@ -21,7 +21,7 @@ class TestTemplateTypedCoercion:
         # The test template has: {# props count:int #}
         template = Template(
             "{% load includecontents %}"
-            '{% includecontents "test_int_coerce.html" with count="25" %}{% endincludecontents %}'
+            '{% includecontents "test_coercion/test_int_coerce.html" with count="25" %}{% endincludecontents %}'
         )
 
         context = Context({})
@@ -35,7 +35,7 @@ class TestTemplateTypedCoercion:
         for true_val in ["true", "True", "1", "yes", "on"]:
             template = Template(
                 "{% load includecontents %}"
-                f'{{% includecontents "test_bool_coerce.html" with active="{true_val}" %}}{{% endincludecontents %}}'
+                f'{{% includecontents "test_coercion/test_bool_coerce.html" with active="{true_val}" %}}{{% endincludecontents %}}'
             )
 
             context = Context({})
@@ -46,7 +46,7 @@ class TestTemplateTypedCoercion:
         for false_val in ["false", "False", "0", "no", "off"]:
             template = Template(
                 "{% load includecontents %}"
-                f'{{% includecontents "test_bool_coerce.html" with active="{false_val}" %}}{{% endincludecontents %}}'
+                f'{{% includecontents "test_coercion/test_bool_coerce.html" with active="{false_val}" %}}{{% endincludecontents %}}'
             )
 
             context = Context({})
@@ -58,7 +58,7 @@ class TestTemplateTypedCoercion:
         """Test that {# props rating:float #} coerces string to float."""
         template = Template(
             "{% load includecontents %}"
-            '{% includecontents "test_float_coerce.html" with rating="4.5" %}{% endincludecontents %}'
+            '{% includecontents "test_coercion/test_float_coerce.html" with rating="4.5" %}{% endincludecontents %}'
         )
 
         context = Context({})
@@ -69,7 +69,7 @@ class TestTemplateTypedCoercion:
         """Test that {# props tags:list[str] #} splits comma-separated strings."""
         template = Template(
             "{% load includecontents %}"
-            '{% includecontents "test_list_str_coerce.html" with tags="python, django, web" %}{% endincludecontents %}'
+            '{% includecontents "test_coercion/test_list_str_coerce.html" with tags="python, django, web" %}{% endincludecontents %}'
         )
 
         context = Context({})
@@ -80,7 +80,7 @@ class TestTemplateTypedCoercion:
         """Test that {# props numbers:list[int] #} splits and coerces to integers."""
         template = Template(
             "{% load includecontents %}"
-            '{% includecontents "test_list_int_coerce.html" with numbers="1, 2, 3, 4, 5" %}{% endincludecontents %}'
+            '{% includecontents "test_coercion/test_list_int_coerce.html" with numbers="1, 2, 3, 4, 5" %}{% endincludecontents %}'
         )
 
         context = Context({})
@@ -93,7 +93,7 @@ class TestTemplateTypedCoercion:
         # Test with value provided
         template = Template(
             "{% load includecontents %}"
-            '{% includecontents "test_optional_int.html" with max_items="10" %}{% endincludecontents %}'
+            '{% includecontents "test_coercion/test_optional_int.html" with max_items="10" %}{% endincludecontents %}'
         )
 
         context = Context({})
@@ -103,7 +103,7 @@ class TestTemplateTypedCoercion:
         # Test without value (should use None/empty)
         template = Template(
             "{% load includecontents %}"
-            '{% includecontents "test_optional_int.html" %}{% endincludecontents %}'
+            '{% includecontents "test_coercion/test_optional_int.html" %}{% endincludecontents %}'
         )
 
         context = Context({})

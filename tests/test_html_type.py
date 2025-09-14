@@ -29,7 +29,7 @@ def test_python_props_html_marked_safe():
 def test_template_typed_html_marked_safe():
     """Html typed prop in template is marked safe and not escaped."""
     output = render_to_string(
-        "test_html_include.html",
+        "test_coercion/test_html_include.html",
         {},
     )
 
@@ -97,7 +97,7 @@ def test_python_props_tuple_and_dict_html():
 def test_template_typed_list_html_marked_safe():
     """list[html] typed prop marks each item safe when provided from context."""
     output = render_to_string(
-        "test_html_list_include.html",
+        "test_coercion/test_html_list_include.html",
         {"items": ["<strong>1</strong>", "<i>2</i>"]},
     )
     assert "<strong>1</strong>" in output

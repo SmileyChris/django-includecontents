@@ -377,15 +377,30 @@ class IncludeContentsNode(template.Node):
         template = self.get_component_template(context)
 
         # Get the template path for props class lookup
-        template_path = None
-        if hasattr(template, "origin") and hasattr(template.origin, "name"):
-            template_path = template.origin.name
-        elif hasattr(template, "name"):
-            template_path = template.name
-
+        # Try multiple candidates in order of preference
         props_class = None
-        if template_path:
-            props_class = get_props_class(template_path)
+
+        # Candidate 1: template.origin.template_name (relative path)
+        if (hasattr(template, "origin") and
+            hasattr(template.origin, "template_name") and
+            template.origin.template_name):
+            template_name = str(template.origin.template_name)
+            props_class = get_props_class(template_name)
+
+        # Candidate 2: template.origin.name (absolute path - current behavior)
+        if (not props_class and
+            hasattr(template, "origin") and
+            hasattr(template.origin, "name") and
+            template.origin.name):
+            origin_name = str(template.origin.name)
+            props_class = get_props_class(origin_name)
+
+        # Candidate 3: template.name (fallback)
+        if (not props_class and
+            hasattr(template, "name") and
+            template.name):
+            template_name = str(template.name)
+            props_class = get_props_class(template_name)
 
         if props_class:
             # Use Python-defined props class for validation
