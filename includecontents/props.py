@@ -331,6 +331,13 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
         # Recursively mark Html-typed values safe according to type hints
         value = mark_html_recursive(value, type_hint)
 
+        # Generate camelCase boolean flags for MultiChoice types
+        if is_multichoice_type(type_hint):
+            allowed_values = get_multichoice_values(type_hint)
+            flags = generate_multichoice_flags(field_name, value, allowed_values)
+            # Add flags to cleaned data (they will be added to template context)
+            cleaned.update(flags)
+
         cleaned[field_name] = value
 
     # Check for unexpected props
@@ -389,6 +396,71 @@ def is_html_type(type_hint: Any) -> bool:
         return False
     except Exception:
         return False
+
+
+def is_multichoice_type(type_hint: Any) -> bool:
+    """Return True if the type hint is a MultiChoice Annotated marker."""
+    try:
+        # Direct Annotated MultiChoice marker
+        if hasattr(type_hint, "__metadata__"):
+            from .prop_types import _MULTICHOICE_MARKER
+
+            if _MULTICHOICE_MARKER in getattr(type_hint, "__metadata__", ()):  # type: ignore[attr-defined]
+                return True
+        return False
+    except Exception:
+        return False
+
+
+def get_multichoice_values(type_hint: Any) -> tuple:
+    """Extract the allowed values from a MultiChoice type hint."""
+    try:
+        if hasattr(type_hint, "__metadata__"):
+            metadata = getattr(type_hint, "__metadata__", ())
+            # The allowed values are stored as the last item in metadata after the marker
+            for item in metadata:
+                if isinstance(item, (tuple, list)) and not callable(item):
+                    return tuple(item)
+        return ()
+    except Exception:
+        return ()
+
+
+def generate_multichoice_flags(prop_name: str, value: str, allowed_values: tuple) -> dict:
+    """
+    Generate camelCase boolean flags for MultiChoice values.
+    
+    Args:
+        prop_name: The property name (e.g., 'variant')
+        value: The space-separated value string (e.g., 'primary large')
+        allowed_values: Tuple of allowed values
+        
+    Returns:
+        Dictionary of camelCase flags (e.g., {'variantPrimary': True, 'variantLarge': True})
+    """
+    flags = {}
+    
+    if not value:
+        return flags
+    
+    # Split on spaces to get individual values
+    selected_values = value.split() if isinstance(value, str) else []
+    
+    # Generate camelCase flags for each allowed value
+    for allowed_value in allowed_values:
+        # Convert hyphens to camelCase (e.g., 'dark-mode' -> 'DarkMode')
+        parts = str(allowed_value).split("-")
+        camel_value = parts[0] + "".join(p.capitalize() for p in parts[1:])
+        
+        # Create the flag name (e.g., 'variant' + 'Primary' -> 'variantPrimary')
+        flag_name = prop_name + camel_value[0].upper() + camel_value[1:]
+        
+        # Set flag to True if this value is selected, otherwise don't set it
+        # (Django templates treat missing variables as False)
+        if str(allowed_value) in selected_values:
+            flags[flag_name] = True
+    
+    return flags
 
 
 def mark_html_recursive(value: Any, type_hint: Any) -> Any:

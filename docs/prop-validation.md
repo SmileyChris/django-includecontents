@@ -116,6 +116,7 @@ The `includecontents.prop_types` module provides component-focused types that le
 ### Component-Specific Types
 
 - `Choice['option1', 'option2', ...]` - Restricted string choices (like Literal)
+- `MultiChoice['option1', 'option2', ...]` - Multiple space-separated choices with camelCase boolean flags
 - `CssClass[{'pattern': r'^custom-pattern$'}]` - Validates CSS class names (with optional custom pattern)
 - `Color['hex']` or `Color['rgb']` or `Color['rgba']` - Validates CSS colors with specific format
 - `IconName()` - Validates icon names
@@ -158,6 +159,9 @@ Props with default values are automatically optional. When the prop isn't provid
 
 {# Choice defaults #}
 {# props role:choice[admin,user,guest]=user status:choice[active,inactive]=active #}
+
+{# MultiChoice defaults - supports multiple space-separated values #}
+{# props variant:multichoice[primary,secondary,large,small]=primary size:multichoice[sm,md,lg]=md #}
 ```
 
 #### Variable Expression Defaults
@@ -259,6 +263,172 @@ The original props syntax still works:
 {# props title #}                        {# Required prop #}
 {# props title="Default" #}              {# Prop with default #}
 {# props variant=primary,secondary #}     {# Enum prop #}
+```
+
+### MultiChoice Type
+
+The `MultiChoice` type supports multiple space-separated values while automatically generating camelCase boolean flags in the template context.
+
+#### Basic Usage
+
+```python
+from includecontents.prop_types import MultiChoice
+
+@component('components/button.html')
+@dataclass
+class ButtonProps:
+    variant: MultiChoice['primary', 'secondary', 'large', 'small'] = 'primary'
+```
+
+#### Template Syntax
+
+```django
+{# Template definition #}
+{# props variant:multichoice[primary,secondary,large,small] #}
+
+{# Usage - single value #}
+<include:button variant="primary">Click me</include:button>
+
+{# Usage - multiple values #}
+<include:button variant="primary large">Big primary button</include:button>
+```
+
+#### Generated camelCase Flags
+
+When a MultiChoice value is set, boolean flags are automatically generated in the template context:
+
+```django
+{# For variant="primary large", these flags are available: #}
+{% if variantPrimary %}  {# True - primary is selected #}
+    <span class="primary-styling"></span>
+{% endif %}
+
+{% if variantLarge %}    {# True - large is selected #}
+    <span class="large-styling"></span>
+{% endif %}
+
+{% if variantSecondary %} {# False - secondary not selected (variable doesn't exist) #}
+    <span class="secondary-styling"></span>
+{% endif %}
+```
+
+#### Hyphen Handling
+
+Hyphenated values are automatically converted to camelCase for flag generation:
+
+```python
+variant: MultiChoice['dark-mode', 'extra-large', 'light-theme']
+```
+
+```django
+{# For variant="dark-mode extra-large" #}
+{% if variantDarkMode %}     {# True #}
+{% if variantExtraLarge %}   {# True #}
+{% if variantLightTheme %}   {# False #}
+```
+
+#### Practical Examples
+
+**Button Component:**
+```python
+@component('components/button.html')
+@dataclass
+class ButtonProps:
+    label: str
+    variant: MultiChoice['primary', 'secondary', 'outline'] = 'primary'
+    size: MultiChoice['sm', 'md', 'lg'] = 'md'
+    disabled: bool = False
+```
+
+```django
+{# components/button.html #}
+{# props label:str variant:multichoice[primary,secondary,outline]=primary size:multichoice[sm,md,lg]=md disabled:bool=false #}
+
+<button class="btn{% if variantPrimary %} btn-primary{% endif %}{% if variantSecondary %} btn-secondary{% endif %}{% if variantOutline %} btn-outline{% endif %}{% if sizeSm %} btn-sm{% endif %}{% if sizeLg %} btn-lg{% endif %}"
+        {% if disabled %}disabled{% endif %}>
+    {{ label }}
+</button>
+```
+
+**Usage:**
+```django
+{# Single values #}
+<include:button label="Save" variant="primary" />
+<include:button label="Cancel" variant="secondary" size="sm" />
+
+{# Multiple values (not typical for size, but demonstrates capability) #}
+<include:button label="Special" variant="primary outline" />
+```
+
+#### Backward Compatibility with Legacy Enums
+
+MultiChoice provides the same functionality as legacy enum props but with modern type safety:
+
+```django
+{# Legacy enum syntax (still works) #}
+{# def variant=primary,secondary,large #}
+
+{# Modern MultiChoice equivalent #}
+{# props variant:multichoice[primary,secondary,large] #}
+```
+
+Both generate the same camelCase boolean flags (`variantPrimary`, `variantSecondary`, `variantLarge`).
+
+#### Validation
+
+MultiChoice validates that all space-separated values are in the allowed list:
+
+```python
+# ✅ Valid
+validate_props(ButtonProps, {'variant': 'primary'})           # Single value
+validate_props(ButtonProps, {'variant': 'primary large'})     # Multiple values
+validate_props(ButtonProps, {'variant': 'secondary outline'}) # Different combination
+
+# ❌ Invalid - raises ValidationError
+validate_props(ButtonProps, {'variant': 'invalid'})           # Unknown value
+validate_props(ButtonProps, {'variant': 'primary invalid'})   # Mix of valid/invalid
+```
+
+#### Migration from Legacy Enums
+
+To migrate from legacy enum syntax to MultiChoice:
+
+1. **Update the template comment:**
+   ```django
+   {# Before #}
+   {# def variant=primary,secondary,large #}
+   
+   {# After #}
+   {# props variant:multichoice[primary,secondary,large] #}
+   ```
+
+2. **Or create a Python props class:**
+   ```python
+   @component('components/your-component.html')
+   @dataclass
+   class YourComponentProps:
+       variant: MultiChoice['primary', 'secondary', 'large']
+   ```
+
+3. **Template usage remains the same** - all camelCase flags continue to work identically.
+
+#### Advanced Usage with Defaults
+
+```python
+@component('components/card.html')
+@dataclass  
+class CardProps:
+    title: str
+    variant: MultiChoice['primary', 'secondary', 'outline'] = 'primary'
+    features: MultiChoice['shadow', 'border', 'hover-effect'] = 'shadow border'
+    size: MultiChoice['sm', 'md', 'lg'] = 'md'
+```
+
+```django
+{# All of these work: #}
+<include:card title="Default card" />  {# Uses all defaults #}
+<include:card title="Big card" size="lg" />
+<include:card title="Special card" features="shadow hover-effect" variant="outline" />
 ```
 
 ## Python Props Classes

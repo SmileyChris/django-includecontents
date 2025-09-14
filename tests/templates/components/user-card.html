@@ -1,0 +1,14 @@
+
+{# props
+name:str
+email:str
+role:str=guest
+#}
+<div class="user-card">
+    <h3>{{ name }}</h3>
+    <p>Email: {{ email }}</p>
+    <p>Role: {{ role }}</p>
+    {% if variantAdmin %}
+        <span class="admin-badge">Admin</span>
+    {% endif %}
+</div>

@@ -178,6 +178,74 @@ class Choice(Generic[T]):
         return Literal[items]
 
 
+# Unique marker for MultiChoice values to enable camelCase boolean flag generation
+_MULTICHOICE_MARKER = object()
+
+
+class MultiChoice(Generic[T]):
+    """
+    Multiple choice type that supports space-separated values and generates camelCase boolean flags.
+    
+    This type mimics the behavior of legacy enum props, where multiple values can be provided
+    space-separated (e.g., "primary large") and each value generates a camelCase boolean flag
+    in the template context (e.g., variantPrimary=True, variantLarge=True).
+    
+    Usage:
+        variant: MultiChoice['primary', 'secondary', 'large', 'small']
+        variant: MultiChoice['primary', 'secondary', 'large', 'small'] = 'primary'
+        
+    Example:
+        # Component definition:
+        {# props variant:multichoice[primary,secondary,large,small] #}
+        
+        # Usage:
+        <include:button variant="primary large">Click me</include:button>
+        
+        # Template context will have:
+        # - variant = "primary large"
+        # - variantPrimary = True
+        # - variantLarge = True
+        # - variantSecondary = False (not set)
+        # - variantSmall = False (not set)
+    """
+    
+    def __class_getitem__(cls, items):
+        """
+        Create a MultiChoice type with allowed values.
+        
+        Returns an Annotated type with validation and the MultiChoice marker
+        for downstream processing.
+        """
+        if isinstance(items, str):
+            items = (items,)
+        elif not isinstance(items, (tuple, list)):
+            items = (items,)
+        
+        def validate_multichoice(value):
+            """Validate that all space-separated values are in allowed choices."""
+            from django.core.exceptions import ValidationError
+            
+            if value is None:
+                return
+            
+            # Convert to string and split on spaces
+            value_str = str(value).strip()
+            if not value_str:
+                return
+            
+            provided_values = value_str.split()
+            
+            # Check each value against allowed choices
+            for val in provided_values:
+                if val not in items:
+                    raise ValidationError(
+                        f'Invalid choice "{val}". Allowed choices: {", ".join(repr(x) for x in items)}'
+                    )
+        
+        # Return annotated type with both validator and MultiChoice marker
+        return Annotated[str, validate_multichoice, _MULTICHOICE_MARKER, items]
+
+
 # Django-specific prop types
 
 # Model type that supports both bare usage and square brackets
@@ -475,6 +543,7 @@ TYPE_MAP = {
     'model': Model(),  # Model instance returns Annotated type for any model
     'queryset': QuerySet(),  # QuerySet instance returns Annotated type for any queryset
     'user': User,  # Special user type
+    'multichoice': MultiChoice,  # MultiChoice type with camelCase boolean flags
 }
 
 # Mapping of type names to their classes (for parameterized types)
@@ -490,4 +559,5 @@ TYPE_CLASSES = {
     'color': Color,
     'model': Model,
     'queryset': QuerySet,
+    'multichoice': MultiChoice,
 }
