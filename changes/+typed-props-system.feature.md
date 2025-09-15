@@ -1,0 +1,9 @@
+Add comprehensive type-safe component props system with validation, defaults, and Django integration. Components can now declare typed props using either simple template syntax (`{# props name:text email:email age:int[min=18]=25 #}`) or Python data classes with full IDE support.
+
+The system includes extensive built-in prop types designed specifically for component validation: Text with length and pattern validation, Integer and Decimal with min/max bounds, Email and URL validation, Html type that automatically marks content as safe, MultiChoice for enumerated values, and Django-specific types like ModelInstance and QuerySet for ORM integration. All prop types support optional validation parameters using intuitive bracket syntax.
+
+Default values can be specified directly in prop definitions using literal values (`count:int=5`), Django template variables (`title:str=page.title`), or complex template expressions (`header:str="{{ user.name|default:'Guest' }}"`). The system intelligently parses these defaults and applies proper type coercion, supporting strings, numbers, booleans, lists, and choice selections.
+
+MultiChoice props provide special convenience features, automatically generating camelCase boolean flags in the template context. For example, `variant:choice[primary,secondary,danger]` creates `variantPrimary`, `variantSecondary`, and `variantDanger` boolean variables, making conditional styling and logic much more ergonomic in templates.
+
+The type coercion system works consistently across both Python data class props and template-defined props, converting string inputs to appropriate types (e.g., `'25'` → `25`, `'true'` → `True`, `'red,blue,green'` → `['red', 'blue', 'green']`) while providing clear error messages when conversion fails.

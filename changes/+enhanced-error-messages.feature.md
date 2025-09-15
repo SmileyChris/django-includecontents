@@ -1,0 +1,1 @@
+Add enhanced error messages for component props validation with detailed context and debugging information. Validation errors now include component template path, props class name, field-specific details, and helpful hints for common type coercion failures. Uses Python 3.11+ `Exception.add_note()` when available, with graceful fallback for older Python versions.
