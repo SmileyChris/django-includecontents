@@ -375,7 +375,7 @@ class IncludeContentsNode(template.Node):
         # so we don't return early for non-components
 
         # Check for registered Python props class first
-        from includecontents.props import get_props_class, validate_props
+        from includecontents.props import get_props_class, validate_props, list_registered_components
 
         template = self.get_component_template(context)
 
@@ -404,6 +404,30 @@ class IncludeContentsNode(template.Node):
             template.name):
             template_name = str(template.name)
             props_class = get_props_class(template_name)
+
+        # Debug logging for registry misses
+        if not props_class:
+            candidates = []
+            if (hasattr(template, "origin") and
+                hasattr(template.origin, "template_name") and
+                template.origin.template_name):
+                candidates.append(str(template.origin.template_name))
+            if (hasattr(template, "origin") and
+                hasattr(template.origin, "name") and
+                template.origin.name):
+                candidates.append(str(template.origin.name))
+            if hasattr(template, "name") and template.name:
+                candidates.append(str(template.name))
+
+            registered_keys = list_registered_components()
+            logger.debug(
+                "No props class found for component '%s'. "
+                "Tried candidates: %s. "
+                "Registered components (first 5): %s",
+                self.token_name,
+                candidates,
+                registered_keys[:5] if registered_keys else []
+            )
 
         if props_class:
             # Use Python-defined props class for validation

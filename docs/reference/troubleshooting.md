@@ -337,6 +337,116 @@ TEMPLATES = [{
 
 ## Error Debugging
 
+### Enhanced Error Messages
+
+Django IncludeContents provides enhanced error messages with additional context to help debug issues faster.
+
+#### Props Validation Errors
+
+Modern validation errors include comprehensive context:
+
+```python
+# Example enhanced error output (Python 3.11+):
+TemplateSyntaxError: Props validation failed: email: Enter a valid email address
+Component: components/user-card.html
+Props class: UserCardProps
+  • email: Enter a valid email address
+  • age: Cannot convert 'abc' to integer
+
+# On older Python versions, context is included in the main error message
+```
+
+**Common validation error types:**
+
+1. **Missing required props:**
+   ```
+   Props validation failed: Missing required prop: title
+   Component: components/card.html
+   Props class: CardProps
+   ```
+
+2. **Type coercion failures:**
+   ```
+   Props validation failed: age: Cannot convert 'not-a-number' to integer
+   Component: components/user-profile.html
+   Props class: UserProfileProps
+     • Field: age
+     • Expected type: int
+     • Received value: 'not-a-number' (type: str)
+     • Hint: Ensure the value is a valid integer
+   ```
+
+3. **Validation errors:**
+   ```
+   Props validation failed: email: Enter a valid email address
+   Component: components/contact-form.html
+   Props class: ContactFormProps
+     • email: Enter a valid email address
+   ```
+
+#### Debug Component Registration
+
+Use registry introspection helpers to debug component lookup issues:
+
+```python
+from includecontents.props import list_registered_components, resolve_props_class_for
+
+# Check what components are registered
+components = list_registered_components()
+print("Available components:", components)
+
+# Debug path resolution
+props_class = resolve_props_class_for('components/my-component.html')
+if props_class:
+    print(f"Found props class: {props_class.__name__}")
+else:
+    print("No props class found - check registration")
+```
+
+#### Debug Logging
+
+Enable debug logging to see detailed component lookup information:
+
+```python
+# settings.py
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'includecontents.props': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'includecontents.templatetags.includecontents': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+```
+
+**Debug log output examples:**
+
+```
+# Props cache operations
+DEBUG: Props cache hit for template components/card.html (key: props title...)
+DEBUG: Props cached for template components/button.html (key: props text..., 2 props)
+
+# Registry lookup failures
+DEBUG: No props class found for component 'card'. Tried candidates:
+['components/card.html', '/app/templates/components/card.html', 'card.html'].
+Registered components (first 5): ['components/button.html', 'components/form.html']
+
+# Registry collisions
+WARNING: Component already registered for 'components/button.html'.
+Previous: ButtonProps, New: DuplicateButtonProps (keeping first)
+```
+
 ### Enable Debug Mode
 
 **Template debugging:**

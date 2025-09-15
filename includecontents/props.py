@@ -8,6 +8,7 @@ This module provides:
 """
 
 import inspect
+import logging
 import types as _types
 from dataclasses import MISSING, dataclass, is_dataclass
 from dataclasses import fields as dataclass_fields
@@ -28,8 +29,13 @@ from django.core.exceptions import ValidationError
 from django.template import TemplateSyntaxError
 from django.utils.safestring import mark_safe
 
+from .errors import enhance_coercion_error, enhance_validation_error
+
 # Registry for component props classes
 _registry: Dict[str, Type] = {}
+
+# Logger for props system
+logger = logging.getLogger(__name__)
 
 
 def component(template_path: str):
@@ -50,8 +56,19 @@ def component(template_path: str):
         if not is_dataclass(props_class):
             props_class = dataclass(props_class)
 
-        # Register the props class
-        _registry[template_path] = props_class
+        # Register the props class, warning about collisions
+        if template_path in _registry:
+            existing_class = _registry[template_path]
+            logger.warning(
+                "Component already registered for '%s'. "
+                "Previous: %s, New: %s (keeping first)",
+                template_path,
+                existing_class.__name__,
+                props_class.__name__
+            )
+            # Keep the first registration (don't overwrite)
+        else:
+            _registry[template_path] = props_class
 
         # Add a marker attribute
         props_class._is_component_props = True
@@ -65,6 +82,94 @@ def component(template_path: str):
 def get_props_class(template_path: str) -> Optional[Type]:
     """Get the registered props class for a template path."""
     return _registry.get(template_path)
+
+
+def list_registered_components() -> list[str]:
+    """
+    Return list of all registered component template paths.
+
+    This is useful for debugging and introspection, particularly in tests
+    and development environments where you need to see what components
+    are available.
+
+    Returns:
+        List of template paths that have registered props classes
+    """
+    return list(_registry.keys())
+
+
+def resolve_props_class_for(path: str) -> Optional[Type]:
+    """
+    Get props class for a template path with normalization.
+
+    This function tries various path variations to find a matching
+    props class, including handling absolute vs relative paths and
+    common path prefixes.
+
+    Args:
+        path: Template path to look up
+
+    Returns:
+        Props class if found, None otherwise
+    """
+    # Try exact match first
+    if path in _registry:
+        return _registry[path]
+
+    # Try relative path variations
+    from pathlib import Path
+
+    # Try without leading slash
+    if path.startswith('/'):
+        relative = path.lstrip('/')
+        if relative in _registry:
+            return _registry[relative]
+
+    # Try with 'templates/' prefix removed (handle both Unix and Windows paths)
+    if 'templates/' in path or 'templates\\' in path:
+        # Normalize path separators to forward slashes for consistency
+        normalized_path = path.replace('\\', '/')
+        if 'templates/' in normalized_path:
+            parts = normalized_path.split('templates/', 1)
+            if len(parts) == 2 and parts[1] in _registry:
+                return _registry[parts[1]]
+
+    # Try normalized path variations
+    try:
+        # Normalize path separators for cross-platform compatibility
+        normalized_path = path.replace('\\', '/')
+        path_obj = Path(normalized_path)
+
+        # Convert to forward slash notation for consistency
+        path_parts = normalized_path.split('/')
+
+        # Look for 'templates' in the path and extract relative part
+        if 'templates' in path_parts:
+            templates_index = path_parts.index('templates')
+            if templates_index < len(path_parts) - 1:
+                # Get everything after 'templates/'
+                relative_parts = path_parts[templates_index + 1:]
+                relative_path = '/'.join(relative_parts)
+                if relative_path in _registry:
+                    return _registry[relative_path]
+    except Exception:
+        # If path parsing fails, continue with other attempts
+        pass
+
+    return None
+
+
+def clear_registry():
+    """
+    Clear all registered components.
+
+    This is primarily useful for testing to ensure a clean state
+    between test runs. In production, the registry should be populated
+    once at startup and remain read-only.
+
+    Note: This modifies global state and should be used carefully.
+    """
+    _registry.clear()
 
 
 def coerce_value(value: Any, type_hint: Any) -> Any:
@@ -269,14 +374,16 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
                 and not isinstance(coerced_value, int)
                 and coerced_value == value
             ):
-                errors.append(f"{field_name}: Cannot convert '{value}' to integer")
+                error_msg = f"{field_name}: Cannot convert '{value}' to integer"
+                errors.append(error_msg)
                 continue
             elif (
                 actual_type is float
                 and not isinstance(coerced_value, float)
                 and coerced_value == value
             ):
-                errors.append(f"{field_name}: Cannot convert '{value}' to float")
+                error_msg = f"{field_name}: Cannot convert '{value}' to float"
+                errors.append(error_msg)
                 continue
             elif get_origin(actual_type) is list:
                 # Check if coerced list has unconverted items when expecting int/float
@@ -349,7 +456,20 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
 
     # Raise errors if any
     if errors:
-        raise TemplateSyntaxError(f"Props validation failed: {'; '.join(errors)}")
+        exc = TemplateSyntaxError(f"Props validation failed: {'; '.join(errors)}")
+
+        # Enhance with contextual information
+        component_name = getattr(props_class, '_template_path', None)
+        props_class_name = getattr(props_class, '__name__', 'Unknown')
+
+        enhance_validation_error(
+            exc,
+            component_name=component_name,
+            props_class_name=props_class_name,
+            field_errors=errors
+        )
+
+        raise exc
 
     # Run custom clean method if it exists
     if hasattr(props_class, "clean"):
@@ -366,7 +486,21 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
                 msg = str(e.message)
             else:
                 msg = str(e)
-            raise TemplateSyntaxError(f"Props validation failed: {msg}")
+
+            exc = TemplateSyntaxError(f"Props validation failed: {msg}")
+
+            # Enhance with contextual information
+            component_name = getattr(props_class, '_template_path', None)
+            props_class_name = getattr(props_class, '__name__', 'Unknown')
+
+            enhance_validation_error(
+                exc,
+                component_name=component_name,
+                props_class_name=props_class_name,
+                field_errors=[msg]
+            )
+
+            raise exc
         except TypeError as e:
             # Handle cases where the class can't be instantiated
             # Fall back to calling clean as a class method

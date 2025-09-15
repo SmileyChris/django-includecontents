@@ -251,6 +251,98 @@ mkdocs build --verbose
 3. **Run specific test files for faster feedback**
 4. **Use print statements in template tags for debugging**
 
+### Enhanced Error Messages and Debugging
+
+Django IncludeContents provides enhanced error messages and debugging features to improve the development experience:
+
+#### Registry Introspection
+
+Use these helpers to debug component registration issues:
+
+```python
+from includecontents.props import list_registered_components, resolve_props_class_for
+
+# List all registered components
+components = list_registered_components()
+print("Registered components:", components)
+
+# Debug path resolution
+props_class = resolve_props_class_for('/app/templates/components/card.html')
+print("Resolved props class:", props_class)
+```
+
+#### Enhanced Error Context
+
+Validation errors now include comprehensive context (Python 3.11+ uses `Exception.add_note()`):
+
+```python
+# Example enhanced error output:
+# TemplateSyntaxError: Props validation failed: email: Enter a valid email address
+# Component: components/user-card.html
+# Props class: UserCardProps
+#   • email: Enter a valid email address
+#   • age: Cannot convert 'abc' to integer
+```
+
+#### Debug Logging
+
+Enable debug logging to see registry lookup attempts:
+
+```python
+# settings.py
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'includecontents.props': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'includecontents.templatetags.includecontents': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+```
+
+Debug output includes:
+- Registry collision warnings
+- Props cache hit/miss information
+- Component lookup candidates when resolution fails
+- Sample of registered components for comparison
+
+#### Registry Collision Detection
+
+The system automatically detects and warns about duplicate component registrations:
+
+```python
+@component('components/button.html')
+class ButtonProps:
+    text: str
+
+@component('components/button.html')  # Duplicate!
+class DuplicateButtonProps:
+    label: str
+
+# Logs: WARNING: Component already registered for 'components/button.html'.
+# Previous: ButtonProps, New: DuplicateButtonProps (keeping first)
+```
+
+#### Thread Safety Considerations
+
+The component registry is designed for production use:
+
+- **Startup Registration**: Components should be registered during Django startup (typically in `apps.py` or module imports)
+- **Runtime Read-Only**: Once Django has started, the registry is effectively read-only
+- **Thread Safe**: Multiple threads can safely read from the registry simultaneously
+- **Testing**: Use `clear_registry()` to reset state between tests
+
 ## Release Process
 
 The release process for Django IncludeContents uses manual GitHub Actions workflows for complete control over releases.
