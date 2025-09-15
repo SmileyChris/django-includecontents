@@ -48,7 +48,7 @@ class TestPropCachingWorking:
         template2_file.write_text(template2_content)
 
         # Template 3 - Complex props with variables and expressions
-        template3_content = """{# props user_name:str=user.name formatted_title:str="{{ title|default:'Complex Test' }}" items:list[str]=[alpha,beta,gamma] #}
+        template3_content = """{# props user_name:str="{{ user.name|default:'DefaultUser' }}" formatted_title:str="{{ title|default:'Complex Test' }}" items:list[str]=[alpha,beta,gamma] #}
 <div class="complex-component">
     <h2>{{ formatted_title }}</h2>
     <p>User: {{ user_name }}</p>
@@ -70,7 +70,7 @@ class TestPropCachingWorking:
         template4_file.write_text(template4_content)
 
         # Template 5 - For performance testing (many props)
-        template5_content = """{# props prop1:str="value1" prop2:int=1 prop3:bool=true prop4:list[str]=[a,b,c] prop5:str=user.name prop6:str="{{ title|default:'Performance' }}" prop7:int=999 prop8:bool=false prop9:list[int]=[1,2,3] prop10:str="final" #}
+        template5_content = """{# props prop1:str="value1" prop2:int=1 prop3:bool=true prop4:list[str]=[a,b,c] prop5:str="username" prop6:str="{{ title|default:'Performance' }}" prop7:int=999 prop8:bool=false prop9:list[int]=[1,2,3] prop10:str="final" #}
 <div>Performance test with {{ prop1 }}, {{ prop2 }}, {{ prop7 }}</div>"""
 
         template5_file = template_dir / 'cache_performance.html'

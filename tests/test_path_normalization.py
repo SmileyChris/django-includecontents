@@ -111,7 +111,7 @@ message:str=Template props used
         # Create template with template-defined props only
         template_content = """
 {# props
-fallback_message:str=Fallback working
+fallback_message:str="Fallback working"
 #}
 <div>{{ fallback_message }}</div>
 """

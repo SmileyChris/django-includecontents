@@ -664,13 +664,27 @@ class IncludeContentsNode(template.Node):
         if (
             django_template.first_comment.startswith("props ")
             or django_template.first_comment == "props"
+            or django_template.first_comment.startswith("props\n")
         ):
-            first_comment = django_template.first_comment[6:]
+            # Handle both single-line and multi-line props comments
+            if django_template.first_comment == "props":
+                first_comment = ""
+            elif django_template.first_comment.startswith("props "):
+                first_comment = django_template.first_comment[6:]
+            else:  # startswith("props\n")
+                first_comment = django_template.first_comment[6:]
         elif (
             django_template.first_comment.startswith("def ")
             or django_template.first_comment == "def"
+            or django_template.first_comment.startswith("def\n")
         ):
-            first_comment = django_template.first_comment[4:]
+            # Handle both single-line and multi-line def comments
+            if django_template.first_comment == "def":
+                first_comment = ""
+            elif django_template.first_comment.startswith("def "):
+                first_comment = django_template.first_comment[4:]
+            else:  # startswith("def\n")
+                first_comment = django_template.first_comment[4:]
         else:
             return None
 
