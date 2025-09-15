@@ -263,6 +263,47 @@ TEMPLATES = [{
 }]
 ```
 
+### Props Parsing Cache
+
+Template-defined props (using `{# props ... #}` syntax) are automatically cached for performance:
+
+```html
+{# props title:str="Default" count:int=0 active:bool=true #}
+<div class="my-component">
+    <h2>{{ title }}</h2>
+    <span>{{ count }}</span>
+</div>
+```
+
+**How it works:**
+- Props definitions are parsed once and cached on the template instance
+- Subsequent renders of the same template reuse the cached props structure
+- Cache automatically invalidates when the template file is modified
+- Provides significant performance improvements for frequently-rendered components
+
+**Debug logging:**
+When `DEBUG=True`, you can see cache operations in logs:
+
+```python
+# settings.py
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'loggers': {
+        'includecontents.templatetags.includecontents': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+```
+
+This will show cache hits and storage operations in your development logs.
+
+**Note:** This optimization is completely transparent - your components will work exactly the same, just faster.
+
 ### Avoid Heavy Logic
 
 Keep components lightweight by avoiding heavy computation:

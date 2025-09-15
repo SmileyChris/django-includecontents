@@ -1,3 +1,4 @@
+import logging
 import re
 from collections import abc
 from collections.abc import MutableMapping
@@ -16,6 +17,8 @@ from django.utils.text import smart_split
 
 from includecontents.django.base import Template
 from includecontents.props import coerce_value
+
+logger = logging.getLogger(__name__)
 
 register = template.Library()
 
@@ -617,6 +620,23 @@ class IncludeContentsNode(template.Node):
         first_comment = getattr(django_template, "first_comment", None)
         if not first_comment:
             return None
+
+        # Check cache first
+        try:
+            if hasattr(django_template, '_includecontents_props_cache'):
+                cache_key = django_template.first_comment
+                if cache_key in django_template._includecontents_props_cache:
+                    logger.debug(
+                        "Props cache hit for template %s (key: %s...)",
+                        getattr(django_template, 'name', '<unknown>'),
+                        cache_key[:50]
+                    )
+                    return django_template._includecontents_props_cache[cache_key]
+        except Exception:
+            # If anything goes wrong with cache, continue with parsing
+            logger.debug("Props cache access failed, falling back to parsing")
+            pass
+
         if (
             django_template.first_comment.startswith("props ")
             or django_template.first_comment == "props"
@@ -737,6 +757,24 @@ class IncludeContentsNode(template.Node):
                             props[attr] = EnumVariable(enum_values, required)
                         else:
                             props[attr] = Variable(value)
+
+        # Store in cache for future use
+        try:
+            cache_key = django_template.first_comment
+            if not hasattr(django_template, '_includecontents_props_cache'):
+                django_template._includecontents_props_cache = {}
+            django_template._includecontents_props_cache[cache_key] = props
+            logger.debug(
+                "Props cached for template %s (key: %s..., %d props)",
+                getattr(django_template, 'name', '<unknown>'),
+                cache_key[:50],
+                len(props)
+            )
+        except Exception:
+            # If caching fails, that's OK - just continue
+            logger.debug("Props cache storage failed")
+            pass
+
         return props
 
     def get_component_template(self, context) -> Template:
