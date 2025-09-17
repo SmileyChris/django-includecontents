@@ -1,0 +1,88 @@
+{% extends "showcase/base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <h1>Component Library</h1>
+    <p class="lead">
+        Explore and test {{ total_components }} components for your Django application.
+        Each component includes interactive prop editing and usage examples.
+    </p>
+</div>
+
+<!-- Categories Grid -->
+<section class="categories-section">
+    <h2>Browse by Category</h2>
+    <div class="categories-grid">
+        {% for category, count in categories %}
+        <a href="{% url 'showcase:category' category|lower|slugify %}" class="category-card">
+            <div class="category-icon">
+                {% if "form" in category|lower %}📝
+                {% elif "layout" in category|lower %}📐
+                {% elif "navigation" in category|lower %}🧭
+                {% elif "feedback" in category|lower %}💬
+                {% elif "display" in category|lower %}📊
+                {% elif "typography" in category|lower %}📖
+                {% elif "media" in category|lower %}🖼️
+                {% elif "icon" in category|lower %}✨
+                {% else %}📦
+                {% endif %}
+            </div>
+            <h3>{{ category }}</h3>
+            <p>{{ count }} component{{ count|pluralize }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Recent Components -->
+{% if recent_components %}
+<section class="recent-section">
+    <h2>Recently Added</h2>
+    <div class="components-list">
+        {% for component in recent_components %}
+        <div class="component-card">
+            <h3>
+                <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}">
+                    {{ component.name }}
+                </a>
+            </h3>
+            {% if component.description %}
+            <p>{{ component.description }}</p>
+            {% endif %}
+            <div class="component-meta">
+                <span class="category-badge">{{ component.category }}</span>
+                {% if component.props %}
+                <span class="props-count">{{ component.props|length }} props</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Getting Started -->
+<section class="getting-started">
+    <h2>Getting Started</h2>
+    <div class="info-cards">
+        <div class="info-card">
+            <h3>📚 Browse Components</h3>
+            <p>Explore components by category or use search to find specific ones.</p>
+        </div>
+        <div class="info-card">
+            <h3>🎛️ Interactive Props</h3>
+            <p>Adjust component props in real-time to see how they affect the output.</p>
+        </div>
+        <div class="info-card">
+            <h3>📋 Copy Code</h3>
+            <p>Get the exact template tag syntax for your chosen configuration.</p>
+        </div>
+        <div class="info-card">
+            <h3>📖 Documentation</h3>
+            <p>Each component includes usage examples and best practices.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

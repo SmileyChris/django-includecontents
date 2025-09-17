@@ -1,0 +1,46 @@
+name: Hero
+category: Marketing
+description: Large promotional header with eyebrow text, rich body copy, and flexible call-to-action slots.
+props:
+  title:
+    description: Primary headline for the hero section
+    type: string
+  eyebrow:
+    description: Optional supporting label displayed above the title
+    type: string
+  cta_label:
+    description: Text for the primary call-to-action button
+    type: string
+  cta_href:
+    description: URL for the primary call-to-action button
+    type: string
+  theme:
+    description: Color treatment for contrasting backgrounds
+    type: enum
+    values: [light, dark]
+    default: light
+examples:
+  - name: Light Hero With CTA
+    description: Standard marketing hero with primary CTA and supporting copy.
+    props:
+      eyebrow: Highlights
+      title: Ship Django components without boilerplate
+      cta_label: Open showcase
+      cta_href: /showcase/
+      theme: light
+    code: |
+      <p>Design, document, and preview reusable templates all in one workflow.</p>
+      {% contents actions %}
+        <include:forms:button label="View docs" variant="ghost" size="md" href="https://smileychris.github.io/django-includecontents/" />
+      {% endcontents %}
+  - name: Dark Hero Without Button
+    description: Uses the `dark` theme and content-only call-to-action block.
+    props:
+      eyebrow: Release ready
+      title: Production tooling baked in
+      theme: dark
+    code: |
+      <p>Enforce prop contracts, render live previews, and publish documentation with ease.</p>
+      {% contents actions %}
+        <span class="hero-note">Access restricted to authenticated users.</span>
+      {% endcontents %}

@@ -1,0 +1,230 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    max-width: 960px;
+    line-height: 1.65;
+    background: #f5f7fb;
+    color: #0f172a;
+}
+
+h2 {
+    margin-top: 3rem;
+    font-size: 1.6rem;
+}
+
+.layout-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    margin-top: 1.5rem;
+}
+
+.component-demo {
+    background: white;
+    border-radius: 12px;
+    padding: 1.75rem;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    color: #0f172a;
+}
+
+.hero {
+    border-radius: 18px;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-light {
+    background: radial-gradient(circle at top left, #e8f2ff, #ffffff 55%);
+    color: #0f172a;
+}
+
+.hero-dark {
+    background: radial-gradient(circle at top left, #1f2937, #0f172a 55%);
+    color: white;
+}
+
+.hero-eyebrow {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.7;
+}
+
+.hero-title {
+    font-size: clamp(2.4rem, 4vw, 3rem);
+    margin: 0;
+}
+
+.hero-body p {
+    margin: 1rem 0 1.75rem;
+    max-width: 42ch;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.hero-note {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    align-self: center;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 120ms ease, box-shadow 160ms ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.btn.is-disabled,
+.btn.is-disabled:hover {
+    opacity: 0.55;
+    pointer-events: none;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: white;
+}
+
+.btn-secondary {
+    background: white;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    color: #1d4ed8;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: inherit;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.btn-md {
+    padding: 0.65rem 1.35rem;
+    font-size: 0.95rem;
+}
+
+.btn-lg {
+    padding: 0.85rem 1.75rem;
+    font-size: 1rem;
+}
+
+.btn-icon {
+    font-size: 1.05em;
+}
+
+.feature-card {
+    background: linear-gradient(160deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0.9));
+    border-radius: 16px;
+    padding: 1.75rem;
+    position: relative;
+    color: #0f172a;
+}
+
+.feature-eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2563eb;
+}
+
+.feature-title {
+    margin: 0 0 0.5rem;
+}
+
+.feature-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    align-items: center;
+}
+
+.feature-link {
+    color: #1d4ed8;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.feature-accent {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    font-size: 2.25rem;
+    opacity: 0.2;
+}
+
+@media (max-width: 720px) {
+    body {
+        padding: 2rem 1.25rem;
+    }
+
+    .hero {
+        padding: 2.25rem;
+    }
+}
+
+.alert {
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.75rem;
+    align-items: start;
+    background: white;
+}
+
+.alert-info {
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.alert-success {
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.alert-warning {
+    border: 1px solid rgba(234, 179, 8, 0.25);
+}
+
+.alert-danger {
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.alert-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.alert-title {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.alert-close {
+    border: none;
+    background: transparent;
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+}

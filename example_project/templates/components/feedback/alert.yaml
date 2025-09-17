@@ -1,0 +1,44 @@
+name: Alert
+category: Feedback
+description: Banner component for communicating system messages with optional icons and dismiss controls.
+props:
+  title:
+    description: Short heading summarising the message state
+    type: string
+  variant:
+    description: Visual priority of the alert
+    type: enum
+    values: [info, success, warning, danger]
+    default: info
+  icon:
+    description: Glyph or emoji rendered before the message copy
+    type: string
+  dismissible:
+    description: Adds a close affordance for transient alerts
+    type: boolean
+    default: false
+examples:
+  - name: Informational Alert
+    description: The default info variant with supporting copy.
+    props:
+      title: Heads up!
+      variant: info
+      icon: 💡
+    code: |
+      Stay informed about upcoming maintenance windows.
+  - name: Success With Dismiss
+    description: Confirms a successful action with a close button.
+    props:
+      title: Profile updated
+      variant: success
+      icon: ✅
+      dismissible: true
+    code: |
+      Your account changes have been saved.
+  - name: Warning Without Title
+    description: Alerts can omit the title when copy alone is sufficient.
+    props:
+      variant: warning
+      icon: ⚠️
+    code: |
+      Storage is at 85% capacity. Consider archiving old projects.

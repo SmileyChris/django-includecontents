@@ -1,0 +1,168 @@
+{% extends "showcase/base.html" %}
+
+{% block title %}{{ token.name }} Token{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <nav class="breadcrumb">
+        <a href="{% url 'showcase:tokens_index' %}">Design Tokens</a> /
+        <a href="{% url 'showcase:token_category' token.category %}">{{ token.category|title }}</a> /
+        <span>{{ token.name }}</span>
+    </nav>
+    <h1>{{ token.name }}</h1>
+    <p class="showcase-subtitle">{{ token.path }}</p>
+</div>
+
+<div class="token-detail-layout">
+    <div class="token-preview-section">
+        <h2>Preview</h2>
+        <div class="token-preview-container">
+            {% if token.is_color %}
+                <div class="color-detail-preview">
+                    <div class="color-swatch-xl" style="background-color: {{ token.value }};">
+                        <span class="color-contrast-text" style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ token.value }}</span>
+                    </div>
+                    <div class="color-info">
+                        <div class="color-value-row">
+                            <span class="label">HEX:</span>
+                            <code>{{ token.value }}</code>
+                            <button class="copy-btn-inline" onclick="copyToClipboard('{{ token.value }}', event)">📋</button>
+                        </div>
+                        {% comment %}
+                        <!-- Future: Add RGB, HSL conversions -->
+                        {% endcomment %}
+                    </div>
+                </div>
+            {% elif token.is_dimension %}
+                <div class="dimension-detail-preview">
+                    <div class="dimension-example">
+                        <div class="dimension-visual" style="width: min({{ token.value }}, 400px); height: 32px; background: linear-gradient(90deg, #3b82f6, #1d4ed8);">
+                            <span class="dimension-label">{{ token.value }}</span>
+                        </div>
+                    </div>
+                    <div class="dimension-examples">
+                        <h4>Usage Examples</h4>
+                        <div class="usage-example">
+                            <strong>As margin:</strong>
+                            <div class="box-example" style="margin: {{ token.value }}; background: #f3f4f6; padding: 8px;">Content with {{ token.value }} margin</div>
+                        </div>
+                        <div class="usage-example">
+                            <strong>As padding:</strong>
+                            <div class="box-example" style="padding: {{ token.value }}; background: #f3f4f6;">Content with {{ token.value }} padding</div>
+                        </div>
+                    </div>
+                </div>
+            {% elif token.is_typography %}
+                <div class="typography-detail-preview">
+                    <div class="font-display" style="font-family: {{ token.value }};">
+                        <div class="font-sample-large" style="font-size: 36px;">The quick brown fox jumps over the lazy dog</div>
+                        <div class="font-sample-medium" style="font-size: 24px;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+                        <div class="font-sample-small" style="font-size: 16px;">abcdefghijklmnopqrstuvwxyz 0123456789</div>
+                    </div>
+                    <div class="font-info">
+                        <strong>Font Family:</strong> {{ token.value }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="generic-detail-preview">
+                    <div class="value-display">
+                        <code>{{ token.value }}</code>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="token-info-section">
+        <h2>Token Information</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Name:</strong>
+                <span>{{ token.name }}</span>
+            </div>
+            <div class="info-item">
+                <strong>Path:</strong>
+                <code>{{ token.path }}</code>
+            </div>
+            <div class="info-item">
+                <strong>Type:</strong>
+                <span class="token-type-badge">{{ token.type }}</span>
+            </div>
+            <div class="info-item">
+                <strong>Category:</strong>
+                <a href="{% url 'showcase:token_category' token.category %}">{{ token.category|title }}</a>
+            </div>
+            <div class="info-item">
+                <strong>Value:</strong>
+                <code>{{ token.value }}</code>
+                <button class="copy-btn-inline" onclick="copyToClipboard('{{ token.value }}', event)">📋</button>
+            </div>
+            <div class="info-item">
+                <strong>CSS Variable:</strong>
+                <code>{{ token.css_var_name }}</code>
+                <button class="copy-btn-inline" onclick="copyToClipboard('{{ token.css_var_name }}', event)">📋</button>
+            </div>
+            {% if token.description %}
+            <div class="info-item">
+                <strong>Description:</strong>
+                <p>{{ token.description }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="token-usage-section">
+        <h2>Usage</h2>
+        <div class="usage-examples">
+            <div class="usage-example-item">
+                <h4>CSS Custom Property</h4>
+                <pre><code>.my-element {
+  property: var({{ token.css_var_name }});
+}</code></pre>
+                <button class="copy-btn" onclick="copyToClipboard('var({{ token.css_var_name }})', event)">📋 Copy CSS</button>
+            </div>
+
+            <div class="usage-example-item">
+                <h4>Direct Value</h4>
+                <pre><code>.my-element {
+  property: {{ token.value }};
+}</code></pre>
+                <button class="copy-btn" onclick="copyToClipboard('{{ token.value }}', event)">📋 Copy Value</button>
+            </div>
+
+            {% if token.is_color %}
+            <div class="usage-example-item">
+                <h4>SCSS/Sass Variable</h4>
+                <pre><code>${{ token.path|slugify }}: {{ token.value }};
+
+.my-element {
+  color: ${{ token.path|slugify }};
+}</code></pre>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    navigator.clipboard.writeText(text).then(function() {
+        // Show feedback
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = '#10b981';
+
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+        }, 1500);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+    });
+}
+</script>
+{% endblock %}

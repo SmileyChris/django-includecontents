@@ -1,0 +1,65 @@
+{# props title="", variant=default,elevated,outlined,ghost, padding=md,sm,lg, rounded=true #}
+<div {% attrs
+  class="card"
+  class:card-elevated=variantElevated
+  class:card-outlined=variantOutlined
+  class:card-ghost=variantGhost
+  style="
+    background: {% if variantGhost %}transparent{% else %}white{% endif %};
+    border-radius: {% if rounded %}var(--layout-border-radius-lg){% else %}0{% endif %};
+    transition: all var(--effects-transition-duration-normal) var(--effects-transition-easing-ease-out);
+
+    /* Padding variants */
+    padding: {% if paddingSm %}var(--layout-spacing-md){% elif paddingLg %}var(--layout-spacing-2xl){% else %}var(--layout-spacing-lg){% endif %};
+
+    /* Variant styles */
+    {% if variantElevated %}
+      box-shadow: var(--effects-shadow-lg);
+      border: 1px solid var(--color-brand-secondary-100);
+    {% elif variantOutlined %}
+      border: 1px solid var(--color-brand-secondary-200);
+      box-shadow: none;
+    {% elif variantGhost %}
+      border: 1px solid transparent;
+      box-shadow: none;
+    {% else %}
+      border: 1px solid var(--color-brand-secondary-100);
+      box-shadow: var(--effects-shadow-sm);
+    {% endif %}
+  "
+%}>
+  {% if title %}
+    <div class="card-header" style="
+      margin-bottom: var(--layout-spacing-md);
+      padding-bottom: var(--layout-spacing-md);
+      border-bottom: 1px solid var(--color-brand-secondary-100);
+    ">
+      <h3 class="card-title" style="
+        margin: 0;
+        font-size: var(--typography-font-size-lg);
+        font-weight: var(--typography-font-weight-semibold);
+        color: var(--color-brand-secondary-900);
+        font-family: var(--typography-font-family-heading);
+        line-height: var(--typography-font-line-height-snug);
+      ">{{ title }}</h3>
+    </div>
+  {% endif %}
+
+  <div class="card-content" style="
+    color: var(--color-brand-secondary-600);
+    font-size: var(--typography-font-size-base);
+    line-height: var(--typography-font-line-height-normal);
+  ">
+    {{ contents }}
+  </div>
+
+  {% if contents.footer %}
+    <div class="card-footer" style="
+      margin-top: var(--layout-spacing-md);
+      padding-top: var(--layout-spacing-md);
+      border-top: 1px solid var(--color-brand-secondary-100);
+    ">
+      {{ contents.footer }}
+    </div>
+  {% endif %}
+</div>

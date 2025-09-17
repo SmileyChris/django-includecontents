@@ -1,0 +1,166 @@
+{
+  "spacing": {
+    "px": {
+      "value": "1px",
+      "type": "dimension",
+      "description": "1 pixel"
+    },
+    "0": {
+      "value": "0px",
+      "type": "dimension",
+      "description": "No spacing"
+    },
+    "0.5": {
+      "value": "0.125rem",
+      "type": "dimension",
+      "description": "Extra small spacing - 2px"
+    },
+    "1": {
+      "value": "0.25rem",
+      "type": "dimension",
+      "description": "Extra small spacing - 4px"
+    },
+    "1.5": {
+      "value": "0.375rem",
+      "type": "dimension",
+      "description": "Extra small spacing - 6px"
+    },
+    "2": {
+      "value": "0.5rem",
+      "type": "dimension",
+      "description": "Small spacing - 8px"
+    },
+    "2.5": {
+      "value": "0.625rem",
+      "type": "dimension",
+      "description": "Small spacing - 10px"
+    },
+    "3": {
+      "value": "0.75rem",
+      "type": "dimension",
+      "description": "Small spacing - 12px"
+    },
+    "3.5": {
+      "value": "0.875rem",
+      "type": "dimension",
+      "description": "Small spacing - 14px"
+    },
+    "4": {
+      "value": "1rem",
+      "type": "dimension",
+      "description": "Base spacing - 16px"
+    },
+    "5": {
+      "value": "1.25rem",
+      "type": "dimension",
+      "description": "Medium spacing - 20px"
+    },
+    "6": {
+      "value": "1.5rem",
+      "type": "dimension",
+      "description": "Medium spacing - 24px"
+    },
+    "7": {
+      "value": "1.75rem",
+      "type": "dimension",
+      "description": "Medium spacing - 28px"
+    },
+    "8": {
+      "value": "2rem",
+      "type": "dimension",
+      "description": "Large spacing - 32px"
+    },
+    "9": {
+      "value": "2.25rem",
+      "type": "dimension",
+      "description": "Large spacing - 36px"
+    },
+    "10": {
+      "value": "2.5rem",
+      "type": "dimension",
+      "description": "Large spacing - 40px"
+    },
+    "11": {
+      "value": "2.75rem",
+      "type": "dimension",
+      "description": "Large spacing - 44px"
+    },
+    "12": {
+      "value": "3rem",
+      "type": "dimension",
+      "description": "Extra large spacing - 48px"
+    },
+    "14": {
+      "value": "3.5rem",
+      "type": "dimension",
+      "description": "Extra large spacing - 56px"
+    },
+    "16": {
+      "value": "4rem",
+      "type": "dimension",
+      "description": "Extra large spacing - 64px"
+    },
+    "20": {
+      "value": "5rem",
+      "type": "dimension",
+      "description": "Extra extra large spacing - 80px"
+    },
+    "24": {
+      "value": "6rem",
+      "type": "dimension",
+      "description": "Extra extra large spacing - 96px"
+    },
+    "32": {
+      "value": "8rem",
+      "type": "dimension",
+      "description": "Extra extra large spacing - 128px"
+    }
+  },
+  "borderRadius": {
+    "none": {
+      "value": "0px",
+      "type": "dimension",
+      "description": "No border radius"
+    },
+    "sm": {
+      "value": "0.125rem",
+      "type": "dimension",
+      "description": "Small border radius - 2px"
+    },
+    "base": {
+      "value": "0.25rem",
+      "type": "dimension",
+      "description": "Base border radius - 4px"
+    },
+    "md": {
+      "value": "0.375rem",
+      "type": "dimension",
+      "description": "Medium border radius - 6px"
+    },
+    "lg": {
+      "value": "0.5rem",
+      "type": "dimension",
+      "description": "Large border radius - 8px"
+    },
+    "xl": {
+      "value": "0.75rem",
+      "type": "dimension",
+      "description": "Extra large border radius - 12px"
+    },
+    "2xl": {
+      "value": "1rem",
+      "type": "dimension",
+      "description": "2X large border radius - 16px"
+    },
+    "3xl": {
+      "value": "1.5rem",
+      "type": "dimension",
+      "description": "3X large border radius - 24px"
+    },
+    "full": {
+      "value": "9999px",
+      "type": "dimension",
+      "description": "Full border radius - circular"
+    }
+  }
+}

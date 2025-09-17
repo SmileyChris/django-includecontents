@@ -1,0 +1,19 @@
+{# props title, eyebrow="", accent="", href="" #}
+<article class="feature-card">
+    {% if eyebrow %}<p class="feature-eyebrow">{{ eyebrow }}</p>{% endif %}
+    <h3 class="feature-title">{{ title }}</h3>
+    <div class="feature-body">{{ contents }}</div>
+    {% if contents.footer or href %}
+    <footer class="feature-footer">
+        {% if contents.footer %}
+            {{ contents.footer }}
+        {% endif %}
+        {% if href %}
+            <a href="{{ href }}" class="feature-link">Learn more →</a>
+        {% endif %}
+    </footer>
+    {% endif %}
+    {% if accent %}
+    <span class="feature-accent" aria-hidden="true">{{ accent }}</span>
+    {% endif %}
+</article>

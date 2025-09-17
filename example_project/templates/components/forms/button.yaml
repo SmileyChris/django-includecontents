@@ -1,0 +1,49 @@
+name: Button
+category: Forms
+description: Versatile call-to-action button with variant, size, and optional icon support.
+props:
+  label:
+    description: Text displayed inside the button
+    type: string
+    default: Call to action
+  variant:
+    description: Visual style treatment
+    type: enum
+    values: [primary, secondary, ghost]
+    default: primary
+  size:
+    description: Button sizing scale
+    type: enum
+    values: [sm, md, lg]
+    default: md
+  icon_before:
+    description: Optional glyph or emoji rendered before the label
+    type: string
+  disabled:
+    description: Render the button in a disabled state
+    type: boolean
+    default: false
+  href:
+    description: Convert the button to an anchor when provided
+    type: string
+examples:
+  - name: Primary CTA
+    description: Default button styling for primary actions.
+    props:
+      label: Start Building
+      variant: primary
+      size: md
+  - name: Secondary Link Button
+    description: Renders as an anchor when `href` is supplied.
+    props:
+      label: View Docs
+      variant: secondary
+      size: sm
+      href: https://smileychris.github.io/django-includecontents/
+  - name: Ghost Button With Emoji
+    description: Flat button for subtle actions with an emoji prefix.
+    props:
+      label: Save Draft
+      variant: ghost
+      size: md
+      icon_before: 💾

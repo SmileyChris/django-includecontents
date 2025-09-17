@@ -1,0 +1,27 @@
+{# props title="", subtitle="", footer="", bordered=True, shadow=,none,sm,md,lg #}
+
+<div {% attrs
+    class="card"
+    class:card-bordered=bordered
+    class:shadow-none=shadowNone
+    class:shadow-sm=shadowSm
+    class:shadow=shadowMd
+    class:shadow-lg=shadowLg
+%}>
+    {% if title or subtitle %}
+    <div class="card-header">
+        {% if title %}<h3 class="card-title">{{ title }}</h3>{% endif %}
+        {% if subtitle %}<p class="card-subtitle">{{ subtitle }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="card-body">
+        {{ contents }}
+    </div>
+
+    {% if footer %}
+    <div class="card-footer">
+        {{ footer }}
+    </div>
+    {% endif %}
+</div>

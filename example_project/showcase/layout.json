@@ -1,0 +1,224 @@
+{
+  "layout": {
+    "spacing": {
+      "none": {
+        "value": "0",
+        "type": "dimension",
+        "description": "No spacing"
+      },
+      "xs": {
+        "value": "0.25rem",
+        "type": "dimension",
+        "description": "Extra small spacing - 4px"
+      },
+      "sm": {
+        "value": "0.5rem",
+        "type": "dimension",
+        "description": "Small spacing - 8px"
+      },
+      "md": {
+        "value": "1rem",
+        "type": "dimension",
+        "description": "Medium spacing - 16px - base unit"
+      },
+      "lg": {
+        "value": "1.5rem",
+        "type": "dimension",
+        "description": "Large spacing - 24px"
+      },
+      "xl": {
+        "value": "2rem",
+        "type": "dimension",
+        "description": "Extra large spacing - 32px"
+      },
+      "2xl": {
+        "value": "3rem",
+        "type": "dimension",
+        "description": "2X large spacing - 48px"
+      },
+      "3xl": {
+        "value": "4rem",
+        "type": "dimension",
+        "description": "3X large spacing - 64px"
+      },
+      "4xl": {
+        "value": "6rem",
+        "type": "dimension",
+        "description": "4X large spacing - 96px"
+      },
+      "5xl": {
+        "value": "8rem",
+        "type": "dimension",
+        "description": "5X large spacing - 128px"
+      }
+    },
+    "borderRadius": {
+      "none": {
+        "value": "0",
+        "type": "dimension",
+        "description": "No border radius - sharp corners"
+      },
+      "xs": {
+        "value": "0.125rem",
+        "type": "dimension",
+        "description": "Extra small border radius - 2px"
+      },
+      "sm": {
+        "value": "0.25rem",
+        "type": "dimension",
+        "description": "Small border radius - 4px"
+      },
+      "md": {
+        "value": "0.375rem",
+        "type": "dimension",
+        "description": "Medium border radius - 6px"
+      },
+      "lg": {
+        "value": "0.5rem",
+        "type": "dimension",
+        "description": "Large border radius - 8px"
+      },
+      "xl": {
+        "value": "0.75rem",
+        "type": "dimension",
+        "description": "Extra large border radius - 12px"
+      },
+      "2xl": {
+        "value": "1rem",
+        "type": "dimension",
+        "description": "2X large border radius - 16px"
+      },
+      "full": {
+        "value": "9999px",
+        "type": "dimension",
+        "description": "Full border radius - circular/pill shape"
+      }
+    },
+    "breakpoints": {
+      "sm": {
+        "value": "640px",
+        "type": "dimension",
+        "description": "Small breakpoint for mobile devices"
+      },
+      "md": {
+        "value": "768px",
+        "type": "dimension",
+        "description": "Medium breakpoint for tablets"
+      },
+      "lg": {
+        "value": "1024px",
+        "type": "dimension",
+        "description": "Large breakpoint for laptops"
+      },
+      "xl": {
+        "value": "1280px",
+        "type": "dimension",
+        "description": "Extra large breakpoint for desktops"
+      },
+      "2xl": {
+        "value": "1536px",
+        "type": "dimension",
+        "description": "2X large breakpoint for large desktops"
+      }
+    },
+    "maxWidth": {
+      "xs": {
+        "value": "20rem",
+        "type": "dimension",
+        "description": "Extra small max width - 320px"
+      },
+      "sm": {
+        "value": "24rem",
+        "type": "dimension",
+        "description": "Small max width - 384px"
+      },
+      "md": {
+        "value": "28rem",
+        "type": "dimension",
+        "description": "Medium max width - 448px"
+      },
+      "lg": {
+        "value": "32rem",
+        "type": "dimension",
+        "description": "Large max width - 512px"
+      },
+      "xl": {
+        "value": "36rem",
+        "type": "dimension",
+        "description": "Extra large max width - 576px"
+      },
+      "2xl": {
+        "value": "42rem",
+        "type": "dimension",
+        "description": "2X large max width - 672px"
+      },
+      "3xl": {
+        "value": "48rem",
+        "type": "dimension",
+        "description": "3X large max width - 768px"
+      },
+      "4xl": {
+        "value": "56rem",
+        "type": "dimension",
+        "description": "4X large max width - 896px"
+      },
+      "5xl": {
+        "value": "64rem",
+        "type": "dimension",
+        "description": "5X large max width - 1024px"
+      },
+      "6xl": {
+        "value": "72rem",
+        "type": "dimension",
+        "description": "6X large max width - 1152px"
+      },
+      "7xl": {
+        "value": "80rem",
+        "type": "dimension",
+        "description": "7X large max width - 1280px"
+      }
+    },
+    "zIndex": {
+      "behind": {
+        "value": -1,
+        "type": "zIndex",
+        "description": "Behind other elements"
+      },
+      "base": {
+        "value": 0,
+        "type": "zIndex",
+        "description": "Base z-index"
+      },
+      "dropdown": {
+        "value": 10,
+        "type": "zIndex",
+        "description": "Dropdown menus and popovers"
+      },
+      "sticky": {
+        "value": 20,
+        "type": "zIndex",
+        "description": "Sticky elements"
+      },
+      "fixed": {
+        "value": 30,
+        "type": "zIndex",
+        "description": "Fixed elements like headers"
+      },
+      "modal": {
+        "value": 40,
+        "type": "zIndex",
+        "description": "Modal dialogs"
+      },
+      "popover": {
+        "value": 50,
+        "type": "zIndex",
+        "description": "Popovers and tooltips"
+      },
+      "toast": {
+        "value": 60,
+        "type": "zIndex",
+        "description": "Toast notifications"
+      }
+    }
+  }
+}

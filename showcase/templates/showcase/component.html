@@ -1,0 +1,229 @@
+{% extends "showcase/base.html" %}
+{% load includecontents %}
+
+{% block title %}{{ component.name }}{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <nav class="breadcrumb">
+        <a href="{% url 'showcase:index' %}">Home</a>
+        <span>/</span>
+        <a href="{% url 'showcase:category' component.category|lower|slugify %}">{{ component.category }}</a>
+        <span>/</span>
+        <span>{{ component.name }}</span>
+    </nav>
+    <h1>{{ component.name }}</h1>
+    {% if component.description %}
+    <p class="lead">{{ component.description }}</p>
+    {% endif %}
+</div>
+
+<div class="component-viewer">
+    <!-- Preview Section -->
+    <div class="preview-header">
+        <h2>Preview</h2>
+        <div class="preview-controls" role="group" aria-label="Change preview mode">
+            <button class="btn-sm preview-mode-btn" data-mode="mobile">📱 Mobile</button>
+            <button class="btn-sm preview-mode-btn active" data-mode="desktop">💻 Desktop</button>
+            <button class="btn-sm preview-mode-btn" data-mode="wide">🖥️ Wide</button>
+            <button class="btn-sm preview-mode-btn" data-mode="html">HTML</button>
+        </div>
+    </div>
+    <section class="preview-section" data-mode="desktop" data-view="preview">
+        <iframe
+            id="component-preview-iframe"
+            name="component-preview-iframe"
+            src="about:blank"
+            frameborder="0"
+            style="width: 100%; min-height: 200px; background: white; border-radius: 4px;"
+        ></iframe>
+        <pre id="component-preview-html" class="preview-html" hidden></pre>
+    </section>
+
+    <!-- Props Editor -->
+    <section class="props-section">
+        <h2>Props</h2>
+        <form id="prop-editor-form" class="prop-editor">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <div class="form-label">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {% if field.field.required %}
+                    <span class="required-indicator" title="Required">*</span>
+                    {% endif %}
+                </div>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="help-text">{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <!-- Content Editor -->
+            <div class="form-group">
+                <label for="content-input">Content (between tags)</label>
+                <textarea id="content-input" class="form-input" rows="3" placeholder="Content goes here..."></textarea>
+            </div>
+
+            {% if component.content_blocks %}
+            <h3>Content Blocks</h3>
+            {% for block_name in component.content_blocks %}
+            <div class="form-group">
+                <label for="block-{{ block_name }}">{{ block_name }} block</label>
+                <textarea id="block-{{ block_name }}" class="form-input content-block" data-block="{{ block_name }}" rows="2"></textarea>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+        </form>
+    </section>
+
+    <!-- Code Section -->
+    <section class="code-section">
+        <h2>Code</h2>
+        <div class="code-tabs">
+            <button class="tab-btn active" data-tab="html">HTML Syntax</button>
+            <button class="tab-btn" data-tab="django">Django Template</button>
+        </div>
+        <div class="code-content">
+            <div id="html-code" class="code-block active">
+                <pre><code id="html-template-code">Loading...</code></pre>
+                <button class="copy-btn" onclick="copyFromElement('html-template-code', event)">📋 Copy HTML</button>
+            </div>
+            <div id="django-code" class="code-block">
+                <pre><code id="django-template-code">Loading...</code></pre>
+                <button class="copy-btn" onclick="copyFromElement('django-template-code', event)">📋 Copy Django</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Examples -->
+    {% if examples_with_json %}
+    <section class="examples-section">
+        <h2>Examples</h2>
+        {% for example in examples_with_json %}
+        <div class="example">
+            <h3>{{ example.name }}</h3>
+            {% if example.description %}
+            <p>{{ example.description }}</p>
+            {% endif %}
+            <pre><code>{{ example.code }}</code></pre>
+            <button
+                class="btn-sm load-example"
+                data-props="{{ example.props_json|urlencode }}"
+                data-code="{{ example.code|urlencode }}"
+            >
+                Load Example
+            </button>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- Documentation -->
+    <section class="docs-section">
+        <h2>Documentation</h2>
+
+        {% if component.props %}
+        <h3>Props Reference</h3>
+        <table class="props-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prop_name, prop in component.props.items %}
+                <tr>
+                    <td><code>{{ prop_name }}</code></td>
+                    <td>
+                        {% if prop.is_enum %}
+                        <span class="prop-type">enum</span>
+                        <div class="enum-values">
+                            {% for value in prop.allowed_values %}
+                            <code>{{ value|default:"(empty)" }}</code>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="prop-type">{{ prop.type }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if prop.default is not None %}
+                        <code>{{ prop.default }}</code>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if prop.required %}
+                        <span class="required">Yes</span>
+                        {% else %}
+                        No
+                        {% endif %}
+                    </td>
+                    <td>{{ prop.description|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if component.best_practices %}
+        <h3>Best Practices</h3>
+        <div class="doc-content">{{ component.best_practices|linebreaks }}</div>
+        {% endif %}
+
+        {% if component.accessibility %}
+        <h3>Accessibility</h3>
+        <div class="doc-content">{{ component.accessibility|linebreaks }}</div>
+        {% endif %}
+
+        {% if component.related %}
+        <h3>Related Components</h3>
+        <ul class="related-list">
+            {% for related in component.related %}
+            <li><a href="#">{{ related }}</a></li>
+            {% endfor %}
+        </ul>
+        {% elif not component.props and not component.best_practices and not component.accessibility and not component.examples %}
+        <div class="doc-empty">
+            <p>No metadata yet. Add a file next to <code>{{ component.path }}</code> (for example <code>{{ component.path|cut:'.html' }}.yaml</code>) with content such as:</p>
+            <pre><code>name: {{ component.name }}
+description: Short description of the component.
+props:
+  title:
+    description: Heading text
+    type: string
+    default: ""
+examples:
+  - name: Basic Usage
+    description: Demonstrates the component.
+    code: |
+      &lt;include:{{ component.tag_name }}&gt;
+        Content here.
+      &lt;/include:{{ component.tag_name }}&gt;</code></pre>
+            <p>Place the file alongside the template (YAML, TOML, or JSON supported) and refresh this page to see the metadata populate.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<script>
+// Component data
+const componentData = {
+    name: "{{ component.name }}",
+    category: "{{ component.category|lower|slugify }}",
+    slug: "{{ component.slug }}",
+    templateName: "{{ component.template_name }}",
+    tagName: "{{ component.tag_name }}",
+    initialProps: {{ preview_props_json|safe }},
+    examples: {{ examples_json|safe }}
+};
+</script>
+{% endblock %}

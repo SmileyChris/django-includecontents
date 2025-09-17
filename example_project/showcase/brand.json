@@ -1,0 +1,180 @@
+{
+  "color": {
+    "brand": {
+      "primary": {
+        "50": {
+          "value": "#f0f9ff",
+          "type": "color",
+          "description": "Lightest brand blue for backgrounds"
+        },
+        "100": {
+          "value": "#e0f2fe",
+          "type": "color",
+          "description": "Very light brand blue for subtle backgrounds"
+        },
+        "200": {
+          "value": "#bae6fd",
+          "type": "color",
+          "description": "Light brand blue for hover states"
+        },
+        "300": {
+          "value": "#7dd3fc",
+          "type": "color",
+          "description": "Medium light brand blue"
+        },
+        "400": {
+          "value": "#38bdf8",
+          "type": "color",
+          "description": "Medium brand blue for secondary actions"
+        },
+        "500": {
+          "value": "#0ea5e9",
+          "type": "color",
+          "description": "Primary brand color - main CTAs and brand elements"
+        },
+        "600": {
+          "value": "#0284c7",
+          "type": "color",
+          "description": "Darker brand blue for hover states"
+        },
+        "700": {
+          "value": "#0369a1",
+          "type": "color",
+          "description": "Dark brand blue for pressed states"
+        },
+        "800": {
+          "value": "#075985",
+          "type": "color",
+          "description": "Very dark brand blue"
+        },
+        "900": {
+          "value": "#0c4a6e",
+          "type": "color",
+          "description": "Darkest brand blue"
+        }
+      },
+      "secondary": {
+        "50": {
+          "value": "#fafafa",
+          "type": "color",
+          "description": "Lightest neutral for backgrounds"
+        },
+        "100": {
+          "value": "#f4f4f5",
+          "type": "color",
+          "description": "Light neutral for subtle backgrounds"
+        },
+        "200": {
+          "value": "#e4e4e7",
+          "type": "color",
+          "description": "Light neutral for borders"
+        },
+        "300": {
+          "value": "#d4d4d8",
+          "type": "color",
+          "description": "Medium light neutral"
+        },
+        "400": {
+          "value": "#a1a1aa",
+          "type": "color",
+          "description": "Medium neutral for placeholder text"
+        },
+        "500": {
+          "value": "#71717a",
+          "type": "color",
+          "description": "Default neutral for secondary text"
+        },
+        "600": {
+          "value": "#52525b",
+          "type": "color",
+          "description": "Dark neutral for body text"
+        },
+        "700": {
+          "value": "#3f3f46",
+          "type": "color",
+          "description": "Darker neutral for headings"
+        },
+        "800": {
+          "value": "#27272a",
+          "type": "color",
+          "description": "Very dark neutral"
+        },
+        "900": {
+          "value": "#18181b",
+          "type": "color",
+          "description": "Darkest neutral for high contrast text"
+        }
+      }
+    },
+    "semantic": {
+      "success": {
+        "50": {
+          "value": "#f0fdf4",
+          "type": "color",
+          "description": "Success background light"
+        },
+        "500": {
+          "value": "#22c55e",
+          "type": "color",
+          "description": "Success state color for confirmations and positive feedback"
+        },
+        "700": {
+          "value": "#15803d",
+          "type": "color",
+          "description": "Success state dark for text on light backgrounds"
+        }
+      },
+      "warning": {
+        "50": {
+          "value": "#fffbeb",
+          "type": "color",
+          "description": "Warning background light"
+        },
+        "500": {
+          "value": "#f59e0b",
+          "type": "color",
+          "description": "Warning state color for caution and attention"
+        },
+        "700": {
+          "value": "#d97706",
+          "type": "color",
+          "description": "Warning state dark for text on light backgrounds"
+        }
+      },
+      "error": {
+        "50": {
+          "value": "#fef2f2",
+          "type": "color",
+          "description": "Error background light"
+        },
+        "500": {
+          "value": "#ef4444",
+          "type": "color",
+          "description": "Error state color for validation errors and critical alerts"
+        },
+        "700": {
+          "value": "#dc2626",
+          "type": "color",
+          "description": "Error state dark for text on light backgrounds"
+        }
+      },
+      "info": {
+        "50": {
+          "value": "#f0f9ff",
+          "type": "color",
+          "description": "Info background light"
+        },
+        "500": {
+          "value": "#3b82f6",
+          "type": "color",
+          "description": "Info state color for informational messages"
+        },
+        "700": {
+          "value": "#1d4ed8",
+          "type": "color",
+          "description": "Info state dark for text on light backgrounds"
+        }
+      }
+    }
+  }
+}

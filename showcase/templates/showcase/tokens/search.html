@@ -1,0 +1,81 @@
+{% extends "showcase/base.html" %}
+
+{% block title %}
+{% if query %}Search: "{{ query }}"{% else %}Search{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <h1>Search Results</h1>
+    {% if query %}
+        <p class="showcase-subtitle">Results for "{{ query }}"</p>
+    {% endif %}
+</div>
+
+{% if tokens or components %}
+    {% if tokens %}
+    <section class="search-section">
+        <h2>Design Tokens ({{ tokens|length }})</h2>
+        <div class="tokens-list">
+            {% for token in tokens %}
+            <div class="token-card search-result">
+                <a href="{% url 'showcase:token_detail' token.category token.slug %}" class="token-card-link">
+                    <div class="token-preview-medium">
+                        {% if token.is_color %}
+                            <div class="color-swatch-medium" style="background-color: {{ token.value }};" title="{{ token.value }}"></div>
+                        {% elif token.is_dimension %}
+                            <div class="dimension-preview-medium">
+                                <div class="dimension-bar-medium" style="width: min({{ token.value }}, 100px); height: 6px; background: #3b82f6;"></div>
+                            </div>
+                        {% elif token.is_typography %}
+                            <div class="typography-preview-medium" style="font-family: {{ token.value }};">Aa</div>
+                        {% else %}
+                            <div class="generic-preview-medium">{{ token.value|truncatechars:10 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="token-details">
+                        <h3>{{ token.name }}</h3>
+                        <p class="token-path">{{ token.path }}</p>
+                        <p class="token-value">{{ token.value }}</p>
+                        <span class="token-category-badge">{{ token.category|title }}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if components %}
+    <section class="search-section">
+        <h2>Components ({{ components|length }})</h2>
+        <div class="components-list">
+            {% for component in components %}
+            <div class="component-card search-result">
+                <a href="{% url 'showcase:component' component.category|slugify component.slug %}" class="component-card-link">
+                    <div class="component-details">
+                        <h3>{{ component.name }}</h3>
+                        <p class="component-description">{{ component.description|default:"" }}</p>
+                        <span class="component-category-badge">{{ component.category }}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+{% else %}
+    {% if query %}
+    <div class="empty-state">
+        <h2>No results found</h2>
+        <p>No design tokens or components match "{{ query }}"</p>
+        <p><a href="{% url 'showcase:tokens_index' %}">Browse all design tokens</a> or <a href="{% url 'showcase:index' %}">browse all components</a></p>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>Enter a search term</h2>
+        <p>Use the search box above to find design tokens and components.</p>
+    </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

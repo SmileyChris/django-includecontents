@@ -1,0 +1,88 @@
+{% extends "showcase/base.html" %}
+
+{% block title %}Design Tokens{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <h1>Design Tokens</h1>
+    <p class="showcase-subtitle">
+        Design tokens are design decisions represented as data, ensuring consistency across your design system.
+    </p>
+    <div class="showcase-stats">
+        <span class="stat">
+            <strong>{{ total_tokens }}</strong> tokens
+        </span>
+        <span class="stat">
+            <strong>{{ token_categories|length }}</strong> categories
+        </span>
+    </div>
+</div>
+
+{% if token_categories %}
+<div class="showcase-grid">
+    <section class="showcase-section">
+        <h2>Token Categories</h2>
+        <div class="category-grid">
+            {% for category in token_categories %}
+            <div class="category-card">
+                <a href="{% url 'showcase:token_category' category.slug %}" class="category-link">
+                    <h3>{{ category.name }}</h3>
+                    <p class="category-description">{{ category.description }}</p>
+                    <span class="category-count">{{ category.count }} tokens</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if recent_tokens %}
+    <section class="showcase-section">
+        <h2>Recent Tokens</h2>
+        <div class="token-preview-grid">
+            {% for token in recent_tokens %}
+            <div class="token-preview-card">
+                <a href="{% url 'showcase:token_detail' token.category token.slug %}" class="token-link">
+                    <div class="token-preview">
+                        {% if token.is_color %}
+                            <div class="color-swatch" style="background-color: {{ token.value }};" title="{{ token.value }}"></div>
+                        {% elif token.is_dimension %}
+                            <div class="dimension-preview">
+                                <div class="dimension-bar" style="width: {{ token.value }}; height: 4px; background: #3b82f6;"></div>
+                            </div>
+                        {% elif token.is_typography %}
+                            <div class="typography-preview" style="font-family: {{ token.value }};">Aa</div>
+                        {% else %}
+                            <div class="generic-preview">{{ token.value|truncatechars:20 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="token-info">
+                        <h4>{{ token.name }}</h4>
+                        <p class="token-path">{{ token.path }}</p>
+                        <p class="token-value">{{ token.value }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h2>No Design Tokens Found</h2>
+    <p>To get started with design tokens, create JSON files in the <code>showcase/tokens/</code> directory.</p>
+    <p>Example token structure:</p>
+    <pre><code>{
+  "color": {
+    "primary": {
+      "500": {
+        "value": "#3b82f6",
+        "type": "color",
+        "description": "Primary brand color"
+      }
+    }
+  }
+}</code></pre>
+</div>
+{% endif %}
+{% endblock %}

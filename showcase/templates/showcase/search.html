@@ -1,0 +1,41 @@
+{% extends "showcase/base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <h1>Search Results</h1>
+    {% if query %}
+    <p class="lead">Found {{ components|length }} result{{ components|length|pluralize }} for "{{ query }}"</p>
+    {% else %}
+    <p class="lead">Enter a search term to find components</p>
+    {% endif %}
+</div>
+
+{% if components %}
+<div class="components-grid">
+    {% for component in components %}
+    <div class="component-card">
+        <h3>
+            <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}">
+                {{ component.name }}
+            </a>
+        </h3>
+
+        {% if component.description %}
+        <p>{{ component.description }}</p>
+        {% endif %}
+
+        <div class="component-meta">
+            <span class="category-badge">{{ component.category }}</span>
+            {% if component.props %}
+            <span class="props-count">{{ component.props|length }} props</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% elif query %}
+<p>No components found matching your search.</p>
+{% endif %}
+{% endblock %}

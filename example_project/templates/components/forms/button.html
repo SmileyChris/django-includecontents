@@ -1,0 +1,128 @@
+{# props label, variant=primary,secondary,success,warning,error,ghost, size=sm,md,lg, icon_before="", disabled=False, href="", type=button,submit,reset #}
+{% if href %}
+<a {% attrs
+  href=href
+  role="button"
+  class="btn"
+  class:btn-disabled=disabled
+  style="
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--layout-spacing-xs);
+    font-family: var(--typography-font-family-primary);
+    font-weight: var(--typography-font-weight-medium);
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--effects-transition-duration-normal) var(--effects-transition-easing-ease-out);
+    border-radius: var(--layout-border-radius-md);
+
+    /* Size variants */
+    padding: {% if sizeSm %}var(--layout-spacing-xs) var(--layout-spacing-sm){% elif sizeLg %}var(--layout-spacing-md) var(--layout-spacing-xl){% else %}var(--layout-spacing-sm) var(--layout-spacing-lg){% endif %};
+    font-size: {% if sizeSm %}var(--typography-font-size-sm){% elif sizeLg %}var(--typography-font-size-lg){% else %}var(--typography-font-size-base){% endif %};
+
+    /* Variant styles */
+    {% if variantPrimary %}
+      background-color: var(--color-brand-primary-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantSecondary %}
+      background-color: var(--color-brand-secondary-100);
+      color: var(--color-brand-secondary-700);
+      border-color: var(--color-brand-secondary-200);
+    {% elif variantSuccess %}
+      background-color: var(--color-semantic-success-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantWarning %}
+      background-color: var(--color-semantic-warning-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantError %}
+      background-color: var(--color-semantic-error-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantGhost %}
+      background-color: transparent;
+      color: var(--color-brand-primary-600);
+      border-color: var(--color-brand-primary-200);
+    {% else %}
+      background-color: var(--color-brand-secondary-200);
+      color: var(--color-brand-secondary-700);
+    {% endif %}
+
+    /* Disabled state */
+    {% if disabled %}
+      opacity: var(--effects-opacity-medium);
+      cursor: not-allowed;
+      pointer-events: none;
+    {% endif %}
+  "
+%}>
+  {% if icon_before %}<span class="btn-icon">{{ icon_before }}</span>{% endif %}
+  {{ label }}{{ contents }}
+</a>
+{% else %}
+<button {% attrs
+  type=type
+  disabled=disabled
+  class="btn"
+  class:btn-disabled=disabled
+  style="
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--layout-spacing-xs);
+    font-family: var(--typography-font-family-primary);
+    font-weight: var(--typography-font-weight-medium);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--effects-transition-duration-normal) var(--effects-transition-easing-ease-out);
+    border-radius: var(--layout-border-radius-md);
+
+    /* Size variants */
+    padding: {% if sizeSm %}var(--layout-spacing-xs) var(--layout-spacing-sm){% elif sizeLg %}var(--layout-spacing-md) var(--layout-spacing-xl){% else %}var(--layout-spacing-sm) var(--layout-spacing-lg){% endif %};
+    font-size: {% if sizeSm %}var(--typography-font-size-sm){% elif sizeLg %}var(--typography-font-size-lg){% else %}var(--typography-font-size-base){% endif %};
+
+    /* Variant styles */
+    {% if variantPrimary %}
+      background-color: var(--color-brand-primary-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantSecondary %}
+      background-color: var(--color-brand-secondary-100);
+      color: var(--color-brand-secondary-700);
+      border-color: var(--color-brand-secondary-200);
+    {% elif variantSuccess %}
+      background-color: var(--color-semantic-success-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantWarning %}
+      background-color: var(--color-semantic-warning-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantError %}
+      background-color: var(--color-semantic-error-500);
+      color: white;
+      box-shadow: var(--effects-shadow-sm);
+    {% elif variantGhost %}
+      background-color: transparent;
+      color: var(--color-brand-primary-600);
+      border-color: var(--color-brand-primary-200);
+    {% else %}
+      background-color: var(--color-brand-secondary-200);
+      color: var(--color-brand-secondary-700);
+    {% endif %}
+
+    /* Disabled state */
+    {% if disabled %}
+      opacity: var(--effects-opacity-medium);
+      cursor: not-allowed;
+    {% endif %}
+  "
+%}>
+  {% if icon_before %}<span class="btn-icon">{{ icon_before }}</span>{% endif %}
+  {{ label }}{{ contents }}
+</button>
+{% endif %}

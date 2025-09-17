@@ -1,0 +1,63 @@
+{# props title, eyebrow="", cta_label="", cta_href="", theme=,light,dark #}
+<section {% attrs
+  class="hero"
+  class:hero-light=themeLight
+  class:hero-dark=themeDark
+  style="
+    padding: var(--layout-spacing-4xl) var(--layout-spacing-lg);
+    text-align: center;
+    background: var(--color-brand-primary-50);
+    border-radius: var(--layout-border-radius-xl);
+    margin: var(--layout-spacing-xl) 0;
+  "
+%}>
+  {% if eyebrow %}
+    <p class="hero-eyebrow" style="
+      font-size: var(--typography-font-size-sm);
+      font-weight: var(--typography-font-weight-medium);
+      color: var(--color-brand-primary-600);
+      text-transform: uppercase;
+      letter-spacing: var(--typography-font-letter-spacing-wide);
+      margin-bottom: var(--layout-spacing-sm);
+    ">{{ eyebrow }}</p>
+  {% endif %}
+
+  <h1 class="hero-title" style="
+    font-size: var(--typography-font-size-5xl);
+    font-weight: var(--typography-font-weight-bold);
+    line-height: var(--typography-font-line-height-tight);
+    color: var(--color-brand-secondary-900);
+    margin-bottom: var(--layout-spacing-lg);
+    font-family: var(--typography-font-family-heading);
+  ">{{ title }}</h1>
+
+  <div class="hero-body" style="
+    font-size: var(--typography-font-size-lg);
+    line-height: var(--typography-font-line-height-relaxed);
+    color: var(--color-brand-secondary-600);
+    max-width: var(--layout-max-width-2xl);
+    margin: 0 auto var(--layout-spacing-xl) auto;
+  ">{{ contents }}</div>
+
+  {% if cta_label or contents.actions %}
+    <div class="hero-actions" style="
+      display: flex;
+      gap: var(--layout-spacing-md);
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    ">
+      {% if cta_label %}
+        <include:forms:button
+          label="{{ cta_label }}"
+          href="{{ cta_href|default:'#' }}"
+          variant="primary"
+          size="lg"
+        />
+      {% endif %}
+      {% if contents.actions %}
+        {{ contents.actions }}
+      {% endif %}
+    </div>
+  {% endif %}
+</section>

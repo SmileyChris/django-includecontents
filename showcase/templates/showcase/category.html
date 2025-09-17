@@ -1,0 +1,70 @@
+{% extends "showcase/base.html" %}
+
+{% block title %}{{ category }} Components{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <nav class="breadcrumb">
+        <a href="{% url 'showcase:index' %}">Home</a>
+        <span>/</span>
+        <span>{{ category }}</span>
+    </nav>
+    <h1>{{ category }} Components</h1>
+    <p class="lead">{{ components|length }} component{{ components|length|pluralize }} in this category</p>
+</div>
+
+<div class="components-grid">
+    {% for component in components %}
+    <div class="component-card">
+        <h3>
+            <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}">
+                {{ component.name }}
+            </a>
+        </h3>
+
+        {% if component.description %}
+        <p>{{ component.description }}</p>
+        {% endif %}
+
+        {% if component.props %}
+        <div class="props-preview">
+            <h4>Props:</h4>
+            <ul class="props-list">
+                {% for prop_name, prop in component.props.items|slice:":3" %}
+                <li>
+                    <code>{{ prop_name }}</code>
+                    {% if prop.required %}<span class="required">*</span>{% endif %}
+                    {% if prop.is_enum %}
+                    <span class="prop-type">enum</span>
+                    {% else %}
+                    <span class="prop-type">{{ prop.type }}</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+                {% if component.props|length > 3 %}
+                <li class="more">+{{ component.props|length|add:"-3" }} more</li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if component.content_blocks %}
+        <div class="content-blocks">
+            <strong>Content blocks:</strong>
+            {% for block in component.content_blocks %}
+            <code>{{ block }}</code>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="component-actions">
+            <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}" class="btn-primary">
+                View Component →
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <p>No components found in this category.</p>
+    {% endfor %}
+</div>
+{% endblock %}

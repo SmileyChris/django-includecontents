@@ -1,0 +1,99 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django IncludeContents – Example Project</title>
+    <link rel="stylesheet" href="{% static 'example_project/css/showcase-overrides.css' %}">
+  </head>
+  <body>
+    <include:marketing:hero
+      eyebrow="Example project"
+      title="Explore Django IncludeContents"
+      cta_label="Open showcase"
+      cta_href="/showcase/"
+      theme="light"
+    >
+      <p>
+        Spin up a live component gallery backed by familiar Django templates.
+        Adjust props, review documentation, and copy ready-to-use snippets.
+      </p>
+      <content:actions>
+        <include:forms:button
+          label="Read documentation"
+          variant="ghost"
+          size="md"
+          href="https://smileychris.github.io/django-includecontents/"
+        />
+      </content:actions>
+    </include:marketing:hero>
+
+    <h2>Featured components</h2>
+    <div class="layout-grid">
+      <include:layout:feature-card
+        eyebrow="Productivity"
+        title="Ship reusable patterns"
+      >
+        <p>
+          Author components once and make them discoverable to the whole team
+          through the showcase.
+        </p>
+        <content:footer>
+          <include:forms:button
+            label="Browse components"
+            variant="secondary"
+            size="sm"
+            href="/showcase/"
+          />
+        </content:footer>
+      </include:layout:feature-card>
+
+      <include:layout:feature-card
+        eyebrow="Developer experience"
+        title="Live previews & code"
+        accent="⚡"
+        href="/showcase/"
+      >
+        <p>
+          Change props, swap slots, and copy the generated
+          {% verbatim %}{% includecontents %}{% endverbatim %} tag without
+          context switching.
+        </p>
+      </include:layout:feature-card>
+
+      <include:layout:feature-card
+        eyebrow="Documentation"
+        title="Metadata sidecars"
+        accent="🗂️"
+      >
+        <p>
+          Store component docs in `button.yaml` right beside `button.html`,
+          keeping guidance and implementation in sync.
+        </p>
+      </include:layout:feature-card>
+    </div>
+
+    <h2>Stateful UI examples</h2>
+    <div class="component-demo">
+      <include:feedback:alert
+        title="Deployment scheduled"
+        variant="info"
+        icon="🗓️"
+      >
+        <p>
+          Production will be unavailable for 5 minutes on Friday at 21:00 UTC.
+        </p>
+      </include:feedback:alert>
+
+      <div style="margin-top: 1rem;">
+        <include:forms:button
+          label="Enable maintenance mode"
+          variant="primary"
+          icon_before="🛠️"
+        />
+        <include:forms:button label="Cancel" variant="ghost" size="sm" />
+      </div>
+    </div>
+  </body>
+</html>

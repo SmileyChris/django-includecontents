@@ -1,0 +1,35 @@
+name: Feature Card
+category: Layout
+description: Highlight key product capabilities with optional eyebrow text, accent glyph, and footer call to action.
+props:
+  title:
+    description: Primary headline for the feature call-out
+    type: string
+  eyebrow:
+    description: Small label rendered above the headline
+    type: string
+  accent:
+    description: Decorative character displayed in the corner
+    type: string
+  href:
+    description: Optional link target for an inline "Learn more" anchor
+    type: string
+examples:
+  - name: Card With Footer Slot
+    description: Uses the named `footer` block to supply a custom button.
+    props:
+      title: Build components faster
+      eyebrow: Productivity
+      accent: 🚀
+      href: /showcase/
+    code: |
+      <p>Compose rich UI primitives using familiar Django templates.</p>
+      {% contents footer %}
+        <include:forms:button label="Browse showcase" variant="secondary" size="sm" />
+      {% endcontents %}
+  - name: Minimal Card
+    description: Headline with supporting copy and no footer.
+    props:
+      title: Accessible by design
+    code: |
+      <p>Ship inclusive experiences with semantic markup and ARIA hooks.</p>

@@ -1,0 +1,89 @@
+{% extends "showcase/base.html" %}
+
+{% block title %}{{ category }} Tokens{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <nav class="breadcrumb">
+        <a href="{% url 'showcase:tokens_index' %}">Design Tokens</a> /
+        <span>{{ category }}</span>
+    </nav>
+    <h1>{{ category }} Tokens</h1>
+    <p class="showcase-subtitle">{{ tokens|length }} token{{ tokens|length|pluralize }}</p>
+</div>
+
+{% if tokens %}
+<div class="tokens-list">
+    {% for token in tokens %}
+    <div class="token-card">
+        <a href="{% url 'showcase:token_detail' category_slug token.slug %}" class="token-card-link">
+            <div class="token-preview-large">
+                {% if token.is_color %}
+                    <div class="color-swatch-large" style="background-color: {{ token.value }};" title="{{ token.value }}">
+                        <span class="color-value">{{ token.value }}</span>
+                    </div>
+                {% elif token.is_dimension %}
+                    <div class="dimension-preview-large">
+                        <div class="dimension-label">{{ token.value }}</div>
+                        <div class="dimension-bar-large" style="width: min({{ token.value }}, 200px); height: 8px; background: #3b82f6;"></div>
+                    </div>
+                {% elif token.is_typography %}
+                    <div class="typography-preview-large" style="font-family: {{ token.value }};">
+                        <span class="font-sample">The quick brown fox</span>
+                        <span class="font-name">{{ token.value }}</span>
+                    </div>
+                {% else %}
+                    <div class="generic-preview-large">
+                        <code>{{ token.value }}</code>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="token-details">
+                <h3>{{ token.name }}</h3>
+                <p class="token-path">{{ token.path }}</p>
+                {% if token.description %}
+                    <p class="token-description">{{ token.description }}</p>
+                {% endif %}
+                <div class="token-meta">
+                    <span class="token-type">{{ token.type }}</span>
+                    <button class="copy-btn" onclick="copyToClipboard('{{ token.css_var_name }}', event)" title="Copy CSS variable">
+                        📋 Copy CSS Var
+                    </button>
+                    <button class="copy-btn" onclick="copyToClipboard('{{ token.value }}', event)" title="Copy value">
+                        📋 Copy Value
+                    </button>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h2>No tokens found in {{ category }}</h2>
+    <p><a href="{% url 'showcase:tokens_index' %}">← Back to all tokens</a></p>
+</div>
+{% endif %}
+
+<script>
+function copyToClipboard(text, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    navigator.clipboard.writeText(text).then(function() {
+        // Show feedback
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = '#10b981';
+
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+        }, 1500);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+    });
+}
+</script>
+{% endblock %}

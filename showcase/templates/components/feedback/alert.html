@@ -1,0 +1,19 @@
+{# props title="", variant=info,success,warning,danger, icon="", dismissible=False #}
+
+<div {% attrs
+    class="alert"
+    class:alert-info=variantInfo
+    class:alert-success=variantSuccess
+    class:alert-warning=variantWarning
+    class:alert-danger=variantDanger
+    role="status"
+%}>
+    {% if icon %}<span class="alert-icon" aria-hidden="true">{{ icon }}</span>{% endif %}
+    <div class="alert-body">
+        {% if title %}<h3 class="alert-title">{{ title }}</h3>{% endif %}
+        <div class="alert-content">{{ contents }}</div>
+    </div>
+    {% if dismissible %}
+    <button type="button" class="alert-close" aria-label="Dismiss">×</button>
+    {% endif %}
+</div>

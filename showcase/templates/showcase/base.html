@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Component Showcase{% endblock %} - Django IncludeContents</title>
+    <link rel="stylesheet" href="{% static 'showcase/css/showcase.css' %}">
+    <link rel="stylesheet" href="{% static 'showcase/css/tokens.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="showcase-container">
+        <!-- Sidebar Navigation -->
+        <aside class="showcase-sidebar">
+            <div class="sidebar-header">
+                <h1><a href="{% url 'showcase:index' %}">Component Library</a></h1>
+                <p class="sidebar-subtitle">Django IncludeContents</p>
+            </div>
+
+            <!-- Search -->
+            <div class="sidebar-search">
+                <form action="{% url 'showcase:search' %}" method="get">
+                    <input type="search" name="q" placeholder="Search components..." value="{{ query|default:'' }}">
+                </form>
+            </div>
+
+            <!-- Design Tokens -->
+            <nav class="sidebar-nav">
+                <h3><a href="{% url 'showcase:tokens_index' %}">Design Tokens</a></h3>
+                {% if token_categories %}
+                <ul class="category-list">
+                    {% for category in token_categories %}
+                    <li>
+                        <a href="{% url 'showcase:token_category' category.slug %}">
+                            {{ category.name }}
+                            <span class="count">{{ category.count }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </nav>
+
+            <!-- Component Categories -->
+            <nav class="sidebar-nav">
+                <h3>Components</h3>
+                <ul class="category-list">
+                    {% for category, count in categories %}
+                    <li>
+                        <a href="{% url 'showcase:category' category|lower|slugify %}">
+                            {{ category }}
+                            <span class="count">{{ count }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="showcase-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="{% static 'showcase/js/prop-editor.js' %}"></script>
+    <script src="{% static 'showcase/js/copy-clipboard.js' %}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

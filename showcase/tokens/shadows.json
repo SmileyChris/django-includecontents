@@ -1,0 +1,44 @@
+{
+  "shadow": {
+    "sm": {
+      "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "type": "boxShadow",
+      "description": "Small shadow for subtle elevation"
+    },
+    "base": {
+      "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+      "type": "boxShadow",
+      "description": "Default shadow for cards and panels"
+    },
+    "md": {
+      "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      "type": "boxShadow",
+      "description": "Medium shadow for elevated elements"
+    },
+    "lg": {
+      "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "type": "boxShadow",
+      "description": "Large shadow for modals and dropdowns"
+    },
+    "xl": {
+      "value": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+      "type": "boxShadow",
+      "description": "Extra large shadow for prominent elements"
+    },
+    "2xl": {
+      "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
+      "type": "boxShadow",
+      "description": "2X large shadow for hero elements"
+    },
+    "inner": {
+      "value": "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)",
+      "type": "boxShadow",
+      "description": "Inner shadow for inputs and wells"
+    },
+    "none": {
+      "value": "0 0 #0000",
+      "type": "boxShadow",
+      "description": "No shadow"
+    }
+  }
+}

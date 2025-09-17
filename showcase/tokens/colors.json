@@ -1,0 +1,129 @@
+{
+  "color": {
+    "primary": {
+      "50": {
+        "value": "#eff6ff",
+        "type": "color",
+        "description": "Lightest primary blue"
+      },
+      "100": {
+        "value": "#dbeafe",
+        "type": "color",
+        "description": "Very light primary blue"
+      },
+      "200": {
+        "value": "#bfdbfe",
+        "type": "color",
+        "description": "Light primary blue"
+      },
+      "300": {
+        "value": "#93c5fd",
+        "type": "color",
+        "description": "Medium light primary blue"
+      },
+      "400": {
+        "value": "#60a5fa",
+        "type": "color",
+        "description": "Medium primary blue"
+      },
+      "500": {
+        "value": "#3b82f6",
+        "type": "color",
+        "description": "Default primary blue - main brand color"
+      },
+      "600": {
+        "value": "#2563eb",
+        "type": "color",
+        "description": "Medium dark primary blue"
+      },
+      "700": {
+        "value": "#1d4ed8",
+        "type": "color",
+        "description": "Dark primary blue"
+      },
+      "800": {
+        "value": "#1e40af",
+        "type": "color",
+        "description": "Very dark primary blue"
+      },
+      "900": {
+        "value": "#1e3a8a",
+        "type": "color",
+        "description": "Darkest primary blue"
+      }
+    },
+    "secondary": {
+      "50": {
+        "value": "#f8fafc",
+        "type": "color",
+        "description": "Lightest gray"
+      },
+      "100": {
+        "value": "#f1f5f9",
+        "type": "color",
+        "description": "Very light gray"
+      },
+      "200": {
+        "value": "#e2e8f0",
+        "type": "color",
+        "description": "Light gray"
+      },
+      "300": {
+        "value": "#cbd5e1",
+        "type": "color",
+        "description": "Medium light gray"
+      },
+      "400": {
+        "value": "#94a3b8",
+        "type": "color",
+        "description": "Medium gray"
+      },
+      "500": {
+        "value": "#64748b",
+        "type": "color",
+        "description": "Default gray"
+      },
+      "600": {
+        "value": "#475569",
+        "type": "color",
+        "description": "Medium dark gray"
+      },
+      "700": {
+        "value": "#334155",
+        "type": "color",
+        "description": "Dark gray"
+      },
+      "800": {
+        "value": "#1e293b",
+        "type": "color",
+        "description": "Very dark gray"
+      },
+      "900": {
+        "value": "#0f172a",
+        "type": "color",
+        "description": "Darkest gray"
+      }
+    },
+    "success": {
+      "500": {
+        "value": "#10b981",
+        "type": "color",
+        "description": "Success green"
+      }
+    },
+    "warning": {
+      "500": {
+        "value": "#f59e0b",
+        "type": "color",
+        "description": "Warning orange"
+      }
+    },
+    "error": {
+      "500": {
+        "value": "#ef4444",
+        "type": "color",
+        "description": "Error red"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{# props variant=primary,secondary,success,danger,warning,info, size=medium,small,large, disabled=False #}
+
+<button
+    {% attrs
+        class="btn"
+        class:btn-primary=variantPrimary
+        class:btn-secondary=variantSecondary
+        class:btn-success=variantSuccess
+        class:btn-danger=variantDanger
+        class:btn-warning=variantWarning
+        class:btn-info=variantInfo
+        class:btn-sm=sizeSmall
+        class:btn-lg=sizeLarge
+    %}
+    {% if disabled %}disabled{% endif %}
+>
+    {{ contents }}
+</button>

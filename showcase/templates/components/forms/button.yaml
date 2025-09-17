@@ -1,0 +1,47 @@
+name: Button
+category: Forms
+description: Action button with flavor variants, sizing, and disabled support for the showcase gallery.
+best_practices: |
+  - Keep copy short and verb-focused so buttons read as actions.
+  - Pair destructive variants with a confirmation step or undo affordance.
+accessibility: |
+  - Supply an `aria-label` when the button contents rely on iconography alone.
+  - Communicate disabled states in adjacent copy because screen readers announce the control as unavailable.
+related:
+  - forms:input
+props:
+  variant:
+    description: Visual treatment controlling color and emphasis.
+    type: enum
+    values: [primary, secondary, success, danger, warning, info]
+    default: primary
+  size:
+    description: Scales padding and font size for the button.
+    type: enum
+    values: [medium, small, large]
+    default: medium
+  disabled:
+    description: Renders the button inert and shows the disabled styling.
+    type: boolean
+    default: false
+examples:
+  - name: Primary Action
+    description: Default styling for the main form submission button.
+    code: |
+      <include:forms:button variant="primary">Save changes</include:forms:button>
+    props:
+      variant: primary
+  - name: Secondary Small
+    description: Compact button for less prominent actions.
+    code: |
+      <include:forms:button variant="secondary" size="small">Cancel</include:forms:button>
+    props:
+      variant: secondary
+      size: small
+  - name: Disabled Danger
+    description: Communicates that a destructive action is temporarily unavailable.
+    code: |
+      <include:forms:button variant="danger" disabled>Delete project</include:forms:button>
+    props:
+      variant: danger
+      disabled: true

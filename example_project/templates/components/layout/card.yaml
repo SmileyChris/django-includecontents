@@ -1,0 +1,60 @@
+name: Card
+category: Layout
+description: Flexible container component for grouping related content with consistent spacing and styling
+props:
+  title:
+    description: Optional card title displayed in header
+    type: string
+  variant:
+    description: Visual style variant
+    type: enum
+    values: [default, elevated, outlined, ghost]
+    default: default
+  padding:
+    description: Internal padding size
+    type: enum
+    values: [sm, md, lg]
+    default: md
+  rounded:
+    description: Whether to apply border radius
+    type: boolean
+    default: true
+examples:
+  - name: Basic Card
+    code: |
+      <include:layout:card title="Welcome">
+        <p>This is a basic card with a title and some content.</p>
+      </include:layout:card>
+    props:
+      title: "Welcome"
+      variant: "default"
+  - name: Elevated Card
+    code: |
+      <include:layout:card title="Featured Content" variant="elevated" padding="lg">
+        <p>This card has enhanced shadow and larger padding for important content.</p>
+        <content:footer>
+          <include:forms:button label="Learn More" variant="primary" />
+        </content:footer>
+      </include:layout:card>
+    props:
+      title: "Featured Content"
+      variant: "elevated"
+      padding: "lg"
+  - name: Outlined Card
+    code: |
+      <include:layout:card variant="outlined" rounded="false">
+        <p>This card uses borders instead of shadows for a cleaner look.</p>
+      </include:layout:card>
+    props:
+      variant: "outlined"
+      rounded: false
+best_practices: |
+  - Use elevated variant sparingly for important content that needs emphasis
+  - Outlined variant works well in dense layouts where shadows might be overwhelming
+  - Ghost variant is useful for subtle content grouping without visual weight
+  - Consider the container background when choosing variants
+accessibility: |
+  - Content structure should be logical without styling
+  - Use proper heading hierarchy if title is used
+  - Ensure sufficient color contrast for all content
+related: [layout:grid, forms:button]

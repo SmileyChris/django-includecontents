@@ -1,0 +1,57 @@
+name: Grid
+category: Layout
+description: CSS grid wrapper that spaces child components with configurable columns and gap.
+best_practices: |
+  - Align the column count with the amount of content you expect to prevent awkward wrapping.
+  - Adjust the `gap` to match your design spacing scale so different grids feel cohesive.
+accessibility: |
+  - Ensure nested content maintains a logical reading order because CSS grid does not change DOM order.
+  - Provide sufficient contrast and focus styles for interactive items placed inside the grid.
+related:
+  - layout:card
+props:
+  columns:
+    description: Number of equal-width columns in the grid layout.
+    type: number
+    default: 3
+  gap:
+    description: Space between grid items expressed as any CSS length.
+    type: string
+    default: 1rem
+  responsive:
+    description: Adds a responsive class that collapses to a single column on small screens.
+    type: boolean
+    default: true
+examples:
+  - name: Three Column Default
+    description: Uses the default configuration to lay out three feature cards.
+    code: |
+      <include:layout:grid>
+        <div class="demo-card">Planning</div>
+        <div class="demo-card">Design</div>
+        <div class="demo-card">Development</div>
+      </include:layout:grid>
+    props:
+      columns: 3
+  - name: Two Column Tight Gap
+    description: Reduces the column count and spacing for denser content.
+    code: |
+      <include:layout:grid columns="2" gap="0.5rem">
+        <div class="demo-card">Backlog</div>
+        <div class="demo-card">In progress</div>
+        <div class="demo-card">Review</div>
+        <div class="demo-card">Done</div>
+      </include:layout:grid>
+    props:
+      columns: 2
+      gap: 0.5rem
+  - name: Static Desktop Grid
+    description: Disables the responsive class for complex desktop-only layouts.
+    code: |
+      <include:layout:grid responsive="false">
+        <div class="demo-card">Hero</div>
+        <div class="demo-card">Chart</div>
+        <div class="demo-card">Table</div>
+      </include:layout:grid>
+    props:
+      responsive: false

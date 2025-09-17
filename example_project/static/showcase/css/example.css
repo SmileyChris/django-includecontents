@@ -1,0 +1,46 @@
+/* Example project styles for component showcase */
+
+/* Additional component styling that would be part of your design system */
+.component-container {
+    max-width: 100%;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Animation examples */
+.btn:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+
+.card {
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Typography helpers */
+.text-muted {
+    color: #6b7280;
+}
+
+.text-bold {
+    font-weight: 600;
+}
+
+/* Spacing utilities */
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }

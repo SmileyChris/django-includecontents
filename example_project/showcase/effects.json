@@ -1,0 +1,171 @@
+{
+  "effects": {
+    "shadow": {
+      "none": {
+        "value": "none",
+        "type": "boxShadow",
+        "description": "No shadow"
+      },
+      "xs": {
+        "value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+        "type": "boxShadow",
+        "description": "Extra small shadow for subtle elevation"
+      },
+      "sm": {
+        "value": "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+        "type": "boxShadow",
+        "description": "Small shadow for buttons and small cards"
+      },
+      "md": {
+        "value": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        "type": "boxShadow",
+        "description": "Medium shadow for cards and panels"
+      },
+      "lg": {
+        "value": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+        "type": "boxShadow",
+        "description": "Large shadow for modals and dropdowns"
+      },
+      "xl": {
+        "value": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        "type": "boxShadow",
+        "description": "Extra large shadow for prominent elements"
+      },
+      "2xl": {
+        "value": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        "type": "boxShadow",
+        "description": "2X large shadow for hero sections"
+      },
+      "inner": {
+        "value": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)",
+        "type": "boxShadow",
+        "description": "Inner shadow for inputs and wells"
+      }
+    },
+    "transition": {
+      "duration": {
+        "instant": {
+          "value": "0ms",
+          "type": "duration",
+          "description": "Instant transition - no animation"
+        },
+        "fast": {
+          "value": "150ms",
+          "type": "duration",
+          "description": "Fast transition for micro-interactions"
+        },
+        "normal": {
+          "value": "200ms",
+          "type": "duration",
+          "description": "Normal transition for UI elements"
+        },
+        "slow": {
+          "value": "300ms",
+          "type": "duration",
+          "description": "Slow transition for complex animations"
+        },
+        "slower": {
+          "value": "500ms",
+          "type": "duration",
+          "description": "Slower transition for page transitions"
+        }
+      },
+      "easing": {
+        "linear": {
+          "value": "linear",
+          "type": "cubicBezier",
+          "description": "Linear easing - constant speed"
+        },
+        "easeIn": {
+          "value": "cubic-bezier(0.4, 0, 1, 1)",
+          "type": "cubicBezier",
+          "description": "Ease in - starts slow, ends fast"
+        },
+        "easeOut": {
+          "value": "cubic-bezier(0, 0, 0.2, 1)",
+          "type": "cubicBezier",
+          "description": "Ease out - starts fast, ends slow"
+        },
+        "easeInOut": {
+          "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+          "type": "cubicBezier",
+          "description": "Ease in-out - slow at both ends"
+        },
+        "bounce": {
+          "value": "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+          "type": "cubicBezier",
+          "description": "Bounce easing for playful interactions"
+        }
+      }
+    },
+    "blur": {
+      "none": {
+        "value": "0",
+        "type": "blur",
+        "description": "No blur"
+      },
+      "sm": {
+        "value": "4px",
+        "type": "blur",
+        "description": "Small blur for subtle glass effects"
+      },
+      "md": {
+        "value": "8px",
+        "type": "blur",
+        "description": "Medium blur for glass morphism"
+      },
+      "lg": {
+        "value": "16px",
+        "type": "blur",
+        "description": "Large blur for strong glass effects"
+      },
+      "xl": {
+        "value": "24px",
+        "type": "blur",
+        "description": "Extra large blur for backdrop effects"
+      },
+      "2xl": {
+        "value": "40px",
+        "type": "blur",
+        "description": "2X large blur for heavy backdrop effects"
+      },
+      "3xl": {
+        "value": "64px",
+        "type": "blur",
+        "description": "3X large blur for extreme effects"
+      }
+    },
+    "opacity": {
+      "invisible": {
+        "value": "0",
+        "type": "opacity",
+        "description": "Completely transparent"
+      },
+      "subtle": {
+        "value": "0.05",
+        "type": "opacity",
+        "description": "Very subtle transparency"
+      },
+      "light": {
+        "value": "0.1",
+        "type": "opacity",
+        "description": "Light transparency for overlays"
+      },
+      "medium": {
+        "value": "0.5",
+        "type": "opacity",
+        "description": "Medium transparency for disabled states"
+      },
+      "heavy": {
+        "value": "0.75",
+        "type": "opacity",
+        "description": "Heavy transparency for muted content"
+      },
+      "visible": {
+        "value": "1",
+        "type": "opacity",
+        "description": "Completely opaque"
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+name: Form Input
+category: Forms
+description: Labeled text field with optional help text, placeholders, and required indicator for form demos.
+best_practices: |
+  - Match the `name` with your form backing field or context key so submissions serialize correctly.
+  - Reserve placeholder text for short hints rather than duplicating the label.
+accessibility: |
+  - Every input should have a descriptive `label` so assistive tech announces the control.
+  - Use `help_text` to surface validation requirements that are not obvious from the label alone.
+related:
+  - forms:button
+props:
+  label:
+    description: Human-friendly label rendered above the control.
+    type: string
+  name:
+    description: Input name and identifier used for submissions.
+    type: string
+  type:
+    description: HTML input type to render.
+    type: string
+    default: text
+  required:
+    description: Displays the required indicator and sets the HTML attribute.
+    type: boolean
+    default: false
+  placeholder:
+    description: Hint text displayed when the field is empty.
+    type: string
+  help_text:
+    description: Supplemental guidance rendered below the input.
+    type: string
+examples:
+  - name: Basic Text Field
+    description: Collects a full name with placeholder guidance.
+    code: |
+      <include:forms:input
+        label="Full name"
+        name="full_name"
+        placeholder="Ada Lovelace"
+      />
+    props:
+      label: Full name
+      name: full_name
+      placeholder: Ada Lovelace
+  - name: Required Email
+    description: Marks the field as required and explains validation expectations.
+    code: |
+      <include:forms:input
+        label="Work email"
+        name="work_email"
+        type="email"
+        required
+        help_text="We will only send release notes."
+      />
+    props:
+      label: Work email
+      name: work_email
+      type: email
+      required: true
+      help_text: We will only send release notes.

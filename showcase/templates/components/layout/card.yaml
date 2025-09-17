@@ -1,0 +1,60 @@
+name: Card
+category: Layout
+description: Structured container with optional header, footer, borders, and configurable shadow depth.
+best_practices: |
+  - Keep titles short so the header wraps to at most two lines on smaller screens.
+  - Use the footer region for secondary actions like metadata or links rather than duplicating primary actions.
+accessibility: |
+  - Ensure the card contents maintain heading hierarchy and semantic markup instead of relying on visual styling alone.
+  - When cards are interactive, render them as an anchor or button instead of relying on click handlers on the wrapper.
+related:
+  - layout:grid
+props:
+  title:
+    description: Optional heading displayed in the card header.
+    type: string
+  subtitle:
+    description: Supporting copy rendered below the title.
+    type: string
+  footer:
+    description: Footer text or HTML rendered beneath the body.
+    type: string
+  bordered:
+    description: Toggles the border around the card container.
+    type: boolean
+    default: true
+  shadow:
+    description: Elevation level controlling the shadow utility classes.
+    type: enum
+    values: [none, sm, md, lg]
+    default: none
+examples:
+  - name: Basic Card
+    description: Header and body content with the default border styling.
+    code: |
+      <include:layout:card title="Project kickoff">
+        Align on goals and milestones with the core team.
+      </include:layout:card>
+    props:
+      title: Project kickoff
+  - name: With Footer Metadata
+    description: Footer slot communicates supporting attribution.
+    code: |
+      <include:layout:card
+        title="Release checklist"
+        footer="Updated 2 days ago"
+      >
+        Review QA sign-off, documentation, and release toggles.
+      </include:layout:card>
+    props:
+      title: Release checklist
+      footer: Updated 2 days ago
+  - name: Elevated Card
+    description: Medium shadow variant to help cards stand out on busy backgrounds.
+    code: |
+      <include:layout:card title="Executive summary" shadow="md">
+        High-level snapshot of health metrics for leadership reviews.
+      </include:layout:card>
+    props:
+      title: Executive summary
+      shadow: md

@@ -1,0 +1,19 @@
+{# props label, name, type=text, required=False, placeholder="", help_text="" #}
+
+<div class="form-group">
+    <label for="{{ name }}">
+        {{ label }}
+        {% if required %}<span class="required">*</span>{% endif %}
+    </label>
+    <input
+        type="{{ type }}"
+        id="{{ name }}"
+        name="{{ name }}"
+        placeholder="{{ placeholder }}"
+        {% attrs class="form-control" %}
+        {% if required %}required{% endif %}
+    >
+    {% if help_text %}
+    <small class="form-text text-muted">{{ help_text }}</small>
+    {% endif %}
+</div>

@@ -1,0 +1,9 @@
+{# props columns=3, gap=1rem, responsive=True #}
+
+<div {% attrs
+    class="grid"
+    style="display: grid; grid-template-columns: repeat({{ columns }}, 1fr); gap: {{ gap }};"
+    class:grid-responsive=responsive
+%}>
+    {{ contents }}
+</div>

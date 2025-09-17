@@ -1,0 +1,56 @@
+name: Alert
+category: Feedback
+description: Status message banner with tone-specific styling and optional dismiss control.
+best_practices: |
+  - Use alerts sparingly for significant feedback rather than routine confirmations.
+  - Pair dismissible alerts with state persistence so the message does not immediately reappear.
+accessibility: |
+  - Provide a succinct `title` that summarizes the message for screen reader users.
+  - Ensure the dismiss button receives focus order immediately after the alert for keyboard users.
+related:
+  - forms:button
+props:
+  variant:
+    description: Visual tone mapping to contextual styles.
+    type: enum
+    values: [info, success, warning, danger]
+    default: info
+  title:
+    description: Optional heading rendered above the alert contents.
+    type: string
+  icon:
+    description: Glyph or emoji rendered before the alert body copy.
+    type: string
+  dismissible:
+    description: Adds a close button and supporting classes for transient alerts.
+    type: boolean
+    default: false
+examples:
+  - name: Informational Banner
+    description: Default styling for neutral guidance.
+    code: |
+      <include:feedback:alert title="Heads up!">
+        Maintenance is scheduled for Saturday at 01:00 UTC.
+      </include:feedback:alert>
+    props:
+      title: Heads up!
+      variant: info
+  - name: Success With Dismiss
+    description: Confirms an action and allows the user to close the message.
+    code: |
+      <include:feedback:alert title="Deployment complete" variant="success" icon="✅" dismissible>
+        The latest release is now live in production.
+      </include:feedback:alert>
+    props:
+      title: Deployment complete
+      variant: success
+      icon: ✅
+      dismissible: true
+  - name: Warning Without Title
+    description: Emphasises the message body when a title would repeat the copy.
+    code: |
+      <include:feedback:alert variant="warning">
+        Billing information needs to be updated before the next renewal.
+      </include:feedback:alert>
+    props:
+      variant: warning
