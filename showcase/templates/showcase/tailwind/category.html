@@ -1,7 +1,7 @@
 {% extends "showcase/base.html" %}
 {% load static %}
 
-{% block title %}{{ category }} - Style Dictionary Tokens{% endblock %}
+{% block title %}{{ category }} - Tailwind Tokens{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'showcase/css/tokens.css' %}">
@@ -10,11 +10,11 @@
 {% block content %}
 <div class="showcase-header enhanced">
     <nav class="breadcrumb">
-        <a href="{% url 'showcase:tokens_index' %}">
+        <a href="{% url 'showcase:tailwind_tokens_index' %}">
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
                 <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5z"/>
             </svg>
-            Style Dictionary
+            Tailwind Tokens
         </a>
         <span class="separator">→</span>
         <span class="current">{{ category }}</span>
@@ -25,7 +25,7 @@
             <div class="header-text">
                 <h1 class="gradient-text">{{ category }} Tokens</h1>
                 <p class="showcase-subtitle">
-                    {{ tokens|length }} carefully defined Style Dictionary token{{ tokens|length|pluralize }} for the {{ category|lower }} category
+                    {{ tokens|length }} carefully crafted Tailwind design token{{ tokens|length|pluralize }} for the {{ category|lower }} category
                 </p>
             </div>
 
@@ -34,9 +34,13 @@
                     <div class="stat-number">{{ tokens|length }}</div>
                     <div class="stat-label">Total Tokens</div>
                 </div>
-                <div class="stat-card style-dict">
-                    <div class="stat-number">{{ style_dictionary_token_count }}</div>
-                    <div class="stat-label">JSON Tokens</div>
+                <div class="stat-card css">
+                    <div class="stat-number">{{ css_token_count }}</div>
+                    <div class="stat-label">@theme CSS</div>
+                </div>
+                <div class="stat-card js">
+                    <div class="stat-number">{{ js_token_count }}</div>
+                    <div class="stat-label">config.js</div>
                 </div>
             </div>
         </div>
@@ -46,11 +50,10 @@
 {% if tokens %}
 <div class="token-grid">
     {% for token in tokens %}
-    <div class="token-card style-dictionary-token-card">
+    <div class="token-card tailwind-token-card">
         <div class="token-header">
-            <span class="source-badge source-badge-{{ token.source_type }}">{{ token.source_display_name }}</span>
             {% if token.tailwind_class %}
-                <span class="tailwind-badge" title="Tailwind utility class available">TW</span>
+                <span class="tailwind-badge" title="Tailwind utility class">TW</span>
             {% endif %}
         </div>
 
@@ -159,10 +162,17 @@
                             </div>
                         {% endif %}
 
-                        <div class="usage-method">
-                            <label>JSON Source:</label>
-                            <code>{{ token.path }}: "{{ token.value }}"</code>
-                        </div>
+                        {% if token.source_type == "css" %}
+                            <div class="usage-method">
+                                <label>@theme Source:</label>
+                                <code>--{{ token.path|slugify }}: {{ token.value }};</code>
+                            </div>
+                        {% elif token.source_type == "js" %}
+                            <div class="usage-method">
+                                <label>Config Source:</label>
+                                <code>theme.{{ token.path|slugify }}</code>
+                            </div>
+                        {% endif %}
 
                         <!-- Framework Examples -->
                         <div class="framework-examples">
@@ -173,11 +183,11 @@
                             </div>
 
                             <div class="framework-content active" data-framework="react">
-                                <code>const style = { {{ token.type|default:"property" }}: '{{ token.value }}' }</code>
+                                <code>&lt;div className="{% if token.tailwind_class %}{{ token.tailwind_class }}{% else %}..."{% endif %}"&gt;Content&lt;/div&gt;</code>
                             </div>
 
                             <div class="framework-content" data-framework="vue">
-                                <code>&lt;div :style="{ {{ token.type|default:"property" }}: '{{ token.value }}' }"&gt;&lt;/div&gt;</code>
+                                <code>&lt;div class="{% if token.tailwind_class %}{{ token.tailwind_class }}{% else %}..."{% endif %}"&gt;Content&lt;/div&gt;</code>
                             </div>
                         </div>
                     </div>
@@ -187,10 +197,101 @@
     </div>
     {% endfor %}
 </div>
+
+<!-- Usage guide for this category -->
+<section class="category-usage-guide">
+    <h2>Using {{ category }} Tokens</h2>
+
+    {% if category == "Colors" %}
+    <div class="usage-guide-grid">
+        <div class="usage-guide-item">
+            <h3>Text Colors</h3>
+            <code>class="text-primary"</code>
+            <p>Apply color to text content</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>Background Colors</h3>
+            <code>class="bg-primary"</code>
+            <p>Apply color to backgrounds</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>Border Colors</h3>
+            <code>class="border-primary"</code>
+            <p>Apply color to borders</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>CSS Variables</h3>
+            <code>color: var(--color-primary);</code>
+            <p>Use in custom CSS</p>
+        </div>
+    </div>
+    {% elif category == "Spacing" %}
+    <div class="usage-guide-grid">
+        <div class="usage-guide-item">
+            <h3>Padding</h3>
+            <code>class="p-lg"</code>
+            <p>Add internal spacing</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>Margin</h3>
+            <code>class="m-lg"</code>
+            <p>Add external spacing</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>Gap</h3>
+            <code>class="gap-lg"</code>
+            <p>Space between grid/flex items</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>CSS Variables</h3>
+            <code>padding: var(--spacing-lg);</code>
+            <p>Use in custom CSS</p>
+        </div>
+    </div>
+    {% elif category == "Typography" %}
+    <div class="usage-guide-grid">
+        <div class="usage-guide-item">
+            <h3>Font Family</h3>
+            <code>class="font-heading"</code>
+            <p>Apply font family</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>Font Size</h3>
+            <code>class="text-lg"</code>
+            <p>Set font size</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>Font Weight</h3>
+            <code>class="font-semibold"</code>
+            <p>Set font weight</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>CSS Variables</h3>
+            <code>font-size: var(--font-size-lg);</code>
+            <p>Use in custom CSS</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="usage-guide-grid">
+        <div class="usage-guide-item">
+            <h3>Utility Classes</h3>
+            <code>class="..."</code>
+            <p>Use Tailwind utility classes</p>
+        </div>
+        <div class="usage-guide-item">
+            <h3>CSS Variables</h3>
+            <code>var(--...)</code>
+            <p>Use in custom CSS styles</p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
 {% else %}
 <div class="empty-state">
-    <h2>No tokens found in {{ category }}</h2>
-    <p><a href="{% url 'showcase:tokens_index' %}">← Back to all tokens</a></p>
+    <h2>No tokens found in {{ category|lower }}</h2>
+    <p>This category doesn't contain any Tailwind design tokens yet.</p>
+    <a href="{% url 'showcase:tailwind_tokens_index' %}">← Back to all tokens</a>
 </div>
 {% endif %}
 
@@ -199,8 +300,8 @@
 .showcase-header.enhanced {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-bottom: 1px solid rgba(226, 232, 240, 0.5);
-    padding: 1.5rem 2rem;
-    margin: -2rem -2rem 2rem;
+    padding: 2rem 2rem 3rem;
+    margin: -2rem -2rem 3rem;
     position: relative;
     overflow: hidden;
 }
@@ -209,10 +310,10 @@
     content: '';
     position: absolute;
     top: -50%;
-    left: -10%;
+    right: -10%;
     width: 60%;
     height: 200%;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.03) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -221,62 +322,41 @@
     z-index: 1;
 }
 
-.header-main {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2rem;
-}
-
 .header-text {
-    flex: 1;
+    margin-bottom: 2rem;
 }
 
 .gradient-text {
-    font-size: 2.25rem;
+    font-size: 3rem;
     font-weight: 800;
     background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin: 0.5rem 0;
+    margin: 1rem 0;
     letter-spacing: -0.02em;
 }
 
 .showcase-subtitle {
-    font-size: 1rem;
+    font-size: 1.125rem;
     color: #64748b;
     margin-top: 0.5rem;
-}
-
-@media (max-width: 768px) {
-    .header-main {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.5rem;
-    }
-
-    .gradient-text {
-        font-size: 2rem;
-    }
 }
 
 /* Enhanced Stats Cards */
 .showcase-stats.enhanced {
     display: flex;
-    gap: 1rem;
-    flex-shrink: 0;
+    gap: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .stat-card {
     background: white;
-    padding: 1rem 1.5rem;
+    padding: 1.25rem 2rem;
     border-radius: 12px;
     border: 1px solid rgba(226, 232, 240, 0.5);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.2s;
-    min-width: 100px;
-    text-align: center;
 }
 
 .stat-card:hover {
@@ -284,22 +364,27 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card.style-dict {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    border-color: rgba(16, 185, 129, 0.2);
+.stat-card.css {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    border-color: rgba(20, 184, 166, 0.2);
+}
+
+.stat-card.js {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: rgba(251, 191, 36, 0.2);
 }
 
 .stat-number {
-    font-size: 1.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #1e293b;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     color: #64748b;
-    margin-top: 0.25rem;
+    margin-top: 0.5rem;
     font-weight: 500;
 }
 
@@ -336,24 +421,252 @@
         0 6px 12px -3px rgba(15, 23, 42, 0.05);
 }
 
-.token-card.style-dictionary-token-card:hover::before {
+.token-card.tailwind-token-card:hover::before {
     opacity: 1;
-    background: linear-gradient(180deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.3) 100%);
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.3) 0%, rgba(8, 145, 178, 0.3) 100%);
 }
 
-.token-card.style-dictionary-token-card {
-    background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
+.token-card.tailwind-token-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
 }
 
-.token-card.style-dictionary-token-card::before {
+.token-card.tailwind-token-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 3px;
     height: 100%;
-    background: linear-gradient(180deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.15) 100%);
     opacity: 0.6;
+}
+
+/* Beautiful Token Previews */
+.token-preview {
+    margin-bottom: 1.5rem;
+}
+
+.color-swatch.large {
+    height: 120px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.color-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
+    color: white;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.dimension-preview.large {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dimension-bar {
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.dimension-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.typography-preview.large {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #1e293b;
+}
+
+.generic-preview.large {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    color: #475569;
+    font-family: 'Monaco', 'Menlo', monospace;
+    word-break: break-all;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.category-usage-guide {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.usage-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.usage-guide-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.usage-guide-item h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.usage-guide-item code {
+    background: #1e293b;
+    color: #f1f5f9;
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    display: block;
+    margin: 0.5rem 0;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.usage-guide-item p {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.large {
+    min-height: 60px;
+}
+
+.color-swatch.large {
+    height: 80px;
+}
+
+/* Enhanced Shadow Preview */
+.shadow-preview.large {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background:
+        radial-gradient(ellipse at top, #f8fafc, transparent),
+        radial-gradient(ellipse at bottom, #f1f5f9, transparent);
+    border-radius: 12px;
+}
+
+.shadow-demo-box {
+    width: 80px;
+    height: 56px;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.2;
+    border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+/* Beautiful Opacity Preview */
+.opacity-preview.large {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border-radius: 12px;
+    background-color: #f8fafc;
+    background-image:
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+.opacity-demo-box {
+    width: 80px;
+    height: 56px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+    line-height: 1.2;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Stylish Border Radius Preview */
+.border-radius-preview.large {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background:
+        linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    position: relative;
+}
+
+.border-radius-preview.large::before {
+    content: '';
+    position: absolute;
+    inset: 1rem;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+.border-radius-demo-box {
+    width: 80px;
+    height: 56px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+    line-height: 1.2;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    position: relative;
+    z-index: 1;
 }
 
 /* Modern Breadcrumb */
@@ -370,14 +683,14 @@
 }
 
 .breadcrumb a {
-    color: #10b981;
+    color: #3b82f6;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
 }
 
 .breadcrumb a:hover {
-    color: #059669;
+    color: #2563eb;
 }
 
 .separator {
@@ -407,41 +720,31 @@
     letter-spacing: 0.1em;
     padding: 0.25rem 0.625rem;
     border-radius: 9999px;
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #0369a1;
+    border: 1px solid rgba(14, 165, 233, 0.2);
 }
 
-.source-badge-json {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    color: #047857;
-    border-color: rgba(16, 185, 129, 0.2);
+.source-badge-css {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    color: #0f766e;
+    border-color: rgba(20, 184, 166, 0.2);
 }
 
-/* Beautiful Token Previews */
-.token-preview {
-    margin-bottom: 1.5rem;
+.source-badge-js {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border-color: rgba(251, 191, 36, 0.2);
 }
 
-.color-swatch.large {
-    height: 120px;
-    border-radius: 12px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-}
-
-.color-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
+.tailwind-badge {
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
     color: white;
-    padding: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    font-family: 'Monaco', 'Menlo', monospace;
+    border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(6, 182, 212, 0.2);
 }
 
 /* Token Card Content */
@@ -491,23 +794,13 @@
     color: #475569;
 }
 
+.expand-toggle:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
 .expand-toggle.expanded svg {
     transform: rotate(180deg);
-}
-
-.token-path {
-    font-size: 0.875rem;
-    color: #64748b;
-    margin: 0.25rem 0;
-    font-family: 'Monaco', 'Menlo', monospace;
-}
-
-.token-value {
-    font-size: 0.875rem;
-    color: #475569;
-    margin: 0.5rem 0;
-    font-family: 'Monaco', 'Menlo', monospace;
-    word-break: break-all;
 }
 
 .quick-copy-actions {
@@ -548,34 +841,6 @@
     border-top: 1px solid #f1f5f9;
     padding-top: 1rem;
     margin-top: 1rem;
-}
-
-.usage-examples {
-    margin-bottom: 1rem;
-}
-
-.usage-method {
-    margin: 0.75rem 0;
-}
-
-.usage-method label {
-    font-size: 0.75rem;
-    color: #64748b;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: block;
-    margin-bottom: 0.25rem;
-}
-
-.usage-method code {
-    background: #1e293b;
-    color: #f1f5f9;
-    padding: 0.5rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    display: block;
-    font-family: 'Monaco', 'Menlo', monospace;
 }
 
 .framework-examples {
@@ -631,158 +896,23 @@
     color: inherit;
     background: none;
 }
-
-/* Enhanced Shadow Preview */
-.shadow-preview.large {
-    min-height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background:
-        radial-gradient(ellipse at top, #f8fafc, transparent),
-        radial-gradient(ellipse at bottom, #f1f5f9, transparent);
-    border-radius: 12px;
-}
-
-.shadow-demo-box {
-    width: 80px;
-    height: 56px;
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #64748b;
-    text-align: center;
-    line-height: 1.2;
-    border: 1px solid rgba(226, 232, 240, 0.5);
-}
-
-/* Beautiful Opacity Preview */
-.opacity-preview.large {
-    min-height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    border-radius: 12px;
-    background-color: #f8fafc;
-    background-image:
-        linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
-        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
-        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-}
-
-.opacity-demo-box {
-    width: 80px;
-    height: 56px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-    text-align: center;
-    line-height: 1.2;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-}
-
-/* Stylish Border Radius Preview */
-.border-radius-preview.large {
-    min-height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background:
-        linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 12px;
-    position: relative;
-}
-
-.border-radius-preview.large::before {
-    content: '';
-    position: absolute;
-    inset: 1rem;
-    border: 2px dashed #cbd5e1;
-    border-radius: 8px;
-    pointer-events: none;
-}
-
-.border-radius-demo-box {
-    width: 80px;
-    height: 56px;
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-    text-align: center;
-    line-height: 1.2;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-    position: relative;
-    z-index: 1;
-}
-
-.dimension-preview.large {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    padding: 1.5rem;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.dimension-bar {
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
-}
-
-.dimension-value {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #475569;
-    font-family: 'Monaco', 'Menlo', monospace;
-}
-
-.typography-preview.large {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    padding: 1.5rem;
-    border-radius: 12px;
-    min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #1e293b;
-}
-
-.generic-preview.large {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    padding: 1.5rem;
-    border-radius: 12px;
-    font-size: 0.875rem;
-    color: #475569;
-    font-family: 'Monaco', 'Menlo', monospace;
-    word-break: break-all;
-    min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 </style>
 
 <script>
+function toggleTokenDetails(button) {
+    const card = button.closest('.token-card');
+    const details = card.querySelector('.token-details');
+    const isExpanded = details.style.display !== 'none';
+
+    if (isExpanded) {
+        details.style.display = 'none';
+        button.classList.remove('expanded');
+    } else {
+        details.style.display = 'block';
+        button.classList.add('expanded');
+    }
+}
+
 function copyToClipboard(text, button) {
     navigator.clipboard.writeText(text).then(function() {
         // Visual feedback
@@ -797,20 +927,6 @@ function copyToClipboard(text, button) {
     }).catch(function(err) {
         console.error('Could not copy text: ', err);
     });
-}
-
-function toggleTokenDetails(button) {
-    const card = button.closest('.token-card');
-    const details = card.querySelector('.token-details');
-    const isExpanded = details.style.display !== 'none';
-
-    if (isExpanded) {
-        details.style.display = 'none';
-        button.classList.remove('expanded');
-    } else {
-        details.style.display = 'block';
-        button.classList.add('expanded');
-    }
 }
 
 function showFramework(button, framework) {

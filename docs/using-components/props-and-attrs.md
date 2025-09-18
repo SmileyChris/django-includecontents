@@ -2,6 +2,9 @@
 
 Components can define props (properties) to specify which attributes they expect and how to handle undefined attributes. This system provides validation, defaults, and flexible attribute handling.
 
+!!! tip "Inspect parsed props"
+    The [Showcase props table](../showcase/metadata.md) displays defaults and descriptions pulled from your component metadata, making it easy to confirm how props resolve at runtime.
+
 ## Defining Props
 
 Define props in a comment at the top of your component template:

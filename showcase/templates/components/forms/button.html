@@ -1,18 +1,37 @@
-{# props variant=primary,secondary,success,danger,warning,info, size=medium,small,large, disabled=False #}
+{# props label, variant=primary,secondary,ghost, size=md,sm,lg, icon_before="", icon_after="", disabled=False, href="", type=button,submit,reset #}
 
-<button
+{% if href %}
+<a
     {% attrs
+        href=href
         class="btn"
         class:btn-primary=variantPrimary
         class:btn-secondary=variantSecondary
-        class:btn-success=variantSuccess
-        class:btn-danger=variantDanger
-        class:btn-warning=variantWarning
-        class:btn-info=variantInfo
-        class:btn-sm=sizeSmall
-        class:btn-lg=sizeLarge
+        class:btn-ghost=variantGhost
+        class:btn-sm=sizeSm
+        class:btn-lg=sizeLg
+        aria-disabled=disabled
     %}
-    {% if disabled %}disabled{% endif %}
 >
-    {{ contents }}
+    {% if icon_before %}<span class="btn-icon">{{ icon_before }}</span>{% endif %}
+    {{ label }}
+    {% if icon_after %}<span class="btn-icon">{{ icon_after }}</span>{% endif %}
+</a>
+{% else %}
+<button
+    {% attrs
+        type=type
+        class="btn"
+        class:btn-primary=variantPrimary
+        class:btn-secondary=variantSecondary
+        class:btn-ghost=variantGhost
+        class:btn-sm=sizeSm
+        class:btn-lg=sizeLg
+        disabled=disabled
+    %}
+>
+    {% if icon_before %}<span class="btn-icon">{{ icon_before }}</span>{% endif %}
+    {{ label }}
+    {% if icon_after %}<span class="btn-icon">{{ icon_after }}</span>{% endif %}
 </button>
+{% endif %}

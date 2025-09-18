@@ -2,6 +2,9 @@
 
 The `{% includecontents %}` tag is the foundation of Django IncludeContents. It works similarly to Django's built-in `{% include %}` tag, but allows you to pass content blocks to the included template.
 
+!!! tip "Preview in the Showcase"
+    Use the [Showcase live preview](../showcase/live-preview.md) to experiment with `{% includecontents %}` snippets and copy the generated code as you adjust props.
+
 ## Basic Syntax
 
 ```django

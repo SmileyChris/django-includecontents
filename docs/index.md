@@ -20,6 +20,7 @@ Django IncludeContents provides three powerful features:
 - **🔀 Conditional Wrapping**: Clean conditional HTML wrapper syntax with `{% wrapif %}`
 - **📄 Multi-line Tags**: Support for multi-line template tags for better readability
 - **⚡ Developer Experience**: Great integration with Prettier, VS Code, and Tailwind CSS
+- **🧪 Component Showcase**: Optional `/showcase/` app for browsing live components, tweaking props, and copying snippets ([learn more](showcase/index.md))
 
 ## Quick Examples
 
@@ -100,6 +101,7 @@ Ready to add component-like functionality to your Django templates?
 ```
 
 **Benefits:**
+
 - ✅ Write less, do more
 - ✅ Consistent UI components
 - ✅ Optimized SVG sprites (no font icon CSS)

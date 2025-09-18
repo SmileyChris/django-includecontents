@@ -2,6 +2,9 @@
 
 The `{% wrapif %}` tag provides a clean way to conditionally wrap content with HTML elements, eliminating the need to repeat opening and closing tags in conditional blocks. This tag solves the common problem where you need to wrap content in an element only under certain conditions - without it, you'd have to duplicate your content in both the "if" and "else" branches. With wrapif, you write your content once and the wrapping happens conditionally.
 
+!!! tip "See wrapif in action"
+    Try the interactive examples in the [Showcase preview](../showcase/live-preview.md) to confirm how `{% wrapif %}` behaves with your own data and conditional logic.
+
 ## Standard Syntax
 
 ```django

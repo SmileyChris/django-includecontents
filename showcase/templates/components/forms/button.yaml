@@ -10,38 +10,60 @@ accessibility: |
 related:
   - forms:input
 props:
+  label:
+    description: Text rendered inside the button
+    type: string
+    default: Call to action
   variant:
     description: Visual treatment controlling color and emphasis.
     type: enum
-    values: [primary, secondary, success, danger, warning, info]
+    values: [primary, secondary, ghost]
     default: primary
   size:
     description: Scales padding and font size for the button.
     type: enum
-    values: [medium, small, large]
-    default: medium
+    values: [sm, md, lg]
+    default: md
+  icon_before:
+    description: Optional glyph rendered before the label.
+    type: string
+  icon_after:
+    description: Optional glyph rendered after the label.
+    type: string
   disabled:
     description: Renders the button inert and shows the disabled styling.
     type: boolean
     default: false
+  href:
+    description: Convert the button to an anchor when provided.
+    type: string
+  type:
+    description: Button type attribute when rendered as a `<button>` element.
+    type: enum
+    values: [button, submit, reset]
+    default: button
 examples:
   - name: Primary Action
     description: Default styling for the main form submission button.
     code: |
-      <include:forms:button variant="primary">Save changes</include:forms:button>
+      <include:forms:button label="Save changes" variant="primary" />
     props:
+      label: Save changes
       variant: primary
   - name: Secondary Small
     description: Compact button for less prominent actions.
     code: |
-      <include:forms:button variant="secondary" size="small">Cancel</include:forms:button>
+      <include:forms:button label="Cancel" variant="secondary" size="sm" />
     props:
+      label: Cancel
       variant: secondary
-      size: small
+      size: sm
   - name: Disabled Danger
     description: Communicates that a destructive action is temporarily unavailable.
     code: |
-      <include:forms:button variant="danger" disabled>Delete project</include:forms:button>
+      <include:forms:button label="Delete project" variant="primary" icon_before="🧨" disabled />
     props:
-      variant: danger
+      label: Delete project
+      variant: primary
+      icon_before: 🧨
       disabled: true

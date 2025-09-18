@@ -1,41 +1,461 @@
 {% extends "showcase/base.html" %}
 
-{% block title %}Search Results{% endblock %}
+{% block title %}Search{% if query %} - {{ query }}{% endif %}{% endblock %}
 
 {% block content %}
-<div class="showcase-header">
-    <h1>Search Results</h1>
-    {% if query %}
-    <p class="lead">Found {{ components|length }} result{{ components|length|pluralize }} for "{{ query }}"</p>
-    {% else %}
-    <p class="lead">Enter a search term to find components</p>
+<div class="search-header">
+    <div class="search-hero">
+        <h1>Search Components & Design Tokens</h1>
+        <p class="search-subtitle">Discover components, design tokens, and examples from the Django IncludeContents library</p>
+
+        <!-- Enhanced Search Form -->
+        <div class="search-form-container">
+            <form action="{% url 'showcase:search' %}" method="get" class="enhanced-search-form">
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                    <input type="search" name="q"
+                           placeholder="Search for buttons, cards, tokens, colors..."
+                           value="{{ query|default:'' }}"
+                           class="search-input"
+                           autocomplete="off">
+                    <button type="submit" class="search-button">Search</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Stats -->
+        {% if query %}
+        <div class="search-stats">
+            <div class="stat-item">
+                <strong>{{ components|length }}</strong> component{{ components|length|pluralize }}
+            </div>
+            <div class="stat-separator">•</div>
+            <div class="stat-item">
+                <strong>{{ total_results|default:components|length }}</strong> total result{{ total_results|default:components|length|pluralize }}
+            </div>
+            {% if query %}
+            <div class="stat-separator">•</div>
+            <div class="stat-item">
+                for <em>"{{ query }}"</em>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Search Suggestions -->
+    {% if not query %}
+    <div class="search-suggestions">
+        <h3>Popular Searches</h3>
+        <div class="suggestion-tags">
+            <a href="{% url 'showcase:search' %}?q=button" class="suggestion-tag">button</a>
+            <a href="{% url 'showcase:search' %}?q=card" class="suggestion-tag">card</a>
+            <a href="{% url 'showcase:search' %}?q=form" class="suggestion-tag">form</a>
+            <a href="{% url 'showcase:search' %}?q=navigation" class="suggestion-tag">navigation</a>
+            <a href="{% url 'showcase:search' %}?q=color" class="suggestion-tag">colors</a>
+            <a href="{% url 'showcase:search' %}?q=spacing" class="suggestion-tag">spacing</a>
+            <a href="{% url 'showcase:search' %}?q=typography" class="suggestion-tag">typography</a>
+        </div>
+    </div>
     {% endif %}
 </div>
 
-{% if components %}
-<div class="components-grid">
-    {% for component in components %}
-    <div class="component-card">
-        <h3>
-            <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}">
-                {{ component.name }}
-            </a>
-        </h3>
+<!-- Search Results -->
+{% if query %}
+    {% if components %}
+    <section class="search-results-section">
+        <div class="section-header">
+            <h2>
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16" class="section-icon">
+                    <path d="M2 1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zM1 2a0 0 0 0 1 0 0h6a0 0 0 0 1 0 0v6a0 0 0 0 1 0 0H1a0 0 0 0 1 0 0V2z"/>
+                    <path d="M2 10a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1H2z"/>
+                    <path d="M10 2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1V2z"/>
+                </svg>
+                Components ({{ components|length }})
+            </h2>
+        </div>
 
-        {% if component.description %}
-        <p>{{ component.description }}</p>
-        {% endif %}
+        <div class="enhanced-components-grid">
+            {% for component in components %}
+            <div class="enhanced-component-card">
+                <div class="component-card-header">
+                    <div class="component-icon">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                            <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
+                        </svg>
+                    </div>
+                    <div class="component-header-content">
+                        <h3>
+                            <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}">
+                                {{ component.name }}
+                            </a>
+                        </h3>
+                        <span class="component-category-badge">{{ component.category }}</span>
+                    </div>
+                </div>
 
-        <div class="component-meta">
-            <span class="category-badge">{{ component.category }}</span>
-            {% if component.props %}
-            <span class="props-count">{{ component.props|length }} props</span>
-            {% endif %}
+                {% if component.description %}
+                <p class="component-description">{{ component.description }}</p>
+                {% endif %}
+
+                <div class="component-card-footer">
+                    <div class="component-meta">
+                        {% if component.props %}
+                        <span class="meta-item">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                            </svg>
+                            {{ component.props|length }} props
+                        </span>
+                        {% endif %}
+                        {% if component.examples %}
+                        <span class="meta-item">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M10.478 1.647a.5.5 0 1 0-.956-.294l-4 13a.5.5 0 0 0 .956.294l4-13zM4.854 4.146a.5.5 0 0 1 0 .708L1.707 8l3.147 3.146a.5.5 0 0 1-.708.708l-3.5-3.5a.5.5 0 0 1 0-.708l3.5-3.5a.5.5 0 0 1 .708 0zm6.292 0a.5.5 0 0 0 0 .708L14.293 8l-3.147 3.146a.5.5 0 0 0 .708.708l3.5-3.5a.5.5 0 0 0 0-.708l-3.5-3.5a.5.5 0 0 0-.708 0z"/>
+                            </svg>
+                            {{ component.examples|length }} example{{ component.examples|length|pluralize }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}" class="view-component-btn">
+                        View Component →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% else %}
+    <div class="no-results">
+        <div class="no-results-icon">
+            <svg width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+        </div>
+        <h2>No results found</h2>
+        <p>We couldn't find any components or tokens matching <strong>"{{ query }}"</strong></p>
+        <div class="no-results-suggestions">
+            <p>Try searching for:</p>
+            <div class="suggestion-tags">
+                <a href="{% url 'showcase:search' %}?q=button" class="suggestion-tag">button</a>
+                <a href="{% url 'showcase:search' %}?q=card" class="suggestion-tag">card</a>
+                <a href="{% url 'showcase:search' %}?q=form" class="suggestion-tag">form</a>
+                <a href="{% url 'showcase:search' %}?q=color" class="suggestion-tag">colors</a>
+            </div>
         </div>
     </div>
-    {% endfor %}
-</div>
-{% elif query %}
-<p>No components found matching your search.</p>
+    {% endif %}
 {% endif %}
+
+<style>
+/* Enhanced Search Styles */
+.search-header {
+    margin-bottom: 2rem;
+}
+
+.search-hero {
+    text-align: center;
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.search-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.search-subtitle {
+    font-size: 1.125rem;
+    color: #64748b;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search-form-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.enhanced-search-form {
+    position: relative;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+}
+
+.search-input-wrapper:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+    color: #64748b;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 0.25rem 0;
+    background: transparent;
+}
+
+.search-input::placeholder {
+    color: #94a3b8;
+}
+
+.search-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-left: 0.75rem;
+}
+
+.search-button:hover {
+    background: #2563eb;
+}
+
+.search-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.stat-separator {
+    color: #cbd5e1;
+}
+
+.search-suggestions {
+    text-align: center;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.search-suggestions h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+}
+
+.suggestion-tags {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.suggestion-tag {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid #e2e8f0;
+}
+
+.suggestion-tag:hover {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+    text-decoration: none;
+}
+
+/* Search Results */
+.search-results-section {
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.section-icon {
+    color: #3b82f6;
+}
+
+.enhanced-components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.enhanced-component-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-component-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.component-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.component-icon {
+    background: #f1f5f9;
+    color: #3b82f6;
+    padding: 0.75rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.component-header-content {
+    flex: 1;
+}
+
+.component-header-content h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.component-header-content h3 a {
+    color: #1e293b;
+    text-decoration: none;
+}
+
+.component-header-content h3 a:hover {
+    color: #3b82f6;
+}
+
+.component-category-badge {
+    background: #e0f2fe;
+    color: #0891b2;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.component-description {
+    color: #64748b;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.component-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.component-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.meta-item svg {
+    color: #94a3b8;
+}
+
+.view-component-btn {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.view-component-btn:hover {
+    background: #eff6ff;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+/* No Results */
+.no-results {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #64748b;
+}
+
+.no-results-icon {
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+}
+
+.no-results h2 {
+    color: #374151;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.no-results-suggestions {
+    margin-top: 2rem;
+}
+
+.no-results-suggestions p {
+    margin-bottom: 1rem;
+    color: #64748b;
+}
+</style>
 {% endblock %}

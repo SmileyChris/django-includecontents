@@ -33,7 +33,14 @@ def build_component_template(
         for key, value in props.items():
             if re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", key):
                 sanitized_props[key] = value
-                assignments.append(f"{key}=preview_props.{key}")
+                # For template variable references, we need to quote string values properly
+                if isinstance(value, str):
+                    # Use literal string values for strings instead of variable references
+                    escaped_value = value.replace("'", "\\'")
+                    assignments.append(f"{key}='{escaped_value}'")
+                else:
+                    # For non-strings (booleans, numbers), use variable references
+                    assignments.append(f"{key}=preview_props.{key}")
         if assignments:
             tag_parts.append("with")
             tag_parts.extend(assignments)
@@ -71,7 +78,8 @@ def index(request: HttpRequest) -> HttpResponse:
         "categories": categories,
         "recent_components": recent_components,
         "total_components": len(registry.get_all_components()),
-        "token_categories": registry.get_token_categories()
+        "token_categories": registry.get_token_categories(),
+        "tailwind_token_categories": registry.get_tailwind_token_categories()
     })
 
 
@@ -90,7 +98,8 @@ def category_view(request: HttpRequest, category: str) -> HttpResponse:
         "category": category_name,
         "components": components,
         "categories": registry.get_categories(),
-        "token_categories": registry.get_token_categories()
+        "token_categories": registry.get_token_categories(),
+        "tailwind_token_categories": registry.get_tailwind_token_categories()
     })
 
 
@@ -145,6 +154,18 @@ def component_view(request: HttpRequest, category: str, name: str) -> HttpRespon
             "props_json": json.dumps(example.props)
         })
 
+    # Resolve related components from names to actual component objects
+    related_components = []
+    for related_name in component.related:
+        related_component = registry.get_component(related_name)
+        if related_component:
+            related_components.append(related_component)
+        else:
+            # Try to find by searching if exact name doesn't work
+            search_results = registry.search_components(related_name)
+            if search_results:
+                related_components.append(search_results[0])
+
     return render(request, "showcase/component.html", {
         "component": component,
         "form": form,
@@ -152,8 +173,10 @@ def component_view(request: HttpRequest, category: str, name: str) -> HttpRespon
         "preview_props_json": json.dumps(preview_props),
         "examples_json": json.dumps(examples_json),
         "examples_with_json": examples_with_json,
+        "related_components": related_components,
         "categories": registry.get_categories(),
-        "token_categories": registry.get_token_categories()
+        "token_categories": registry.get_token_categories(),
+        "tailwind_token_categories": registry.get_tailwind_token_categories()
     })
 
 
@@ -256,7 +279,8 @@ def search_view(request: HttpRequest) -> HttpResponse:
         "query": query,
         "components": components,
         "categories": registry.get_categories(),
-        "token_categories": registry.get_token_categories()
+        "token_categories": registry.get_token_categories(),
+        "tailwind_token_categories": registry.get_tailwind_token_categories()
     })
 
 
@@ -264,13 +288,17 @@ def search_view(request: HttpRequest) -> HttpResponse:
 def tokens_index(request: HttpRequest) -> HttpResponse:
     """Main design tokens index page showing all token categories."""
     token_categories = registry.get_token_categories()
-    recent_tokens = registry.get_all_tokens()[:12]  # Show 12 most recent
+    all_tokens = registry.get_all_tokens()
+
+    # Count Style Dictionary tokens (JSON source)
+    style_dictionary_token_count = sum(1 for token in all_tokens if token.source_type == "json")
 
     return render(request, "showcase/tokens/index.html", {
         "token_categories": token_categories,
-        "recent_tokens": recent_tokens,
-        "total_tokens": len(registry.get_all_tokens()),
-        "categories": registry.get_categories()
+        "total_tokens": len(all_tokens),
+        "style_dictionary_token_count": style_dictionary_token_count,
+        "categories": registry.get_categories(),
+        "tailwind_token_categories": registry.get_tailwind_token_categories()
     })
 
 
@@ -285,34 +313,17 @@ def token_category_view(request: HttpRequest, category: str) -> HttpResponse:
         # Try original category name
         tokens = registry.get_tokens_by_category(category)
 
+    # Count Style Dictionary tokens in this category
+    style_dictionary_token_count = sum(1 for token in tokens if token.source_type == "json")
+
     return render(request, "showcase/tokens/category.html", {
         "category": category_name.title(),
         "category_slug": category,
         "tokens": tokens,
+        "style_dictionary_token_count": style_dictionary_token_count,
         "token_categories": registry.get_token_categories(),
-        "categories": registry.get_categories()
-    })
-
-
-@showcase_view
-def token_detail_view(request: HttpRequest, category: str, token_path: str) -> HttpResponse:
-    """View a specific design token with details."""
-    # Convert URL path back to dot notation
-    token_path_dots = token_path.replace("-", ".")
-    token = registry.get_token(token_path_dots)
-
-    if not token:
-        # Try to find token by searching
-        tokens = registry.search_tokens(token_path.replace("-", " "))
-        if tokens:
-            token = tokens[0]
-        else:
-            return redirect("showcase:tokens_index")
-
-    return render(request, "showcase/tokens/detail.html", {
-        "token": token,
-        "token_categories": registry.get_token_categories(),
-        "categories": registry.get_categories()
+        "categories": registry.get_categories(),
+        "tailwind_token_categories": registry.get_tailwind_token_categories()
     })
 
 
@@ -332,5 +343,78 @@ def tokens_search_view(request: HttpRequest) -> HttpResponse:
         "tokens": tokens,
         "components": components,
         "token_categories": registry.get_token_categories(),
-        "categories": registry.get_categories()
+        "categories": registry.get_categories(),
+        "tailwind_token_categories": registry.get_tailwind_token_categories()
+    })
+
+
+# Tailwind token views
+
+@showcase_view
+def tailwind_tokens_index(request: HttpRequest) -> HttpResponse:
+    """Main Tailwind design tokens index page."""
+    tailwind_token_categories = registry.get_tailwind_token_categories()
+    recent_tailwind_tokens = registry.get_all_tailwind_tokens()[:12]  # Show 12 most recent
+    all_tailwind_tokens = registry.get_all_tailwind_tokens()
+
+    # Count tokens by source type
+    css_token_count = sum(1 for token in all_tailwind_tokens if token.source_type == "css")
+    js_token_count = sum(1 for token in all_tailwind_tokens if token.source_type == "js")
+
+    return render(request, "showcase/tailwind/index.html", {
+        "tailwind_token_categories": tailwind_token_categories,
+        "recent_tailwind_tokens": recent_tailwind_tokens,
+        "total_tailwind_tokens": len(all_tailwind_tokens),
+        "css_token_count": css_token_count,
+        "js_token_count": js_token_count,
+        "categories": registry.get_categories(),
+        "token_categories": registry.get_token_categories()
+    })
+
+
+@showcase_view
+def tailwind_token_category_view(request: HttpRequest, category: str) -> HttpResponse:
+    """View all Tailwind tokens in a specific category."""
+    # Replace hyphens with spaces for category name
+    category_name = category.replace("-", " ").lower()
+    tokens = registry.get_tailwind_tokens_by_category(category_name)
+
+    if not tokens:
+        # Try original category name
+        tokens = registry.get_tailwind_tokens_by_category(category)
+
+    # Count tokens by source type in this category
+    css_token_count = sum(1 for token in tokens if token.source_type == "css")
+    js_token_count = sum(1 for token in tokens if token.source_type == "js")
+
+    return render(request, "showcase/tailwind/category.html", {
+        "category": category_name.title(),
+        "category_slug": category,
+        "tokens": tokens,
+        "css_token_count": css_token_count,
+        "js_token_count": js_token_count,
+        "tailwind_token_categories": registry.get_tailwind_token_categories(),
+        "categories": registry.get_categories(),
+        "token_categories": registry.get_token_categories()
+    })
+
+
+@showcase_view
+def tailwind_tokens_search_view(request: HttpRequest) -> HttpResponse:
+    """Search Tailwind design tokens."""
+    query = request.GET.get("q", "")
+    tailwind_tokens = []
+    components = []
+
+    if query:
+        tailwind_tokens = registry.search_tailwind_tokens(query)
+        components = registry.search_components(query)
+
+    return render(request, "showcase/tailwind/search.html", {
+        "query": query,
+        "tailwind_tokens": tailwind_tokens,
+        "components": components,
+        "tailwind_token_categories": registry.get_tailwind_token_categories(),
+        "categories": registry.get_categories(),
+        "token_categories": registry.get_token_categories()
     })

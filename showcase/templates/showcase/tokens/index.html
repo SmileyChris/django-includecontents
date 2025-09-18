@@ -1,12 +1,17 @@
 {% extends "showcase/base.html" %}
+{% load static %}
 
 {% block title %}Design Tokens{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showcase/css/tokens.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="showcase-header">
-    <h1>Design Tokens</h1>
+    <h1>Design Token Library</h1>
     <p class="showcase-subtitle">
-        Design tokens are design decisions represented as data, ensuring consistency across your design system.
+        Design tokens from multiple sources: Style Dictionary, Tailwind @theme, and tailwind.config.js
     </p>
     <div class="showcase-stats">
         <span class="stat">
@@ -15,8 +20,58 @@
         <span class="stat">
             <strong>{{ token_categories|length }}</strong> categories
         </span>
+        {% if total_tokens %}
+        <span class="stat">
+            <strong>{{ style_dictionary_token_count }}</strong> Style Dictionary tokens
+        </span>
+        {% endif %}
     </div>
 </div>
+
+<!-- Token Source Summary -->
+{% if token_categories %}
+<section class="token-sources-summary">
+    <div class="section-header-collapsible">
+        <h2>Token Sources</h2>
+        <button class="collapse-toggle" onclick="toggleSection(this)" aria-expanded="false">
+            <span class="toggle-text">Show Sources</span>
+            <svg class="toggle-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
+            </svg>
+        </button>
+    </div>
+    <div class="source-cards collapsible-content" style="display: none;">
+        {% comment "Count tokens by source type" %}
+        {% for category in token_categories %}
+            {% for token in category.tokens %}
+                {% if not source_counts %}{% endif %}
+            {% endfor %}
+        {% endfor %}
+        {% endcomment %}
+
+        <div class="source-card">
+            <div class="source-icon">🎨</div>
+            <h3>Tailwind @theme</h3>
+            <p class="source-description">CSS custom properties defined with @theme directive</p>
+            <span class="source-badge source-badge-css">CSS</span>
+        </div>
+
+        <div class="source-card">
+            <div class="source-icon">⚙️</div>
+            <h3>tailwind.config.js</h3>
+            <p class="source-description">Theme configuration from Tailwind config files</p>
+            <span class="source-badge source-badge-js">JavaScript</span>
+        </div>
+
+        <div class="source-card">
+            <div class="source-icon">📋</div>
+            <h3>Style Dictionary</h3>
+            <p class="source-description">Manual design tokens in JSON format</p>
+            <span class="source-badge source-badge-json">JSON</span>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 {% if token_categories %}
 <div class="showcase-grid">
@@ -35,44 +90,40 @@
         </div>
     </section>
 
-    {% if recent_tokens %}
-    <section class="showcase-section">
-        <h2>Recent Tokens</h2>
-        <div class="token-preview-grid">
-            {% for token in recent_tokens %}
-            <div class="token-preview-card">
-                <a href="{% url 'showcase:token_detail' token.category token.slug %}" class="token-link">
-                    <div class="token-preview">
-                        {% if token.is_color %}
-                            <div class="color-swatch" style="background-color: {{ token.value }};" title="{{ token.value }}"></div>
-                        {% elif token.is_dimension %}
-                            <div class="dimension-preview">
-                                <div class="dimension-bar" style="width: {{ token.value }}; height: 4px; background: #3b82f6;"></div>
-                            </div>
-                        {% elif token.is_typography %}
-                            <div class="typography-preview" style="font-family: {{ token.value }};">Aa</div>
-                        {% else %}
-                            <div class="generic-preview">{{ token.value|truncatechars:20 }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="token-info">
-                        <h4>{{ token.name }}</h4>
-                        <p class="token-path">{{ token.path }}</p>
-                        <p class="token-value">{{ token.value }}</p>
-                    </div>
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
 </div>
 {% else %}
 <div class="empty-state">
     <h2>No Design Tokens Found</h2>
-    <p>To get started with design tokens, create JSON files in the <code>showcase/tokens/</code> directory.</p>
-    <p>Example token structure:</p>
-    <pre><code>{
+    <p>The showcase will automatically discover design tokens from:</p>
+
+    <div class="discovery-methods">
+        <div class="discovery-method">
+            <h3>🎨 Tailwind 4.0 @theme CSS</h3>
+            <p>Create CSS files with <code>@theme</code> directives:</p>
+            <pre><code>/* styles.css */
+@theme {
+  --color-primary: #3b82f6;
+  --spacing-lg: 2rem;
+}</code></pre>
+        </div>
+
+        <div class="discovery-method">
+            <h3>⚙️ tailwind.config.js</h3>
+            <p>Add a Tailwind configuration file:</p>
+            <pre><code>// tailwind.config.js
+module.exports = {
+  theme: {
+    colors: {
+      primary: '#3b82f6'
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="discovery-method">
+            <h3>📋 Style Dictionary JSON</h3>
+            <p>Create JSON files in <code>showcase/tokens/</code>:</p>
+            <pre><code>{
   "color": {
     "primary": {
       "500": {
@@ -83,6 +134,128 @@
     }
   }
 }</code></pre>
+        </div>
+    </div>
+
+    <div class="discovery-actions">
+        <p><strong>Tokens will appear automatically</strong> when you refresh the page after adding any of the above files.</p>
+        <p>For comprehensive discovery, run: <code>python manage.py import_tailwind_tokens</code></p>
+    </div>
 </div>
+
+<style>
+.discovery-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.discovery-method {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.discovery-method h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+    color: #1e293b;
+}
+
+.discovery-method p {
+    margin: 0 0 1rem 0;
+    color: #475569;
+}
+
+.discovery-method pre {
+    background: #1e293b;
+    color: #f1f5f9;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+
+.discovery-actions {
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.discovery-actions p {
+    margin: 0.5rem 0;
+    color: #0c4a6e;
+}
+
+.discovery-actions code {
+    background: #e0f2fe;
+    color: #0c4a6e;
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+/* Collapsible Sections */
+.section-header-collapsible {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.collapse-toggle {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    color: #475569;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.collapse-toggle:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.toggle-icon {
+    transition: transform 0.2s ease;
+}
+
+.collapsible-content {
+    transition: all 0.3s ease;
+}
+</style>
+
+<script>
+function toggleSection(button) {
+    const content = button.closest('section').querySelector('.collapsible-content');
+    const toggleText = button.querySelector('.toggle-text');
+    const toggleIcon = button.querySelector('.toggle-icon');
+    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+    if (isExpanded) {
+        content.style.display = 'none';
+        toggleText.textContent = 'Show Sources';
+        button.setAttribute('aria-expanded', 'false');
+        toggleIcon.style.transform = 'rotate(0deg)';
+    } else {
+        content.style.display = 'block';
+        toggleText.textContent = 'Hide Sources';
+        button.setAttribute('aria-expanded', 'true');
+        toggleIcon.style.transform = 'rotate(180deg)';
+    }
+}
+</script>
 {% endif %}
 {% endblock %}

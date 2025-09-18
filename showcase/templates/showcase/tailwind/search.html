@@ -1,0 +1,472 @@
+{% extends "showcase/base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if query %}Search: "{{ query }}" - Tailwind Tokens{% else %}Search Tailwind Tokens{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showcase/css/tokens.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="showcase-header">
+    <h1>Search Tailwind Tokens</h1>
+    <p class="showcase-subtitle">
+        Find Tailwind design tokens by name, value, or usage
+    </p>
+</div>
+
+<div class="search-section">
+    <form method="get" class="search-form">
+        <div class="search-input-group">
+            <input
+                type="text"
+                name="q"
+                value="{{ query }}"
+                placeholder="Search tokens (e.g., 'primary', '#3b82f6', 'blue')"
+                class="search-input"
+                autofocus
+            >
+            <button type="submit" class="search-button">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Search
+            </button>
+        </div>
+    </form>
+
+    {% if query %}
+    <div class="search-results-header">
+        <h2>Search Results for "{{ query }}"</h2>
+        <div class="results-summary">
+            <span class="result-count">{{ tailwind_tokens|length }} Tailwind token{{ tailwind_tokens|length|pluralize }}</span>
+            {% if components %}
+                <span class="result-count">{{ components|length }} component{{ components|length|pluralize }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if query %}
+    {% if tailwind_tokens %}
+    <section class="search-results-section">
+        <h3>Tailwind Tokens</h3>
+        <div class="token-grid">
+            {% for token in tailwind_tokens %}
+            <div class="token-card tailwind-token-card">
+                <div class="token-header">
+                    {% if token.tailwind_class %}
+                        <span class="tailwind-badge" title="Tailwind utility class">TW</span>
+                    {% endif %}
+                </div>
+
+                <a href="{% url 'showcase:tailwind_token_detail' token.category token.slug %}">
+                    <div class="token-preview">
+                        {% if token.is_color %}
+                            <div class="color-swatch" style="background-color: {{ token.value }};" title="{{ token.value }}">
+                                <div class="color-overlay">{{ token.value }}</div>
+                            </div>
+                        {% elif token.is_dimension %}
+                            <div class="dimension-preview">
+                                <div class="dimension-bar" style="width: {{ token.value }}; height: 8px; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                                <span class="dimension-value">{{ token.value }}</span>
+                            </div>
+                        {% elif token.is_typography %}
+                            {% if "family" in token.type %}
+                                <div class="typography-preview" style="font-family: {{ token.value }};">The quick brown fox</div>
+                            {% elif "size" in token.type %}
+                                <div class="typography-preview" style="font-size: {{ token.value }};">Text Size</div>
+                            {% elif "weight" in token.type %}
+                                <div class="typography-preview" style="font-weight: {{ token.value }};">Font Weight</div>
+                            {% else %}
+                                <div class="typography-preview">{{ token.value }}</div>
+                            {% endif %}
+                        {% else %}
+                            <div class="generic-preview">{{ token.value|truncatechars:30 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="token-info">
+                        <h4>{{ token.name }}</h4>
+                        <p class="token-path">{{ token.path }}</p>
+                        <p class="token-value">{{ token.value }}</p>
+
+                        <!-- Show matching criteria -->
+                        {% if query|lower in token.name|lower %}
+                            <div class="match-indicator">Matches name</div>
+                        {% elif query|lower in token.value|lower %}
+                            <div class="match-indicator">Matches value</div>
+                        {% elif query|lower in token.path|lower %}
+                            <div class="match-indicator">Matches path</div>
+                        {% endif %}
+
+                        <!-- Quick usage -->
+                        {% if token.tailwind_class %}
+                            <div class="quick-usage">
+                                <code>.{{ token.tailwind_class }}</code>
+                            </div>
+                        {% elif token.css_variable %}
+                            <div class="quick-usage">
+                                <code>var({{ token.css_variable }})</code>
+                            </div>
+                        {% endif %}
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if components %}
+    <section class="search-results-section">
+        <h3>Related Components</h3>
+        <div class="component-grid">
+            {% for component in components %}
+            <div class="component-card">
+                <a href="{% url 'showcase:component' component.category component.name %}">
+                    <h4>{{ component.name }}</h4>
+                    <p class="component-category">{{ component.category }}</p>
+                    <p class="component-description">{{ component.description|truncatechars:100 }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if not tailwind_tokens and not components %}
+    <div class="no-results">
+        <h3>No results found for "{{ query }}"</h3>
+        <p>Try searching for:</p>
+        <ul class="search-suggestions">
+            <li>Token names (e.g., "primary", "secondary")</li>
+            <li>Color values (e.g., "#3b82f6", "blue")</li>
+            <li>Token types (e.g., "color", "spacing", "typography")</li>
+            <li>CSS properties (e.g., "font-size", "padding")</li>
+            <li>Tailwind classes (e.g., "text-", "bg-", "p-")</li>
+        </ul>
+
+        <div class="search-actions">
+            <a href="{% url 'showcase:tailwind_tokens_index' %}" class="browse-link">
+                Browse all Tailwind tokens
+            </a>
+            <a href="{% url 'showcase:tokens_index' %}" class="browse-link">
+                Browse Style Dictionary tokens
+            </a>
+        </div>
+    </div>
+    {% endif %}
+{% else %}
+<div class="search-help">
+    <h3>Search Tailwind Design Tokens</h3>
+    <div class="search-tips">
+        <div class="tip-category">
+            <h4>Search by Name</h4>
+            <ul>
+                <li><code>primary</code> - Find tokens with "primary" in the name</li>
+                <li><code>blue</code> - Find all blue-related tokens</li>
+                <li><code>lg</code> - Find large-sized tokens</li>
+            </ul>
+        </div>
+
+        <div class="tip-category">
+            <h4>Search by Value</h4>
+            <ul>
+                <li><code>#3b82f6</code> - Find tokens with this exact color</li>
+                <li><code>1rem</code> - Find tokens with this spacing value</li>
+                <li><code>Inter</code> - Find tokens using Inter font</li>
+            </ul>
+        </div>
+
+        <div class="tip-category">
+            <h4>Search by Category</h4>
+            <ul>
+                <li><code>color</code> - Find all color tokens</li>
+                <li><code>spacing</code> - Find all spacing tokens</li>
+                <li><code>typography</code> - Find all typography tokens</li>
+            </ul>
+        </div>
+
+        <div class="tip-category">
+            <h4>Search by Usage</h4>
+            <ul>
+                <li><code>text-</code> - Find tokens used for text colors</li>
+                <li><code>bg-</code> - Find tokens used for backgrounds</li>
+                <li><code>p-</code> - Find tokens used for padding</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="browse-sections">
+        <a href="{% url 'showcase:tailwind_tokens_index' %}" class="browse-card">
+            <h4>🎨 Browse Tailwind Tokens</h4>
+            <p>Explore all Tailwind design tokens by category</p>
+        </a>
+
+        <a href="{% url 'showcase:tokens_index' %}" class="browse-card">
+            <h4>📋 Browse Style Dictionary Tokens</h4>
+            <p>Explore Style Dictionary JSON design tokens</p>
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.search-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 2rem;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 600px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-button {
+    padding: 0.75rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.search-button:hover {
+    background: #2563eb;
+}
+
+.search-results-header {
+    margin-top: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.results-summary {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.result-count {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.search-results-section {
+    margin-top: 2rem;
+}
+
+.search-results-section h3 {
+    margin-bottom: 1rem;
+    color: #1e293b;
+}
+
+.tailwind-token-card {
+    border-left: 3px solid #06b6d4;
+}
+
+.token-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.component-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.component-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+.component-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.component-card a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.component-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1e293b;
+}
+
+.component-category {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    color: #3b82f6;
+    font-weight: 500;
+}
+
+.component-description {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.match-indicator {
+    font-size: 0.75rem;
+    color: #059669;
+    background: #d1fae5;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
+.quick-usage {
+    margin-top: 0.5rem;
+}
+
+.quick-usage code {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.search-suggestions {
+    text-align: left;
+    max-width: 400px;
+    margin: 1rem auto;
+}
+
+.search-suggestions li {
+    margin-bottom: 0.5rem;
+}
+
+.search-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.browse-link {
+    padding: 0.75rem 1.5rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #475569;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.browse-link:hover {
+    background: #f1f5f9;
+    text-decoration: none;
+}
+
+.search-help {
+    padding: 2rem;
+}
+
+.search-tips {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.tip-category h4 {
+    margin-bottom: 1rem;
+    color: #1e293b;
+}
+
+.tip-category ul {
+    list-style: none;
+    padding: 0;
+}
+
+.tip-category li {
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.tip-category code {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    margin-right: 0.5rem;
+}
+
+.browse-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.browse-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+}
+
+.browse-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+}
+
+.browse-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1e293b;
+}
+
+.browse-card p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

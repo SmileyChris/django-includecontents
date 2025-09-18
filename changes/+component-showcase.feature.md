@@ -1,0 +1,1 @@
+Add comprehensive component showcase system with interactive prop editor, live preview, per-component YAML/TOML metadata sidecars, optional debug/login access gates, and a populated example project showcasing starter components

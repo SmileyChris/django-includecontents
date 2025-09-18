@@ -9,7 +9,7 @@ props:
   variant:
     description: Visual style treatment
     type: enum
-    values: [primary, secondary, ghost]
+    values: [primary, secondary, success, warning, error, ghost]
     default: primary
   size:
     description: Button sizing scale
@@ -19,6 +19,7 @@ props:
   icon_before:
     description: Optional glyph or emoji rendered before the label
     type: string
+    default: ""
   disabled:
     description: Render the button in a disabled state
     type: boolean
@@ -26,6 +27,12 @@ props:
   href:
     description: Convert the button to an anchor when provided
     type: string
+    default: ""
+  type:
+    description: Button element type attribute
+    type: enum
+    values: [button, submit, reset]
+    default: button
 examples:
   - name: Primary CTA
     description: Default button styling for primary actions.

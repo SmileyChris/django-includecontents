@@ -8,11 +8,15 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("search/", views.search_view, name="search"),
 
-    # Design tokens URLs
+    # Design tokens URLs (Style Dictionary)
     path("tokens/", views.tokens_index, name="tokens_index"),
     path("tokens/search/", views.tokens_search_view, name="tokens_search"),
     path("tokens/<str:category>/", views.token_category_view, name="token_category"),
-    path("tokens/<str:category>/<str:token_path>/", views.token_detail_view, name="token_detail"),
+
+    # Tailwind tokens URLs
+    path("tailwind/", views.tailwind_tokens_index, name="tailwind_tokens_index"),
+    path("tailwind/search/", views.tailwind_tokens_search_view, name="tailwind_tokens_search"),
+    path("tailwind/<str:category>/", views.tailwind_token_category_view, name="tailwind_token_category"),
 
     # Component URLs (must come after tokens to avoid conflicts)
     path("<str:category>/", views.category_view, name="category"),

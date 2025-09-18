@@ -84,6 +84,9 @@ class DesignTokenInfo:
     path: str  # dot-notation path like "color.primary.500"
     description: str = ""
     css_variable: str = ""  # CSS custom property name
+    source_type: str = "json"  # json, css, js, manual
+    source_file: str = ""  # path to source file
+    tailwind_class: str = ""  # generated Tailwind utility class
 
     @property
     def slug(self) -> str:
@@ -111,6 +114,37 @@ class DesignTokenInfo:
     def is_typography(self) -> bool:
         """Check if this is a typography token."""
         return self.type in ("fontFamily", "fontWeight", "fontSize", "lineHeight")
+
+    @property
+    def is_shadow(self) -> bool:
+        """Check if this is a shadow token."""
+        return self.type == "boxShadow" or "shadow" in self.type.lower() or self.category.lower() == "shadows"
+
+    @property
+    def is_opacity(self) -> bool:
+        """Check if this is an opacity token."""
+        return "opacity" in self.path.lower() or self.type == "opacity"
+
+    @property
+    def is_border_radius(self) -> bool:
+        """Check if this is a border radius token."""
+        return "borderradius" in self.path.lower() or "border-radius" in self.path.lower() or self.type == "borderRadius"
+
+    @property
+    def is_tailwind_token(self) -> bool:
+        """Check if this token came from Tailwind configuration."""
+        return self.source_type in ("css", "js") and self.tailwind_class
+
+    @property
+    def source_display_name(self) -> str:
+        """Human-readable source type name."""
+        source_names = {
+            "json": "Style Dictionary",
+            "css": "Tailwind @theme",
+            "js": "tailwind.config.js",
+            "manual": "Manual"
+        }
+        return source_names.get(self.source_type, self.source_type.title())
 
 
 @dataclass

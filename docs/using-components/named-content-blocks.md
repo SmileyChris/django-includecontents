@@ -2,6 +2,9 @@
 
 Named contents blocks allow you to pass multiple content sections to a single component, enabling more complex and flexible component designs.
 
+!!! tip "Preview content slots"
+    The [Showcase preview](../showcase/live-preview.md) surfaces named content areas automatically, so you can experiment with slots like `header` or `sidebar` without editing templates directly.
+
 ## Basic Syntax
 
 ```django

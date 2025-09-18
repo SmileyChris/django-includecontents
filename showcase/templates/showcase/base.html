@@ -11,8 +11,13 @@
 </head>
 <body>
     <div class="showcase-container">
+        <!-- Sidebar Toggle -->
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+            <span class="toggle-icon">☰</span>
+        </button>
+
         <!-- Sidebar Navigation -->
-        <aside class="showcase-sidebar">
+        <aside class="showcase-sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h1><a href="{% url 'showcase:index' %}">Component Library</a></h1>
                 <p class="sidebar-subtitle">Django IncludeContents</p>
@@ -24,23 +29,6 @@
                     <input type="search" name="q" placeholder="Search components..." value="{{ query|default:'' }}">
                 </form>
             </div>
-
-            <!-- Design Tokens -->
-            <nav class="sidebar-nav">
-                <h3><a href="{% url 'showcase:tokens_index' %}">Design Tokens</a></h3>
-                {% if token_categories %}
-                <ul class="category-list">
-                    {% for category in token_categories %}
-                    <li>
-                        <a href="{% url 'showcase:token_category' category.slug %}">
-                            {{ category.name }}
-                            <span class="count">{{ category.count }}</span>
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </nav>
 
             <!-- Component Categories -->
             <nav class="sidebar-nav">
@@ -56,6 +44,49 @@
                     {% endfor %}
                 </ul>
             </nav>
+
+            <!-- Design Tokens -->
+            <nav class="sidebar-nav">
+                <h3>Design Tokens</h3>
+
+                <!-- Style Dictionary Tokens -->
+                <div class="token-section">
+                    <h4><a href="{% url 'showcase:tokens_index' %}">Style Dictionary</a></h4>
+                    {% if token_categories %}
+                    <ul class="category-list">
+                        {% for category in token_categories %}
+                        <li>
+                            <a href="{% url 'showcase:token_category' category.slug %}">
+                                {{ category.name }}
+                                <span class="count">{{ category.count }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+
+                <!-- Tailwind Tokens -->
+                <div class="token-section">
+                    <h4><a href="{% url 'showcase:tailwind_tokens_index' %}">Tailwind</a></h4>
+                    {% if tailwind_token_categories %}
+                    <ul class="category-list">
+                        {% for category in tailwind_token_categories %}
+                        <li>
+                            <a href="{% url 'showcase:tailwind_token_category' category.slug %}">
+                                {{ category.name }}
+                                <span class="count">{{ category.count }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="no-tokens-message">
+                        <small>No Tailwind tokens found</small>
+                    </p>
+                    {% endif %}
+                </div>
+            </nav>
         </aside>
 
         <!-- Main Content -->
@@ -66,6 +97,7 @@
 
     <script src="{% static 'showcase/js/prop-editor.js' %}"></script>
     <script src="{% static 'showcase/js/copy-clipboard.js' %}"></script>
+    <script src="{% static 'showcase/js/sidebar-toggle.js' %}"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

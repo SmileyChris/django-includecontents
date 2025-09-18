@@ -66,31 +66,39 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
     - Basic Concepts: getting-started/basic-concepts.md
+    - Tooling & Integration:
+      - Prettier Formatting: tooling-integration/prettier-formatting.md
+      - Tailwind CSS: tooling-integration/tailwind-css.md
+      - Custom Engine: tooling-integration/custom-engine.md
+      - Multi-line Tags: tooling-integration/multiline-tags.md
+      - VS Code Setup: tooling-integration/vscode-setup.md
   - Using Components:
     - HTML Syntax: using-components/html-syntax.md
     - Template Tag Syntax: using-components/template-tag-syntax.md
     - Props & Attributes: using-components/props-and-attrs.md
     - Named Content Blocks: using-components/named-content-blocks.md
     - Wrapif Tag: using-components/wrapif-tag.md
-  - Building Components:
-    - Component Patterns: building-components/component-patterns.md
-    - Advanced Props: building-components/advanced-props.md
-    - CSS & Styling: building-components/css-and-styling.md
-    - Best Practices: building-components/best-practices.md
   - Icons: 
     - Overview: icons.md
     - Styling with CSS Variables: icons/styling-with-css-variables.md
-  - Tooling & Integration:
-    - Prettier Formatting: tooling-integration/prettier-formatting.md
-    - Tailwind CSS: tooling-integration/tailwind-css.md
-    - Custom Engine: tooling-integration/custom-engine.md
-    - Multi-line Tags: tooling-integration/multiline-tags.md
-    - VS Code Setup: tooling-integration/vscode-setup.md
-  - Reference:
-    - API Reference: reference/api-reference.md
-    - Migration Guide: reference/migration-guide.md
-    - Troubleshooting: reference/troubleshooting.md
-    - Development: reference/development.md
+  - Showcase:
+    - Overview: showcase/index.md
+    - Component Discovery: showcase/component-discovery.md
+    - Metadata Reference: showcase/metadata.md
+    - Live Preview: showcase/live-preview.md
+    - Customisation Tips: showcase/customisation.md
+  - Developing:
+    - Example Project: example-project.md
+    - Building Components:
+      - Component Patterns: building-components/component-patterns.md
+      - Advanced Props: building-components/advanced-props.md
+      - CSS & Styling: building-components/css-and-styling.md
+      - Best Practices: building-components/best-practices.md
+    - Reference:
+      - API Reference: reference/api-reference.md
+      - Migration Guide: reference/migration-guide.md
+      - Troubleshooting: reference/troubleshooting.md
+      - Development: reference/development.md
 
 extra:
   version:

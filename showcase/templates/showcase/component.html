@@ -184,13 +184,21 @@
         <div class="doc-content">{{ component.accessibility|linebreaks }}</div>
         {% endif %}
 
-        {% if component.related %}
+        {% if related_components %}
         <h3>Related Components</h3>
-        <ul class="related-list">
-            {% for related in component.related %}
-            <li><a href="#">{{ related }}</a></li>
+        <div class="related-components">
+            {% for related in related_components %}
+            <div class="related-component">
+                <a href="{% url 'showcase:component' related.category|lower|slugify related.slug %}" class="related-link">
+                    <strong>{{ related.name }}</strong>
+                    <span class="related-category">{{ related.category }}</span>
+                </a>
+                {% if related.description %}
+                <p class="related-description">{{ related.description }}</p>
+                {% endif %}
+            </div>
             {% endfor %}
-        </ul>
+        </div>
         {% elif not component.props and not component.best_practices and not component.accessibility and not component.examples %}
         <div class="doc-empty">
             <p>No metadata yet. Add a file next to <code>{{ component.path }}</code> (for example <code>{{ component.path|cut:'.html' }}.yaml</code>) with content such as:</p>
@@ -226,4 +234,69 @@ const componentData = {
     examples: {{ examples_json|safe }}
 };
 </script>
+
+<style>
+/* Related Components Styling */
+.related-components {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.related-component {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+.related-component:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.related-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.related-link strong {
+    color: #1e293b;
+    font-size: 1rem;
+    transition: color 0.2s;
+}
+
+.related-component:hover .related-link strong {
+    color: #6366f1;
+}
+
+.related-category {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.related-description {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.875rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .related-components {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+</style>
 {% endblock %}

@@ -2,6 +2,9 @@
 
 The HTML component syntax provides a modern, HTML-like way to use components in your Django templates. This feature requires the [custom template engine](../getting-started/installation.md#option-1-with-custom-template-engine-recommended).
 
+!!! tip "Explore in the Showcase"
+    Open the [Showcase explorer](../showcase/index.md) to browse live examples of HTML component tags, tweak props, and copy the generated template snippets.
+
 ## Basic Syntax
 
 ```html
