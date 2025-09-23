@@ -2,7 +2,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/django-includecontents)](https://pypi.org/project/django-includecontents/)
 [![Django Support](https://img.shields.io/pypi/djversions/django-includecontents.svg)](https://pypi.org/project/django-includecontents/)
 
-Component-like Django template tags with HTML syntax support. Works with both Django templates and Jinja2.
+Component-like Django template tags with HTML syntax support. **Full feature parity** between Django templates and Jinja2.
 
 ## Features
 
@@ -140,11 +140,29 @@ If you prefer traditional Django template syntax:
 {% endwrapif %}
 ```
 
+### Modern JavaScript Framework Integration
+
+```html
+<!-- Vue.js and Alpine.js attributes work seamlessly -->
+<include:button @click="handleClick()" :disabled="isLoading">
+    Submit
+</include:button>
+
+<include:modal x-on:click="open = false" x-show="open">
+    Modal content
+</include:modal>
+
+<!-- Nested attributes for complex components -->
+<include:form inner.class="form-control" button.@click="submit()">
+    Form content
+</include:form>
+```
+
 ### Dynamic Components
 
 ```html
 <include:button variant="primary" {disabled} class:loading="{{ is_processing }}">
-    {% if is_processing %}Processing...{% else %}Submit{% endif %}  
+    {% if is_processing %}Processing...{% else %}Submit{% endif %}
 </include:button>
 ```
 

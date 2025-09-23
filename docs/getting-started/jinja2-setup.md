@@ -1,16 +1,20 @@
 # Jinja2 Setup
 
-Django IncludeContents provides full support for Jinja2 templates through a custom extension. This allows you to use components, HTML syntax, and all major features with Jinja2.
+Django IncludeContents provides **complete feature parity** with Django templates through a custom Jinja2 extension. All modern component features work seamlessly with Jinja2.
 
-!!! info "Feature Compatibility"
-    Jinja2 support includes:
+!!! success "Full Feature Parity Achieved"
+    Jinja2 support includes all features from Django templates:
 
     - ✅ **Component system**: Full `{% includecontents %}` tag support
-    - ✅ **HTML component syntax**: `<include:component>` via preprocessing
+    - ✅ **HTML component syntax**: `<include:component>` with full preprocessing
+    - ✅ **JavaScript framework attributes**: `@click`, `v-on:`, `x-on:`, `:bind` syntax
+    - ✅ **Nested attribute syntax**: `inner.class`, `button.type`, `inner.@click`
+    - ✅ **Advanced class manipulation**: `class:not`, `class="& base"`, `class="additional &"`
+    - ✅ **HTML content blocks**: `<content:name>Content</content:name>` syntax
     - ✅ **Props and validation**: Required prop validation and defaults
     - ✅ **Enum prop validation**: Full validation with helpful error messages
-    - ✅ **Named content blocks**: `{% contents %}` and `<content:name>`
-    - ✅ **Attrs system**: Undefined attribute handling
+    - ✅ **Named content blocks**: Traditional `{% contents %}` syntax
+    - ✅ **Attrs system**: Undefined attribute handling with grouping
     - ✅ **Context isolation**: Components render in isolated contexts
     - ✅ **Icon system**: Full support including HTML syntax `<icon:name>`
     - ❌ **WrapIf tag**: Not available (use Jinja2 conditionals instead)
@@ -212,6 +216,78 @@ Support for named content blocks works identically to Django:
         <p>&copy; 2024 My Company</p>
     </content:footer>
 </include:layout>
+```
+
+## Modern JavaScript Framework Integration
+
+The Jinja2 extension now supports all modern JavaScript framework attributes:
+
+### Vue.js Integration
+
+```html
+<!-- Vue.js event handlers -->
+<include:button @click="handleClick()" @keyup.enter="submitForm()">
+    Click me
+</include:button>
+
+<!-- Vue.js directives -->
+<include:card
+    v-on:submit="onSubmit"
+    v-model="inputValue"
+    v-bind:class="{ 'active': isActive }"
+>
+    Card content
+</include:card>
+
+<!-- Vue.js bind shorthand -->
+<include:component :class="dynamicClasses" :disabled="isDisabled">
+    Dynamic component
+</include:component>
+```
+
+### Alpine.js Integration
+
+```html
+<!-- Alpine.js event handlers -->
+<include:button x-on:click="open = !open" x-data="{ open: false }">
+    Toggle
+</include:button>
+
+<!-- Alpine.js directives -->
+<include:modal x-show="showModal" x-transition>
+    Modal content
+</include:modal>
+```
+
+### Nested Attributes
+
+```html
+<!-- Pass attributes to nested elements -->
+<include:form-with-button
+    inner.class="form-control"
+    button.type="submit"
+    button.@click="handleSubmit()"
+>
+    Form content
+</include:form-with-button>
+```
+
+### Advanced Class Manipulation
+
+```html
+<!-- Conditional classes -->
+<include:card class:not="disabled ? 'active'" variant="primary">
+    Conditional styling
+</include:card>
+
+<!-- Class append/prepend -->
+<include:button class="& btn-primary" size="large">
+    Base classes with extensions
+</include:button>
+
+<include:alert class="custom-alert &" type="warning">
+    Custom classes with base
+</include:alert>
 ```
 
 ## Props and Attributes
@@ -417,6 +493,26 @@ Create a simple test to verify everything works:
             <small>Footer content</small>
         </content:footer>
     </include:card>
+
+    <!-- Test JavaScript framework attributes -->
+    <include:button @click="alert('Clicked!')" v-on:mouseover="showTooltip()">
+        Vue.js Button
+    </include:button>
+
+    <!-- Test Alpine.js attributes -->
+    <include:toggle x-on:click="open = !open" x-data="{ open: false }">
+        Alpine.js Toggle
+    </include:toggle>
+
+    <!-- Test nested attributes -->
+    <include:form inner.class="form-control" button.type="submit">
+        Form with nested attributes
+    </include:form>
+
+    <!-- Test advanced class manipulation -->
+    <include:alert class="custom-alert &" class:not="dismissed ? 'visible'">
+        Alert with class manipulation
+    </include:alert>
 </body>
 </html>
 ```
