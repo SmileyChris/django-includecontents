@@ -69,13 +69,17 @@ class IncludeContentsExtension(Extension):
             if parser.stream.current.type == "comma":
                 parser.stream.skip()
                 continue
+
+            # Parse attribute name (preprocessing handles special characters)
             key_token = parser.stream.expect("name")
+            key_name = key_token.value
+
             if parser.stream.current.test("assign"):
                 parser.stream.skip()
                 value = parser.parse_expression()
             else:
-                value = nodes.Const(True, lineno=key_token.lineno)
-            kwargs.append(nodes.Keyword(key_token.value, value, lineno=value.lineno))
+                value = nodes.Const(True, lineno=lineno)
+            kwargs.append(nodes.Keyword(key_name, value, lineno=lineno))
 
         body = parser.parse_statements(("name:endincludecontents",), drop_needle=True)
         call = self.call_method(
@@ -108,6 +112,7 @@ class IncludeContentsExtension(Extension):
         node = nodes.CallBlock(call, [], [], body)
         node.set_lineno(lineno)
         return node
+
 
     # ------------------------------------------------------------------
     # Runtime helpers
@@ -148,14 +153,17 @@ class IncludeContentsExtension(Extension):
 
         if props:
             for key, value in attributes.items():
-                if key in props:
-                    prop_spec = props[key]
-                    prop_values[key] = value
+                # Convert normalized attribute names back to original form
+                original_key = self._denormalize_attribute_name(key)
+
+                if original_key in props:
+                    prop_spec = props[original_key]
+                    prop_values[original_key] = value
                     if isinstance(value, bool) and value:
-                        attrs_obj[key] = True
+                        attrs_obj[original_key] = True
 
                     # Validate enum values
-                    enum_info = enum_specs.get(key)
+                    enum_info = enum_specs.get(original_key)
                     if enum_info:
                         allowed_values, _ = enum_info
                         for enum_value in normalize_enum_values(value):
@@ -166,18 +174,18 @@ class IncludeContentsExtension(Extension):
 
                                 # Create a helpful example
                                 first_value = allowed_values[0] if allowed_values else "value"
-                                example = f'<include:{identifier.replace("components/", "").replace(".html", "")} {key}="{first_value}">'
+                                example = f'<include:{identifier.replace("components/", "").replace(".html", "")} {original_key}="{first_value}">'
 
                                 raise TemplateRuntimeError(
-                                    f'Invalid value "{enum_value}" for attribute "{key}" '
+                                    f'Invalid value "{enum_value}" for attribute "{original_key}" '
                                     f"in component '{identifier}'. Allowed values: {allowed}.{suggestion_text}\n"
                                     f"Example: {example}"
                                 )
-                            flag_key = build_enum_flag_key(key, enum_value)
+                            flag_key = build_enum_flag_key(original_key, enum_value)
                             if flag_key:
                                 prop_values[flag_key] = True
                 else:
-                    attrs_obj[key] = value
+                    attrs_obj[original_key] = value
 
             for name, spec in props.items():
                 if name not in prop_values:
@@ -195,9 +203,12 @@ class IncludeContentsExtension(Extension):
                         )
                     prop_values[name] = spec.clone_default()
         else:
-            prop_values = dict(attributes)
+            # Convert normalized attribute names back to original form
+            prop_values = {}
             for key, value in attributes.items():
-                attrs_obj[key] = value
+                original_key = self._denormalize_attribute_name(key)
+                prop_values[original_key] = value
+                attrs_obj[original_key] = value
 
         template = self.environment.get_template(identifier)
         parent_vars = context.get_all()
@@ -273,6 +284,81 @@ class IncludeContentsExtension(Extension):
         if not identifier.endswith(".html") and "/" not in identifier:
             identifier = f"components/{identifier}.html"
         return identifier
+
+    def _denormalize_attribute_name(self, name: str) -> str:
+        """Convert normalized attribute names back to their original form.
+
+        This reverses the normalization done in preprocessing:
+        - _at_click -> @click
+        - _bind_class -> :class
+        - v_on_click -> v-on:click
+        - x_on_click_stop -> x-on:click.stop
+        - inner_class -> inner.class
+        """
+        # Handle @click attributes
+        if name.startswith("_at_"):
+            return "@" + name[4:].replace("_", ".")
+
+        # Handle :bind attributes
+        if name.startswith("_bind_"):
+            return ":" + name[6:].replace("_", ".")
+
+        # Handle v-on:, v-model, etc.
+        if name.startswith("v_"):
+            # v_on_click_stop -> v-on:click.stop
+            parts = name.split("_")
+            if len(parts) >= 3 and parts[1] in ("on", "bind", "model", "show", "if", "for"):
+                directive = f"v-{parts[1]}"
+                if parts[1] in ("on", "bind") and len(parts) >= 3:
+                    # v-on:click or v-bind:class
+                    event_or_prop = parts[2]
+                    modifiers = ".".join(parts[3:]) if len(parts) > 3 else ""
+                    result = f"{directive}:{event_or_prop}"
+                    if modifiers:
+                        result += f".{modifiers}"
+                    return result
+                else:
+                    # v-model, v-show, etc.
+                    suffix = "_".join(parts[2:]) if len(parts) > 2 else ""
+                    result = directive
+                    if suffix:
+                        result += f".{suffix.replace('_', '.')}"
+                    return result
+
+        # Handle x-on:, x-data, etc. (Alpine.js)
+        if name.startswith("x_"):
+            parts = name.split("_")
+            if len(parts) >= 3 and parts[1] in ("on", "data", "show", "if", "for", "text", "html"):
+                directive = f"x-{parts[1]}"
+                if parts[1] == "on" and len(parts) >= 3:
+                    # x-on:click
+                    event = parts[2]
+                    modifiers = ".".join(parts[3:]) if len(parts) > 3 else ""
+                    result = f"{directive}:{event}"
+                    if modifiers:
+                        result += f".{modifiers}"
+                    return result
+                else:
+                    # x-data, x-show, etc.
+                    suffix = "_".join(parts[2:]) if len(parts) > 2 else ""
+                    result = directive
+                    if suffix:
+                        result += f".{suffix.replace('_', '.')}"
+                    return result
+
+        # Handle nested attributes with @ (inner_at_click -> inner.@click)
+        if "_at_" in name and not name.startswith("_at_"):
+            return name.replace("_at_", ".@").replace("_", ".")
+
+        # Handle nested attributes (inner_class -> inner.class)
+        if "_" in name and not (name.startswith("v_") or name.startswith("x_") or name.startswith("_")):
+            return name.replace("_", ".")
+
+        # Handle regular kebab-case attributes
+        if "_" in name:
+            return name.replace("_", "-")
+
+        return name
 
 
 __all__ = ["IncludeContentsExtension"]

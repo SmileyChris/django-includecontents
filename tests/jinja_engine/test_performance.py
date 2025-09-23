@@ -93,7 +93,7 @@ class TestNestedComponentPerformance:
         <include:complex-component
             class="btn btn-{{ variant }} {{ size }} {{ theme }}"
             data-config="{{ config | tojson | escape }}"
-            style="{% if width %}width: {{ width }}px;{% endif %} {% if height %}height: {{ height }}px;{% endif %}"
+            style="{{{% if width %}}width: {{{{ width }}}}px;{{{% endif %}}} {{{% if height %}}height: {{{{ height }}}}px;{{{% endif %}}}}"
             @click="handleClick($event, '{{ item_id }}', {{ item_data | tojson }})"
             v-on:mouseover="showTooltip($event, { title: '{{ title | escape }}', content: '{{ description | escape }}' })"
             :class="{ 'active': {{ is_active | lower }}, 'disabled': {{ is_disabled | lower }}, 'loading': {{ is_loading | lower }} }"
@@ -133,9 +133,9 @@ class TestNestedComponentPerformance:
             <content:section-{i}>
                 <h{i % 6 + 1}>Section {i}</h{i % 6 + 1}>
                 <p>Content for section {i} with {{{{ "variable_{i}".format(i=i) }}}}.</p>
-                {% for item in items_{i} %}
-                    <div class="item-{i}">{{ item.name }}</div>
-                {% endfor %}
+                {{% for item in items_{i} %}}
+                    <div class="item-{i}">{{{{ item.name }}}}</div>
+                {{% endfor %}}
             </content:section-{i}>
             ''')
 
@@ -323,7 +323,7 @@ class TestMemoryPerformance:
                 id="{i}"
                 class="item-{i % 10}"
                 data-value="{{{{ values[{i}] }}}}"
-                {% if i % 2 %}enabled{% endif %}>
+                {{{% if i % 2 %}}enabled{{{% endif %}}}>
                 Item content {i}
             </include:item-{i}>
             ''')

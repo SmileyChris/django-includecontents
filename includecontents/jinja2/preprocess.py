@@ -11,7 +11,12 @@ class ComponentPreprocessor:
     """Translate HTML-flavoured component syntax into Jinja2 tags."""
 
     component_pattern = re.compile(
-        r"<(?P<closing>/)?(?P<prefix>include|html-component|icon):(?P<name>[\w-]+)(?P<attrs>[^>]*)?(?P<selfclosing>/?)>",
+        r"<(?P<closing>/)?(?P<prefix>include|html-component|icon):(?P<name>[\w-]+)(?P<attrs>(?:[^>\"']|\"[^\"]*\"|'[^']*')*)?(?P<selfclosing>/?)>",
+        re.IGNORECASE,
+    )
+
+    content_pattern = re.compile(
+        r"<(?P<closing>/)?content:(?P<name>[\w-]+)(?P<attrs>[^>]*)?(?P<selfclosing>/?)>",
         re.IGNORECASE,
     )
 
@@ -22,6 +27,9 @@ class ComponentPreprocessor:
     def process(self, source: str) -> str:
         """Convert custom HTML component tags into Jinja statements."""
 
+        # First process content blocks
+        source = self.content_pattern.sub(self._replace_content, source)
+        # Then process components
         return self.component_pattern.sub(self._replace_component, source)
 
     # -- helpers ---------------------------------------------------------
@@ -54,13 +62,25 @@ class ComponentPreprocessor:
             return f"{tag}{{% endincludecontents %}}"
         return tag
 
+    def _replace_content(self, match: re.Match[str]) -> str:
+        """Replace <content:name> tags with {% contents name %} tags."""
+        closing = bool(match.group("closing"))
+        name = match.group("name")
+
+        if closing:
+            return "{% endcontents %}"
+        else:
+            return f"{{% contents \"{name}\" %}}"
+
     def _parse_attributes(self, chunk: str) -> List[Tuple[str, str]]:
         attributes: List[Tuple[str, str]] = []
         for attr in self.attr_pattern.finditer(chunk):
             name = attr.group("name")
             raw_value = attr.group("value")
-            if name.startswith(":"):
-                name = name[1:]
+
+            # Convert special attribute names to valid Jinja2 identifiers
+            name = self._normalize_attribute_name(name)
+
             if raw_value is None:
                 attributes.append((name, "True"))
                 continue
@@ -77,6 +97,32 @@ class ComponentPreprocessor:
                 inner = value
             attributes.append((name, inner))
         return attributes
+
+    def _normalize_attribute_name(self, name: str) -> str:
+        """Convert special attribute names to valid Jinja2 identifiers.
+
+        Examples:
+        - @click -> _at_click
+        - v-on:click -> v_on_click
+        - x-on:click.stop -> x_on_click_stop
+        - :class -> _bind_class
+        - inner.class -> inner_class
+        - inner.@click -> inner_at_click
+        """
+        # Handle @ prefix (Vue/Alpine shorthand)
+        if name.startswith("@"):
+            name = "_at_" + name[1:]
+
+        # Handle : prefix (bind shorthand)
+        elif name.startswith(":"):
+            name = "_bind_" + name[1:]
+
+        # Replace special characters with underscores
+        # Handle nested @, like inner.@click -> inner_at_click
+        name = name.replace(".@", "_at_")
+        name = name.replace(":", "_").replace("-", "_").replace(".", "_").replace("@", "_at_")
+
+        return name
 
     def _build_component_tag(self, name: str, attrs: Iterable[Tuple[str, str]]) -> str:
         parts = [f'{{% includecontents "{name}"']

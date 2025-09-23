@@ -275,16 +275,15 @@ class TestContentBlockEdgeCases:
 
                         {% include "partials/item-details.html" %}
 
-                        {% with processed_content=item.content|markdown %}
-                            {{ processed_content|safe }}
-                        {% endwith %}
+                        {% set processed_content=item.content %}
+                            {{ processed_content }}
                     </div>
                 {% endfor %}
             </content:body>
 
             <content:footer>
                 {% if user.is_authenticated %}
-                    <a href="{% url 'edit' item.id %}">Edit</a>
+                    <a href="/edit/{{ item.id }}/">Edit</a>
                 {% endif %}
             </content:footer>
         </include:complex-card>
