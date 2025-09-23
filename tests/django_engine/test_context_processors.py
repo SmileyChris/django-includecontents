@@ -23,13 +23,13 @@ urlpatterns = [
 
 
 @override_settings(
-    ROOT_URLCONF='tests.core.test_context_processors',
+            ROOT_URLCONF='tests.django_engine.test_context_processors',
     TEMPLATES=[{
         "BACKEND": "includecontents.django.DjangoTemplates",
         "DIRS": ["tests/templates"],
         "OPTIONS": {
             "context_processors": [
-                "tests.core.test_context_processors.simple_context_processor",
+                "tests.django_engine.test_context_processors.simple_context_processor",
             ],
         },
     }]
@@ -56,5 +56,4 @@ class ContextProcessorTest(TestCase):
         # Both outer and inner components should have access to processor_var
         self.assertIn("Outer: from_processor", content)
         self.assertIn("Inner: from_processor", content)
-
 

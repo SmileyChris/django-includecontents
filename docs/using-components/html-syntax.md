@@ -1,6 +1,12 @@
 # HTML Component Syntax
 
-The HTML component syntax provides a modern, HTML-like way to use components in your Django templates. This feature requires the [custom template engine](../getting-started/installation.md#option-1-with-custom-template-engine-recommended).
+The HTML component syntax provides a modern, HTML-like way to use components in your templates.
+
+!!! info "Template Engine Support"
+    HTML component syntax works with both template engines:
+
+    - **Django**: Requires the [custom template engine](../getting-started/installation.md#option-1-django-templates-with-custom-engine-recommended)
+    - **Jinja2**: Automatic preprocessing via extension (see [Jinja2 Setup](../getting-started/jinja2-setup.md))
 
 ## Basic Syntax
 

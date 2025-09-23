@@ -74,7 +74,7 @@ TemplateSyntaxError: Malformed template tag at token 'includecontents'
    {% includecontents %}
        Content
    {% endincludecontents %}
-   
+
    <!-- ✅ Correct -->
    {% includecontents "components/card.html" %}
        Content
@@ -85,10 +85,135 @@ TemplateSyntaxError: Malformed template tag at token 'includecontents'
    ```html
    <!-- ❌ Wrong -->
    <include:card title=Hello World>
-   
+
    <!-- ✅ Correct -->
    <include:card title="Hello World">
    ```
+
+### Enhanced Error Messages
+
+Django IncludeContents provides enhanced error messages to help you quickly identify and fix issues:
+
+#### Props Definition Errors
+
+**Enhanced props error messages include:**
+- Exact line number where the error occurs
+- Specific problematic token
+- Common issues and solutions
+- Concrete examples of correct syntax
+
+**Example error:**
+```
+Props parsing error: Invalid prop name 'invalid name'. Prop names must be valid Python identifiers.
+  In template line 2: {# props "invalid name"=value #}
+  Problem with: 'invalid name=value'
+
+Common issues:
+  - Prop names must be valid Python identifiers (no spaces, special chars)
+  - String values should be quoted: name="value"
+  - Lists should use brackets: items=[1,2,3]
+  - Use commas or spaces to separate props: prop1=value1 prop2=value2
+
+Examples:
+  {# props title required_field=True items=[1,2,3] #}
+  {# props variant=primary,secondary,accent size="large" #}
+```
+
+**Common props definition errors:**
+
+1. **Invalid prop names with spaces:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props "user name"=default_value #}
+
+   <!-- ✅ Correct -->
+   {# props user_name=default_value #}
+   ```
+
+2. **Invalid prop names with special characters:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props prop-name=value #}
+
+   <!-- ✅ Correct -->
+   {# props prop_name=value #}
+   ```
+
+3. **Malformed list syntax:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props items=[1,2,3 #}
+
+   <!-- ✅ Correct -->
+   {# props items=[1,2,3] #}
+   ```
+
+4. **Unquoted string values with spaces:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props title=hello world #}
+
+   <!-- ✅ Correct -->
+   {# props title="hello world" #}
+   ```
+
+#### Enum Validation Errors
+
+**Enhanced enum error messages with suggestions:**
+
+**Example error:**
+```
+Invalid value "primari" for attribute "variant".
+Allowed values: 'primary', 'secondary', 'accent'. Did you mean 'primary'?
+Example: <include:button variant="primary">
+```
+
+**Common enum errors:**
+
+1. **Typos in enum values:**
+   ```html
+   <!-- ❌ Wrong -->
+   <include:button variant="primari">  <!-- typo -->
+
+   <!-- ✅ Correct -->
+   <include:button variant="primary">
+   ```
+
+2. **Case sensitivity issues:**
+   ```html
+   <!-- ❌ Wrong -->
+   <include:button variant="PRIMARY">  <!-- wrong case -->
+
+   <!-- ✅ Correct -->
+   <include:button variant="primary">
+   ```
+
+3. **Using underscores instead of hyphens:**
+   ```html
+   <!-- ❌ Wrong -->
+   <include:button variant="dark_mode">  <!-- underscore -->
+
+   <!-- ✅ Correct -->
+   <include:button variant="dark-mode">  <!-- hyphen -->
+   ```
+
+#### Missing Template Errors
+
+**Enhanced template not found errors include:**
+- Clear component identification
+- Specific template paths searched
+- Actionable suggestions for fixing
+
+**Example error:**
+```
+Component template not found: <include:my-component>
+Looked for: components/my-component.html
+
+Suggestions:
+  1. Create template: templates/components/my-component.html
+  2. Check TEMPLATES['DIRS'] setting includes your template directory
+  3. For app-based components: create template in <app>/templates/components/
+```
 
 ## Component Issues
 

@@ -2,6 +2,14 @@
 
 The custom Django template engine supports multi-line template tags, allowing you to break long tags across multiple lines for better readability and maintainability.
 
+!!! info "Template Engine Support"
+    Multi-line template tag support:
+
+    - **Django**: Requires the custom template engine (`includecontents.django.DjangoTemplates`)
+    - **Jinja2**: Native support built-in (no configuration needed!)
+
+    Standard Django template engine does not support multi-line tags.
+
 ## Basic Multi-line Support
 
 ### Standard Django Tags

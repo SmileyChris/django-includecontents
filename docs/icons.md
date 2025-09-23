@@ -2,6 +2,14 @@
 
 The django-includecontents icons system generates SVG sprite sheets from both Iconify icons and your local SVG files.
 
+!!! info "Template Engine Support"
+    The icon system supports both template engines:
+
+    - **Django Templates**: Both `{% icon "home" %}` tags and `<icon:home />` HTML syntax
+    - **Jinja2**: HTML syntax `<icon:home />` via preprocessing (icon template tags coming soon)
+
+    Icon sprite generation works identically for both engines.
+
 ## How Component Names Work
 
 When you configure icons, they're automatically given component names based on simple rules:

@@ -2,7 +2,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/django-includecontents)](https://pypi.org/project/django-includecontents/)
 [![Django Support](https://img.shields.io/pypi/djversions/django-includecontents.svg)](https://pypi.org/project/django-includecontents/)
 
-Component-like Django template tags with HTML syntax support.
+Component-like Django template tags with HTML syntax support. Works with both Django templates and Jinja2.
 
 ## Features
 
@@ -23,16 +23,39 @@ pip install django-includecontents
 
 ### Setup
 
-Replace your Django template backend in `settings.py`:
+Choose your template engine:
 
-```python
-TEMPLATES = [
-    {
-        'BACKEND': 'includecontents.django.DjangoTemplates',
-        # ... rest of your template config
-    },
-]
-```
+=== "Django Templates"
+
+    Replace your Django template backend in `settings.py`:
+
+    ```python
+    TEMPLATES = [
+        {
+            'BACKEND': 'includecontents.django.DjangoTemplates',
+            # ... rest of your template config
+        },
+    ]
+    ```
+
+=== "Jinja2"
+
+    Add the Jinja2 extension in `settings.py`:
+
+    ```python
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.jinja2.Jinja2',
+            'OPTIONS': {
+                'extensions': [
+                    'includecontents.jinja2.IncludeContentsExtension',
+                ],
+            },
+        },
+    ]
+    ```
+
+    See [Jinja2 Setup](https://smileychris.github.io/django-includecontents/getting-started/jinja2-setup/) for complete instructions.
 
 ### Create a Component
 
@@ -82,7 +105,8 @@ If you prefer traditional Django template syntax:
 📚 **[Full Documentation](https://smileychris.github.io/django-includecontents/)**
 
 - **[Getting Started](https://smileychris.github.io/django-includecontents/getting-started/installation/)** - Installation and setup
-- **[Quick Start Guide](https://smileychris.github.io/django-includecontents/getting-started/quickstart/)** - Get started in 5 minutes  
+- **[Jinja2 Setup](https://smileychris.github.io/django-includecontents/getting-started/jinja2-setup/)** - Jinja2 template engine setup
+- **[Quick Start Guide](https://smileychris.github.io/django-includecontents/getting-started/quickstart/)** - Get started in 5 minutes
 - **[HTML Components](https://smileychris.github.io/django-includecontents/using-components/html-syntax/)** - Modern component syntax
 - **[Best Practices](https://smileychris.github.io/django-includecontents/building-components/best-practices/)** - Building great components
 

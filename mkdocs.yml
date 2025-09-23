@@ -64,6 +64,7 @@ nav:
   - Home: index.md
   - Getting Started:
     - Installation: getting-started/installation.md
+    - Jinja2 Setup: getting-started/jinja2-setup.md
     - Quick Start: getting-started/quickstart.md
     - Basic Concepts: getting-started/basic-concepts.md
   - Using Components:

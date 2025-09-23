@@ -74,6 +74,15 @@ Ready to add component-like functionality to your Django templates?
 [Get Started →](getting-started/installation.md){ .md-button .md-button--primary }
 [Quick Start Guide →](getting-started/quickstart.md){ .md-button }
 
+## Template Engine Support
+
+Django IncludeContents supports both Django templates and Jinja2! Choose the approach that works best for your project:
+
+- **Django Templates**: Full native support with HTML component syntax
+- **Jinja2**: Complete feature parity via extension system
+
+See our [Jinja2 Setup Guide](getting-started/jinja2-setup.md) for Jinja2 installation and usage.
+
 ## Why Django IncludeContents?
 
 ### Without Django IncludeContents

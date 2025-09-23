@@ -2,6 +2,14 @@
 
 Components can define props (properties) to specify which attributes they expect and how to handle undefined attributes. This system provides validation, defaults, and flexible attribute handling.
 
+!!! info "Template Engine Support"
+    The props system works with both template engines:
+
+    - **Django**: Full support with template parsing and validation
+    - **Jinja2**: Full support via shared props registry system
+
+    Props syntax is identical across both engines.
+
 ## Defining Props
 
 Define props in a comment at the top of your component template:

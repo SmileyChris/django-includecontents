@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+  <html>                                                                                                                                                                   │
+ <head><title>Request Nested Test</title></head>                                                                                                                          │
+ <body>                                                                                                                                                                   │
+ <include:context-display>                                                                                                                                                │
+     <include:context-display>                                                                                                                                            │
+ user_agent: {{ request.META.HTTP_USER_AGENT }}                                                                                                                           │
+ method: {{ request.method }}                                                                                                                                             │
+     </include:context-display>                                                                                                                                           │
+ </include:context-display>                                                                                                                                               │
+ </body>                                                                                                                                                                  │
+ </html> 

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head><title>Processor Slots Test</title></head>
+<body>
+<include:slot-tester>
+    <content:header>user_type={{ user_type }}</content:header>
+    <content:footer>app_version={{ app_version }}</content:footer>{% with value=slot_data %}{{ value }}{% endwith %}
+</include:slot-tester>
+</body>
+</html>

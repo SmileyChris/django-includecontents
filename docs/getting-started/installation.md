@@ -6,6 +6,7 @@ Django IncludeContents can be installed and configured in multiple ways dependin
 
 - Python 3.8+
 - Django 3.2+
+- Django templates OR Jinja2 templates (both supported!)
 
 ## Install the Package
 
@@ -15,9 +16,9 @@ pip install django-includecontents
 
 ## Configuration Options
 
-You have two options for using Django IncludeContents:
+Choose your template engine and configuration:
 
-### Option 1: With Custom Template Engine (Recommended)
+### Option 1: Django Templates with Custom Engine (Recommended)
 
 This option enables the HTML component syntax (`<include:component>`) and automatically loads the template tags.
 
@@ -66,6 +67,33 @@ Then load the template tags in your templates:
 {% load includecontents %}
 ```
 
+### Option 3: Jinja2 Templates
+
+For Jinja2 users, register the extension in your Jinja2 environment:
+
+```python
+# settings.py
+from jinja2 import Environment
+from includecontents.jinja2 import IncludeContentsExtension
+
+def environment(**options):
+    env = Environment(extensions=[IncludeContentsExtension], **options)
+    return env
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'environment': 'myproject.jinja2.environment',
+        },
+    },
+]
+```
+
+For detailed Jinja2 setup, see the [Jinja2 Setup Guide](jinja2-setup.md).
+
 ## Verify Installation
 
 Create a simple test to verify everything is working:
@@ -97,6 +125,25 @@ Create a simple test to verify everything is working:
     {% includecontents "hello.html" name="World" %}
         Welcome to Django IncludeContents!
     {% endincludecontents %}
+    ```
+
+=== "Jinja2 Setup"
+
+    **templates/components/hello.html**
+    ```html
+    <div>Hello, {{ name }}! {{ contents }}</div>
+    ```
+
+    **In your template**
+    ```jinja2
+    {% includecontents "hello" name="World" %}
+        Welcome to Django IncludeContents!
+    {% endincludecontents %}
+
+    {# HTML syntax also works: #}
+    <include:hello name="World">
+        Welcome to Django IncludeContents!
+    </include:hello>
     ```
 
 Both should output:
