@@ -3,7 +3,7 @@ name = "django-includecontents"
 description = "Django includecontents component-like tag"
 authors = [{ name = "Chris Beaven", email = "smileychris@gmail.com" }]
 dynamic = ["version"]
-dependencies = ["django", "packaging"]
+dependencies = ["django", "packaging", "pyyaml"]
 requires-python = ">=3.8"
 readme = "README.md"
 classifiers = [
