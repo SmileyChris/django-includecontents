@@ -378,13 +378,15 @@ Then use icons in Jinja2 templates:
 
 ### Django Context Processors
 
-Django context processors work with Jinja2 when configured properly:
+!!! info "Context Processors Discouraged"
+    Django's documentation discourages using context processors with Jinja2. Since Jinja2 can call functions directly (unlike Django templates), it's better to add functions to the global environment instead.
+
+**Recommended approach:**
 
 **myproject/jinja2.py**
 ```python
-from django.contrib.auth.context_processors import auth
-from django.contrib.messages.context_processors import messages
-from django.template.context_processors import request
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.urls import reverse
 from jinja2 import Environment
 
 
@@ -393,9 +395,66 @@ def environment(**options):
     env.globals.update({
         'static': staticfiles_storage.url,
         'url': reverse,
+        # Add functions here instead of using context processors
     })
     return env
 ```
+
+### CSRF Token Handling
+
+!!! success "Automatic CSRF Protection"
+    Django's Jinja2 backend automatically provides CSRF token variables in all templates when rendered with a request context. **No manual configuration needed!**
+
+Django automatically adds these variables to your Jinja2 template context:
+
+- `{{ csrf_token }}` - The CSRF token value
+- `{{ csrf_input }}` - Complete hidden input field (recommended)
+
+**In your components:**
+
+```html
+{# components/form.html #}
+<form method="post" action="{{ action }}">
+    {{ csrf_input }}  <!-- Automatic CSRF protection -->
+    {{ contents }}
+    <button type="submit">Submit</button>
+</form>
+```
+
+**Usage:**
+
+```html
+<include:form action="/contact/">
+    <input name="email" placeholder="Email" required>
+    <textarea name="message" placeholder="Message" required></textarea>
+</include:form>
+```
+
+**Component Context Isolation:**
+
+CSRF tokens are automatically preserved in components even with context isolation enabled:
+
+```html
+{# components/secure-form.html #}
+{# props title #}
+<div class="form-wrapper">
+    <h2>{{ title }}</h2>
+    <form method="post">
+        {{ csrf_input }}  <!-- Always available -->
+        {{ contents }}
+    </form>
+</div>
+```
+
+The IncludeContents extension automatically preserves these essential Django variables:
+
+- `request` - Current HTTP request
+- `csrf_token` - CSRF token value
+- `csrf_input` - CSRF input field
+- `user` - Current authenticated user
+- `perms` - User permissions
+- `messages` - Django messages framework
+- `LANGUAGES` & `LANGUAGE_CODE` - Internationalization
 
 ### Passing Variables to Components
 

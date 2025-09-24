@@ -10,7 +10,7 @@ This document tracks coverage differences between the Django and Jinja test suit
 - Performance and caching optimizations
 - Enhanced error messages with suggestions
 
-### Jinja Engine (145 tests across 14 files)
+### Jinja Engine (151 tests across 15 files)
 - ✅ **Core rendering** - Basic includes, named contents, nesting, context isolation
 - ✅ **Advanced attributes** - Class manipulation, JS framework events, nested attributes
 - ✅ **Content blocks** - HTML `<content:name>` syntax and complex nesting
@@ -19,16 +19,17 @@ This document tracks coverage differences between the Django and Jinja test suit
 - ✅ **Performance** - Compilation, rendering, memory usage, complex scenarios
 - ✅ **Template logic in attributes** - Full support for `{{ variables }}` and `{% if %}` in attribute values
 - ✅ **Icon preprocessing** - `<icon:name>` HTML syntax (both engines)
+- ✅ **CSRF integration** - Full CSRF token support with context isolation preservation
 
 ## Intentionally Engine-Specific Features
 
 ### Django-Only Features (Will Not Port to Jinja)
 1. **Django Framework Integration**
    - Context processors integration (`test_context_processors.py`)
-   - CSRF middleware token propagation (`test_csrf.py`)
+   - Complex CSRF middleware token propagation (`test_csrf.py`) - Note: Basic CSRF support is available in Jinja
    - Django `{% includecontents %}` template tag class
    - Request object propagation through components
-   - **Rationale**: These are Django-specific framework features
+   - **Rationale**: These are Django-specific framework features, but essential CSRF functionality is preserved in Jinja
 
 2. **Django Template Engine Features**
    - Prop definition caching and concurrency (`test_prop_definition_caching.py`)
@@ -72,7 +73,7 @@ The icon system tests have been reorganized for proper parity testing:
 
 ### Test File Mapping
 ```
-Django Engine (154 tests)          →  Jinja Engine (145 tests)
+Django Engine (154 tests)          →  Jinja Engine (151 tests)
 ├── test_component_syntax.py      →  test_attributes.py + test_content_blocks.py
 ├── test_improved_error_messages.py → test_errors.py
 ├── test_template_error_messages.py → test_errors.py
@@ -81,20 +82,22 @@ Django Engine (154 tests)          →  Jinja Engine (145 tests)
 ├── test_context.py               →  test_context.py
 ├── test_extension.py             →  test_extension.py
 ├── test_parity_gaps.py           →  [Jinja-specific validation]
+├── test_csrf.py                  →  test_csrf_integration.py (essential CSRF support)
 ├── test_prop_definition_caching.py → [Django-specific, not ported]
-├── test_context_processors.py    →  [Django-specific, not ported]
-└── test_csrf.py                  →  [Django-specific, not ported]
+└── test_context_processors.py    →  [Django-specific, not ported]
 ```
 
 ### Key Differences in Implementation
 1. **Error Handling**: Jinja tests focus on compilation-time errors vs Django's render-time validation
 2. **Performance Testing**: Jinja tests compilation speed, Django tests framework integration overhead
-3. **Context Handling**: Django uses framework context stack, Jinja uses native Jinja context
+3. **Context Handling**: Django uses framework context stack, Jinja uses enhanced context flattening with CSRF preservation
+4. **CSRF Integration**: Django uses complex middleware integration, Jinja leverages Django's automatic token injection
 
 ### Standardized Behaviors ✅
 1. **Attribute Handling**: Both engines now use identical camelCase access patterns (`data-role` → `attrs.dataRole`)
 2. **Class Manipulation**: Identical `class:not`, append/prepend logic across both engines
 3. **JavaScript Framework Attributes**: Same `@click`, `v-on:`, `x-on:` syntax support in both engines
+4. **CSRF Token Handling**: Both engines preserve `csrf_token` and `csrf_input` in component contexts
 
 ## Validation Strategy
 
@@ -157,6 +160,12 @@ Comprehensive test coverage has been added for both engines, and **all implement
    - `class="btn {% if large %}btn-lg{% endif %}"` - Control structures now fully processed
    - **Status**: Fixed with mini-template rendering for attribute values
    - **Result**: Complete conditional attribute logic support
+
+7. **Enhanced Context Handling** (Django ✅ → Jinja ✅)
+   - Improved context flattening that mirrors Django's `context.flatten()` behavior
+   - Added `csrf_input` to preserved context keys for complete CSRF token support
+   - **Status**: Fixed with `_flatten_jinja_context()` method and expanded `PRESERVED_KEYS`
+   - **Result**: Consistent context behavior and full CSRF protection in components
 
 ### ✅ Confirmed Working Features (Full Parity Achieved)
 

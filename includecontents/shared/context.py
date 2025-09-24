@@ -11,6 +11,7 @@ class ComponentContext:
     PRESERVED_KEYS: Set[str] = {
         "request",
         "csrf_token",
+        "csrf_input",  # Django's Jinja2 backend provides this
         "user",
         "perms",
         "messages",

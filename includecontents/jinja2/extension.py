@@ -268,12 +268,14 @@ class IncludeContentsExtension(Extension):
             else:
                 raise TemplateNotFound(f"Component template not found: {component_name} (looked for {identifier})") from e
 
-        parent_vars = context.get_all()
+        # Use flattened context for better Django parity
+        parent_vars = self._flatten_jinja_context(context)
         if props and self.use_context_isolation:
             component_context = ComponentContext.create_isolated(parent_vars, prop_values)
         else:
             component_context = parent_vars.copy()
             component_context.update(prop_values)
+
         component_context["attrs"] = attrs_obj
         component_context["contents"] = contents
         return template.render(component_context)
@@ -393,6 +395,23 @@ class IncludeContentsExtension(Extension):
                 return value
 
         return value
+
+    def _flatten_jinja_context(self, context: Any) -> Dict[str, Any]:
+        """Flatten Jinja2 context similar to Django's context.flatten().
+
+        Django's context.flatten() merges all context dictionaries into a single dict,
+        with later dictionaries taking precedence. Jinja2's get_all() is similar but
+        we want to ensure consistent behavior.
+        """
+        if hasattr(context, 'get_all'):
+            # Standard Jinja2 context - get_all() already provides flattened view
+            return dict(context.get_all())
+        elif hasattr(context, 'items'):
+            # Dict-like object
+            return dict(context.items())
+        else:
+            # Fallback for other context types
+            return dict(context) if context else {}
 
     def _denormalize_attribute_name(self, name: str) -> str:
         """Convert normalized attribute names back to their original form.
