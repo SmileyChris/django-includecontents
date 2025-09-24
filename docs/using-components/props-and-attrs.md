@@ -213,18 +213,28 @@ You can access individual undefined attributes:
     - `data-id` becomes `attrs.dataId`
     - `my-custom-attr` becomes `attrs.myCustomAttr`
 
-## The `{% attrs %}` Tag
+## The `{% attrs %}` Tag (Django) and Callable `attrs` (Jinja2)
 
-The `{% attrs %}` tag provides more control over attribute rendering with fallback values and class handling.
+Both template engines provide flexible attribute management with fallback values and class handling.
 
-### Basic Syntax
+### Django: `{% attrs %}` Tag
 
 ```html
 {% attrs attribute="fallback_value" %}
 ```
 
+### Jinja2: Callable `attrs` Object
+
+```jinja2
+{{ attrs(attribute='fallback_value') }}
+
+{# For reserved or complex attribute names, use dict unpacking #}
+{{ attrs(**{'class': 'btn', 'data-id': item.id, '@click': 'handler'}) }}
+```
+
 ### Providing Defaults
 
+**Django Template:**
 ```html
 {# props title #}
 <div {% attrs class="card" id="default-card" %}>
@@ -232,6 +242,22 @@ The `{% attrs %}` tag provides more control over attribute rendering with fallba
     <div class="content">{{ contents }}</div>
 </div>
 ```
+
+**Jinja2 Template:**
+```jinja2
+{# props title #}
+<div {{ attrs(class_='card', id='default-card') }}>
+    <h2>{{ title }}</h2>
+    <div class="content">{{ contents }}</div>
+</div>
+```
+
+!!! note "Reserved Keywords"
+    Since `class` is a reserved keyword in Python, you can either:
+    1. **Use trailing underscore** (recommended): `attrs(class_='my-class')` - the underscore is automatically stripped
+    2. **Use dict unpacking**: `attrs(**{'class': 'my-class'})`
+
+    Both methods work identically, but the underscore syntax is cleaner for simple cases.
 
 **Usage:**
 ```html
@@ -246,15 +272,24 @@ The `{% attrs %}` tag provides more control over attribute rendering with fallba
 
 ### Class Handling
 
-The `{% attrs %}` tag provides special handling for CSS classes:
+Both template engines provide special handling for CSS classes:
 
-#### Extending Classes
+#### Extending Classes (Append)
 
 Use `"& "` prefix to append classes after user-provided classes:
 
+**Django:**
 ```html
 {# props #}
 <button {% attrs class="& btn btn-default" %}>
+    {{ contents }}
+</button>
+```
+
+**Jinja2:**
+```jinja2
+{# props #}
+<button {{ attrs(**{'class': '& btn btn-default'}) }}>
     {{ contents }}
 </button>
 ```
@@ -273,9 +308,18 @@ Use `"& "` prefix to append classes after user-provided classes:
 
 Use `" &"` suffix to prepend classes before user-provided classes:
 
+**Django:**
 ```html
 {# props #}
 <div {% attrs class="container &" %}>
+    {{ contents }}
+</div>
+```
+
+**Jinja2:**
+```jinja2
+{# props #}
+<div {{ attrs(**{'class': 'container &'}) }}>
     {{ contents }}
 </div>
 ```
@@ -294,9 +338,21 @@ Use `" &"` suffix to prepend classes before user-provided classes:
 
 Use the `class:` prefix for conditional classes:
 
+**Django:**
 ```html
 {# props active=False, disabled=False #}
 <button {% attrs class="btn" class:active=active class:disabled=disabled %}>
+    {{ contents }}
+</button>
+```
+
+**Jinja2:**
+```jinja2
+{# props active=False, disabled=False #}
+<button {{ attrs(
+    class='btn',
+    **{'class:active': active, 'class:disabled': disabled}
+) }}>
     {{ contents }}
 </button>
 ```
@@ -309,6 +365,62 @@ Use the `class:` prefix for conditional classes:
 **Output:**
 ```html
 <button class="btn active">Active Button</button>
+```
+
+## Jinja2-Specific Features
+
+The callable `attrs` object in Jinja2 templates supports additional patterns:
+
+### Method Chaining
+
+```jinja2
+{# Build attributes progressively #}
+{% set base_attrs = attrs(type='button', class_='btn') %}
+{% set final_attrs = base_attrs(class_='& btn-primary') %}
+<button {{ final_attrs }}>Click me</button>
+
+{# Or chain directly #}
+<button {{ attrs(type='button')(class_='btn')(**{'@click': 'handler'}) }}>
+    Click me
+</button>
+```
+
+### Complex Attribute Names
+
+Use dict unpacking for attribute names with special characters:
+
+```jinja2
+{# JavaScript framework attributes #}
+{{ attrs(**{
+    '@click.prevent': 'handleSubmit',
+    ':disabled': 'isProcessing',
+    'v-model': 'inputValue',
+    'x-on:click': 'toggle()',
+    'hx-get': '/api/data'
+}) }}
+
+{# Data attributes #}
+{{ attrs(**{
+    'data-testid': 'submit-button',
+    'data-analytics': 'click:submit'
+}) }}
+```
+
+### Conditional Building
+
+```jinja2
+{# Build attrs based on conditions #}
+{% set component_attrs = attrs(class_='card') %}
+
+{% if is_elevated %}
+    {% set component_attrs = component_attrs(class_='& elevated') %}
+{% endif %}
+
+{% if clickable %}
+    {% set component_attrs = component_attrs(tabindex='0', role='button') %}
+{% endif %}
+
+<div {{ component_attrs }}>{{ contents }}</div>
 ```
 
 ## Grouped Attributes

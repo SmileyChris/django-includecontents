@@ -795,20 +795,19 @@ class AttrsNode(template.Node):
             )
         if self.sub_key:
             context_attrs = getattr(context_attrs, self.sub_key, None)
-        attrs = Attrs()
-        attrs.update(
-            {
-                key: (
-                    value.resolve(context)  # type: ignore
-                    if isinstance(value, FilterExpression)
-                    else value
-                )
-                for key, value in self.fallbacks.items()
-            }
-        )
-        if isinstance(context_attrs, Attrs):
-            attrs.update(context_attrs)
-        return str(attrs)
+
+        # Build kwargs dict from resolved fallbacks
+        kwargs = {}
+        for key, value in self.fallbacks.items():
+            if isinstance(value, FilterExpression):
+                kwargs[key] = value.resolve(context)
+            elif value is NO_VALUE:  # Boolean attribute
+                kwargs[key] = True
+            else:
+                kwargs[key] = value
+
+        # Call the attrs object with kwargs - this now uses the new callable interface
+        return str(context_attrs(**kwargs))
 
 
 class ContentsObject:

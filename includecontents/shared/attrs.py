@@ -115,6 +115,62 @@ class BaseAttrs(MutableMapping[str, Any]):
         return len(self._attrs)
 
     # ------------------------------------------------------------------
+    # Callable interface
+    # ------------------------------------------------------------------
+
+    def __call__(self, **kwargs) -> BaseAttrs:
+        """
+        Return a new Attrs object with fallbacks applied.
+
+        Examples:
+        - Simple: attrs(class_='btn', type='button')  # trailing _ stripped
+        - Complex names via unpacking: attrs(**{'data-id': '123', '@click': 'handler'})
+        - Mixed: attrs(type='button', **{'@click': 'handler'})
+
+        Special syntaxes:
+        - class_="& suffix" or class="& suffix" - append to existing class
+        - class_="prefix &" or class="prefix &" - prepend to existing class
+        - Use **{'class:active': True} for conditional classes
+
+        Trailing underscores are stripped from keyword arguments to allow
+        using Python reserved words: class_='btn' becomes class='btn'.
+
+        Returns a new Attrs object with fallbacks applied (immutable).
+        """
+        new_attrs = self._new_child()
+
+        # First apply the fallbacks
+        for key, value in kwargs.items():
+            # Strip trailing underscore from keyword arguments (e.g. class_ -> class)
+            if key.endswith('_') and key != '_':  # Don't strip standalone underscore
+                key = key[:-1]
+
+            # Use __setitem__ to trigger all the special handling logic
+            new_attrs[key] = value
+
+        # Then apply existing attrs (they override fallbacks)
+        # Need to merge all the internal dictionaries, not just _attrs
+        new_attrs.update(self)
+
+        # Merge _extended dictionaries (conditional classes like class:active)
+        for base_key, extended_dict in self._extended.items():
+            new_extended = new_attrs._extended.setdefault(base_key, {})
+            new_extended.update(extended_dict)
+
+        # Merge _prepended dictionaries (prepended classes)
+        for base_key, prepended_dict in self._prepended.items():
+            new_prepended = new_attrs._prepended.setdefault(base_key, {})
+            new_prepended.update(prepended_dict)
+
+        # Merge _nested_attrs dictionaries
+        for nested_key, nested_attrs in self._nested_attrs.items():
+            if nested_key not in new_attrs._nested_attrs:
+                new_attrs._nested_attrs[nested_key] = nested_attrs._new_child()
+                new_attrs._nested_attrs[nested_key].update(nested_attrs)
+
+        return new_attrs
+
+    # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 

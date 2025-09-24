@@ -13,61 +13,41 @@ _COMPONENT_LIBRARY: dict[str, str] = {
     "card": dedent(
         """
         {# props title="" #}
-        {% if attrs._attrs.class %}
-            {% set existing_class = attrs._attrs.class %}
-            {% do attrs.__setitem__('class', existing_class + ' card') %}
-        {% else %}
-            {% do attrs.__setitem__('class', 'card') %}
-        {% endif %}
+        {% set final_attrs = attrs(class_='& card') %}
         {{ record(
             component="card",
             title=title|default(""),
-            attrs=attrs,
+            attrs=final_attrs,
             default=contents.default|trim,
             oldstyle=contents.oldstyle|trim,
             newstyle=contents.newstyle|trim,
             contents=contents,
         ) }}
-        <section {{ attrs }}>{{ contents }}</section>
+        <section {{ final_attrs }}>{{ contents }}</section>
         """
     ),
     "card-extend": dedent(
         """
         {# props title="" #}
-        {% if attrs._attrs.class %}
-            {% set existing_class = attrs._attrs.class %}
-            {% do attrs.__setitem__('class', existing_class + ' card-extend') %}
-        {% else %}
-            {% do attrs.__setitem__('class', 'card-extend') %}
-        {% endif %}
-        {{ record(component="card-extend", attrs=attrs) }}
-        <section {{ attrs }}>{{ contents }}</section>
+        {% set final_attrs = attrs(class_='& card-extend') %}
+        {{ record(component="card-extend", attrs=final_attrs) }}
+        <section {{ final_attrs }}>{{ contents }}</section>
         """
     ),
     "card-prepend": dedent(
         """
         {# props title="" #}
-        {% if attrs._attrs.class %}
-            {% set existing_class = attrs._attrs.class %}
-            {% do attrs.__setitem__('class', 'card-prepend ' + existing_class) %}
-        {% else %}
-            {% do attrs.__setitem__('class', 'card-prepend') %}
-        {% endif %}
-        {{ record(component="card-prepend", attrs=attrs) }}
-        <section {{ attrs }}>{{ contents }}</section>
+        {% set final_attrs = attrs(class_='card-prepend &') %}
+        {{ record(component="card-prepend", attrs=final_attrs) }}
+        <section {{ final_attrs }}>{{ contents }}</section>
         """
     ),
     "card-conditional": dedent(
         """
         {# props title="" #}
-        {% if attrs._attrs.class %}
-            {% set existing_class = attrs._attrs.class %}
-            {% do attrs.__setitem__('class', existing_class + ' card') %}
-        {% else %}
-            {% do attrs.__setitem__('class', 'card') %}
-        {% endif %}
-        {{ record(component="card-conditional", attrs=attrs) }}
-        <section {{ attrs }}>{{ contents }}</section>
+        {% set final_attrs = attrs(class_='& card') %}
+        {{ record(component="card-conditional", attrs=final_attrs) }}
+        <section {{ final_attrs }}>{{ contents }}</section>
         """
     ),
     "button": dedent(

@@ -22,6 +22,7 @@ def _environment() -> Environment:
                 "<main>{{ contents }}</main>"
             ),
             "components/section.html": "<section>{{ contents }}</section>",
+            "components/inside/cat.html": "Meow",
         }
     )
     return Environment(loader=loader, extensions=[IncludeContentsExtension])
@@ -369,3 +370,11 @@ def test_no_props_all_attrs() -> None:
     template = env.from_string('{% includecontents "simple" title="Hello" %}World{% endincludecontents %}')
     rendered = template.render()
     assert "Hello - World" in rendered
+
+
+def test_subdirectory_component() -> None:
+    """Test that subdirectory components work with colon syntax."""
+    env = _environment()
+    template = env.from_string('<include:inside:cat />')
+    rendered = template.render()
+    assert rendered == "Meow"
