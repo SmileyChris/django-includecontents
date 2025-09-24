@@ -73,5 +73,8 @@ class CapturedContents:
     def __str__(self) -> str:  # pragma: no cover - implicit use in templates
         return self._default
 
+    def __html__(self) -> str:  # pragma: no cover - for MarkupSafe compatibility
+        return self._default
+
 
 __all__ = ["ComponentContext", "CapturedContents"]

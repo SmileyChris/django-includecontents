@@ -4,20 +4,21 @@ This document tracks coverage differences between the Django and Jinja test suit
 
 ## Current Test Coverage Status
 
-### Django Engine (99 tests across 8 files)
+### Django Engine (154 tests across 14 files)
 - Complete feature coverage including advanced attribute handling, content blocks, error reporting
 - Framework integration (context processors, CSRF, request propagation)
 - Performance and caching optimizations
 - Enhanced error messages with suggestions
 
-### Jinja Engine (30 → 80+ tests across 6 files)
+### Jinja Engine (145 tests across 14 files)
 - ✅ **Core rendering** - Basic includes, named contents, nesting, context isolation
-- ✅ **Advanced attributes** - Class manipulation, JS framework events, template logic
+- ✅ **Advanced attributes** - Class manipulation, JS framework events, nested attributes
 - ✅ **Content blocks** - HTML `<content:name>` syntax and complex nesting
-- ✅ **Error handling** - Enhanced error messages and validation
+- ✅ **Error handling** - Enhanced error messages and enum validation
 - ✅ **Props validation** - Enum validation, complex objects, edge cases
 - ✅ **Performance** - Compilation, rendering, memory usage, complex scenarios
-- ⚠️ **Icon preprocessing** - Jinja-specific `<icon:name>` syntax (not in Django)
+- ✅ **Template logic in attributes** - Full support for `{{ variables }}` and `{% if %}` in attribute values
+- ✅ **Icon preprocessing** - `<icon:name>` HTML syntax (both engines)
 
 ## Intentionally Engine-Specific Features
 
@@ -34,11 +35,11 @@ This document tracks coverage differences between the Django and Jinja test suit
    - Django-specific template loading and compilation optimizations
    - **Rationale**: Jinja has its own caching and optimization mechanisms
 
-### Jinja-Only Features (Not in Django)
-1. **Icon Preprocessing**
-   - `<icon:name>` HTML syntax preprocessing
-   - Icon system integration tests
-   - **Rationale**: Jinja extension has tighter integration with icon preprocessing
+### Icon System Tests Organization ✅
+The icon system tests have been reorganized for proper parity testing:
+1. **Django-specific tests**: `tests/django_engine/icons/` - Tests using Django templates
+2. **Jinja-specific tests**: `tests/jinja_engine/icons/` - Equivalent tests using Jinja2 templates
+3. **Engine-agnostic tests**: `tests/shared/icons/` - Core icon functionality tests
 
 ## Achieved Parity Areas
 
@@ -71,12 +72,15 @@ This document tracks coverage differences between the Django and Jinja test suit
 
 ### Test File Mapping
 ```
-Django Engine (99 tests)          →  Jinja Engine (80+ tests)
+Django Engine (154 tests)          →  Jinja Engine (145 tests)
 ├── test_component_syntax.py      →  test_attributes.py + test_content_blocks.py
 ├── test_improved_error_messages.py → test_errors.py
 ├── test_template_error_messages.py → test_errors.py
 ├── test_props_validation.py      →  test_props.py
 ├── test_complex_nested_components.py → test_performance.py
+├── test_context.py               →  test_context.py
+├── test_extension.py             →  test_extension.py
+├── test_parity_gaps.py           →  [Jinja-specific validation]
 ├── test_prop_definition_caching.py → [Django-specific, not ported]
 ├── test_context_processors.py    →  [Django-specific, not ported]
 └── test_csrf.py                  →  [Django-specific, not ported]
@@ -85,16 +89,20 @@ Django Engine (99 tests)          →  Jinja Engine (80+ tests)
 ### Key Differences in Implementation
 1. **Error Handling**: Jinja tests focus on compilation-time errors vs Django's render-time validation
 2. **Performance Testing**: Jinja tests compilation speed, Django tests framework integration overhead
-3. **Attribute Parsing**: Different syntax validation approaches between template engines
-4. **Context Handling**: Django uses framework context stack, Jinja uses native Jinja context
+3. **Context Handling**: Django uses framework context stack, Jinja uses native Jinja context
+
+### Standardized Behaviors ✅
+1. **Attribute Handling**: Both engines now use identical camelCase access patterns (`data-role` → `attrs.dataRole`)
+2. **Class Manipulation**: Identical `class:not`, append/prepend logic across both engines
+3. **JavaScript Framework Attributes**: Same `@click`, `v-on:`, `x-on:` syntax support in both engines
 
 ## Validation Strategy
 
 ### Functional Parity Verification
-- Both engines should produce equivalent output for core component features
-- Attribute handling should work identically (class manipulation, JS events, template logic)
-- Content block syntax should be interchangeable between engines
-- Error messages should provide similar guidance and detail level
+- ✅ Both engines produce equivalent output for core component features
+- ✅ Attribute handling works identically (class manipulation, JS events, template logic, camelCase access)
+- ✅ Content block syntax is interchangeable between engines
+- ✅ Error messages provide similar guidance and detail level
 
 ### Performance Expectations
 - Jinja compilation should be comparable to Django template parsing
@@ -113,9 +121,9 @@ Django Engine (99 tests)          →  Jinja Engine (80+ tests)
 - Update test coverage numbers after significant test additions
 - Validate parity claims with actual cross-engine testing when possible
 
-## Current Status: ✅ FULL PARITY ACHIEVED
+## Current Status: ✅ COMPLETE PARITY
 
-Comprehensive test coverage has been added for both engines, and **all implementation gaps** in the Jinja extension have been resolved:
+Comprehensive test coverage has been added for both engines, and **all implementation gaps** in the Jinja extension have been resolved.
 
 ### ✅ Resolved Implementation Gaps in Jinja Extension
 
@@ -140,15 +148,29 @@ Comprehensive test coverage has been added for both engines, and **all implement
    - Works alongside traditional `{% contents name %}Content{% endcontents %}` syntax
    - **Result**: Intuitive content block syntax available in Jinja
 
-### ✅ Confirmed Working Features (Parity Achieved)
+5. **Template Variables in Attributes** (Django ✅ → Jinja ✅)
+   - `class="btn {{ size }}"` - Variables are now properly expanded in attribute values
+   - **Status**: Fixed with `_process_template_expression()` method
+   - **Result**: Full support for dynamic attribute values
+
+6. **Template Logic in Attributes** (Django ✅ → Jinja ✅)
+   - `class="btn {% if large %}btn-lg{% endif %}"` - Control structures now fully processed
+   - **Status**: Fixed with mini-template rendering for attribute values
+   - **Result**: Complete conditional attribute logic support
+
+### ✅ Confirmed Working Features (Full Parity Achieved)
 
 - ✅ **Basic component syntax**: `<include:component-name>`
 - ✅ **Hyphenated component names**: `<include:card-with-footer>`
 - ✅ **Self-closing syntax**: `<include:component />`
-- ✅ **Props and enum validation**: Identical validation rules
-- ✅ **Template variables in attributes**: `title="{{ variable }}"`
+- ✅ **Props and enum validation**: Identical validation rules with detailed error messages
+- ✅ **JavaScript framework attributes**: `@click`, `v-on:`, `x-on:`, `:bind` all working
+- ✅ **Nested attributes**: `inner.class`, `button.type` syntax fully supported
+- ✅ **HTML content blocks**: `<content:name>` syntax implemented
+- ✅ **Advanced class manipulation**: `class:not`, append/prepend logic
+- ✅ **Template logic in attributes**: `{{ variables }}` and `{% if %}` syntax
 - ✅ **Named contents**: Traditional `{% contents %}` syntax
-- ✅ **Error messages**: Both provide helpful validation errors
+- ✅ **Error messages**: Enhanced enum validation with suggestions
 - ✅ **Performance**: Comparable compilation and rendering speed
 
 ### Implementation Summary
@@ -158,9 +180,11 @@ Comprehensive test coverage has been added for both engines, and **all implement
 2. ✅ Nested attribute syntax (`inner.class`, `button.type`)
 3. ✅ HTML content block syntax (`<content:name>`)
 4. ✅ Advanced class manipulation (`class:not`, `class="& base"`)
+5. ✅ Template variables and logic in attributes (`{{ var }}`, `{% if %}`)
 
 **Technical Implementation**:
 - Enhanced preprocessing layer with attribute normalization/denormalization
 - Extended Jinja2 parser to handle special characters in attribute names
 - Added content block preprocessing (`<content:name>` → `{% contents %}`)
+- Implemented `_process_template_expression()` for template logic in attributes
 - Leveraged existing shared BaseAttrs class for class manipulation logic

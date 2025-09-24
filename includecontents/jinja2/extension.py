@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, Iterator, List, Optional
 
 from jinja2 import Environment, nodes, pass_context
-from jinja2.exceptions import TemplateRuntimeError
+from jinja2.exceptions import TemplateNotFound, TemplateRuntimeError
 from jinja2.ext import Extension
 from jinja2.lexer import Token, TokenStream
 from jinja2.parser import Parser
@@ -70,16 +70,23 @@ class IncludeContentsExtension(Extension):
                 parser.stream.skip()
                 continue
 
-            # Parse attribute name (preprocessing handles special characters)
-            key_token = parser.stream.expect("name")
-            key_name = key_token.value
-
-            if parser.stream.current.test("assign"):
-                parser.stream.skip()
-                value = parser.parse_expression()
+            # Check if this looks like a dictionary (starts with {)
+            if parser.stream.current.test("lbrace"):
+                dict_expr = parser.parse_expression()
+                # Add dictionary as a special argument that we'll handle in render
+                args.append(dict_expr)
+                break
             else:
-                value = nodes.Const(True, lineno=lineno)
-            kwargs.append(nodes.Keyword(key_name, value, lineno=lineno))
+                # Parse individual attribute name (traditional keyword syntax)
+                key_token = parser.stream.expect("name")
+                key_name = key_token.value
+
+                if parser.stream.current.test("assign"):
+                    parser.stream.skip()
+                    value = parser.parse_expression()
+                else:
+                    value = nodes.Const(True, lineno=lineno)
+                kwargs.append(nodes.Keyword(key_name, value, lineno=lineno))
 
         body = parser.parse_statements(("name:endincludecontents",), drop_needle=True)
         call = self.call_method(
@@ -123,6 +130,7 @@ class IncludeContentsExtension(Extension):
         self,
         context: Any,
         template_name: Any,
+        *args: Any,
         caller: Optional[Any] = None,
         **attributes: Any,
     ) -> str:
@@ -135,6 +143,11 @@ class IncludeContentsExtension(Extension):
 
         identifier = self._normalize_template_name(template_name)
         props = self._props_registry.get(identifier)
+
+        # Handle dictionary unpacking arguments (**{...})
+        for arg in args:
+            if isinstance(arg, dict):
+                attributes.update(arg)
 
         default_content = "".join(state["default"]) or body_output
         contents = CapturedContents(default_content, state["named"])
@@ -153,20 +166,54 @@ class IncludeContentsExtension(Extension):
 
         if props:
             for key, value in attributes.items():
-                # Convert normalized attribute names back to original form
-                original_key = self._denormalize_attribute_name(key)
+                # Process template expressions in attribute values
+                processed_value = self._process_template_expression(value, context)
 
-                if original_key in props:
-                    prop_spec = props[original_key]
-                    prop_values[original_key] = value
+                # Handle bound attributes (e.g., :title)
+                if key.startswith(":"):
+                    prop_name = key[1:]  # Remove the : prefix
+                    if prop_name in props:
+                        prop_spec = props[prop_name]
+                        prop_values[prop_name] = processed_value
+                        if isinstance(value, bool) and value:
+                            attrs_obj[prop_name] = True
+
+                        # Validate enum values
+                        enum_info = enum_specs.get(prop_name)
+                        if enum_info:
+                            allowed_values, _ = enum_info
+                            for enum_value in normalize_enum_values(processed_value):
+                                if enum_value not in allowed_values:
+                                    allowed = ", ".join(repr(v) for v in allowed_values)
+                                    suggestion = suggest_enum_value(enum_value, allowed_values)
+                                    suggestion_text = f" Did you mean {suggestion!r}?" if suggestion else ""
+
+                                    # Create a helpful example
+                                    first_value = allowed_values[0] if allowed_values else "value"
+                                    example = f'<include:{identifier.replace("components/", "").replace(".html", "")} {prop_name}="{first_value}">'
+
+                                    raise TemplateRuntimeError(
+                                        f'Invalid value "{enum_value}" for attribute "{prop_name}" '
+                                        f"in component '{identifier}'. Allowed values: {allowed}.{suggestion_text}\n"
+                                        f"Example: {example}"
+                                    )
+                                flag_key = build_enum_flag_key(prop_name, enum_value)
+                                if flag_key:
+                                    prop_values[flag_key] = True
+                    else:
+                        # Bound attribute that's not a prop goes to attrs
+                        attrs_obj[key] = value
+                elif key in props:
+                    prop_spec = props[key]
+                    prop_values[key] = processed_value
                     if isinstance(value, bool) and value:
-                        attrs_obj[original_key] = True
+                        attrs_obj[key] = True
 
                     # Validate enum values
-                    enum_info = enum_specs.get(original_key)
+                    enum_info = enum_specs.get(key)
                     if enum_info:
                         allowed_values, _ = enum_info
-                        for enum_value in normalize_enum_values(value):
+                        for enum_value in normalize_enum_values(processed_value):
                             if enum_value not in allowed_values:
                                 allowed = ", ".join(repr(v) for v in allowed_values)
                                 suggestion = suggest_enum_value(enum_value, allowed_values)
@@ -174,18 +221,18 @@ class IncludeContentsExtension(Extension):
 
                                 # Create a helpful example
                                 first_value = allowed_values[0] if allowed_values else "value"
-                                example = f'<include:{identifier.replace("components/", "").replace(".html", "")} {original_key}="{first_value}">'
+                                example = f'<include:{identifier.replace("components/", "").replace(".html", "")} {key}="{first_value}">'
 
                                 raise TemplateRuntimeError(
-                                    f'Invalid value "{enum_value}" for attribute "{original_key}" '
+                                    f'Invalid value "{enum_value}" for attribute "{key}" '
                                     f"in component '{identifier}'. Allowed values: {allowed}.{suggestion_text}\n"
                                     f"Example: {example}"
                                 )
-                            flag_key = build_enum_flag_key(original_key, enum_value)
+                            flag_key = build_enum_flag_key(key, enum_value)
                             if flag_key:
                                 prop_values[flag_key] = True
                 else:
-                    attrs_obj[original_key] = value
+                    attrs_obj[key] = processed_value
 
             for name, spec in props.items():
                 if name not in prop_values:
@@ -203,14 +250,24 @@ class IncludeContentsExtension(Extension):
                         )
                     prop_values[name] = spec.clone_default()
         else:
-            # Convert normalized attribute names back to original form
+            # No props defined, use attributes as-is
             prop_values = {}
             for key, value in attributes.items():
-                original_key = self._denormalize_attribute_name(key)
-                prop_values[original_key] = value
-                attrs_obj[original_key] = value
+                processed_value = self._process_template_expression(value, context)
+                prop_values[key] = processed_value
+                attrs_obj[key] = processed_value
 
-        template = self.environment.get_template(identifier)
+        try:
+            template = self.environment.get_template(identifier)
+        except TemplateNotFound as e:
+            # Enhance error message with component name
+            component_name = identifier.replace("components/", "").replace(".html", "")
+            if ":" in component_name:
+                namespace, name = component_name.split(":", 1)
+                raise TemplateNotFound(f"Component template not found: {namespace}:{name} (looked for {identifier})") from e
+            else:
+                raise TemplateNotFound(f"Component template not found: {component_name} (looked for {identifier})") from e
+
         parent_vars = context.get_all()
         if props and self.use_context_isolation:
             component_context = ComponentContext.create_isolated(parent_vars, prop_values)
@@ -231,7 +288,7 @@ class IncludeContentsExtension(Extension):
     ) -> str:
         content = caller() if caller is not None else ""
         if not self._render_stack:
-            return content
+            return content  # Render as plain text outside components
         state = self._render_stack[-1]
         key = self._normalize_content_name(name)
         if key is None:
@@ -249,21 +306,43 @@ class IncludeContentsExtension(Extension):
 
         # Register icon function if available
         try:
-            environment.globals.setdefault("icon", self._icon_function)
+            # Create a standalone function that can be decorated with pass_context
+            def icon_function(context, icon_name: str, **attributes) -> str:
+                return self._icon_function(context, icon_name, **attributes)
+
+            environment.globals.setdefault("icon", pass_context(icon_function))
         except ImportError:
             # Icons not available, skip
             pass
 
-    def _icon_function(self, icon_name: str, **attributes) -> str:
+    def _icon_function(self, context, icon_name: str, **attributes) -> str:
         """Jinja2-compatible icon function."""
         try:
             from includecontents.icons.templatetags.icons import IconNode
 
+            # Process template variables in attribute values
+            processed_attributes = {}
+            for key, value in attributes.items():
+                if isinstance(value, str) and ('{{' in value or '{%' in value):
+                    try:
+                        # Create and render mini-template for this attribute value
+                        mini_template = self.environment.from_string(value)
+                        processed_value = mini_template.render(context.get_all())
+                        processed_attributes[key] = processed_value
+                    except Exception:
+                        # If processing fails, use original value
+                        processed_attributes[key] = value
+                else:
+                    processed_attributes[key] = value
+
             # Create an IconNode and render it
-            icon_node = IconNode(icon_name, attributes)
-            # We need a context-like object, but for icons we can pass minimal context
-            context = {}
-            return icon_node.render(context)
+            icon_node = IconNode(icon_name, processed_attributes)
+            # Create minimal context-like object for Django compatibility
+            class MinimalContext:
+                def get(self, key, default=None):
+                    return default
+
+            return icon_node.render(MinimalContext())
         except ImportError:
             # Icons not available
             return f'<!-- Icon "{icon_name}" not available -->'
@@ -281,9 +360,39 @@ class IncludeContentsExtension(Extension):
             identifier = template_name
         else:
             identifier = str(template_name)
+
+        # Handle namespaced components (forms:field -> forms/field)
+        identifier = identifier.replace(":", "/")
+
         if not identifier.endswith(".html") and "/" not in identifier:
             identifier = f"components/{identifier}.html"
+        elif not identifier.endswith(".html"):
+            identifier = f"components/{identifier}.html"
         return identifier
+
+    def _process_template_expression(self, value: Any, context: Any) -> Any:
+        """Process template expressions in attribute values.
+
+        This method evaluates template variables ({{ }}) and control structures ({% %})
+        within attribute values to provide Django template parity.
+        """
+        if not isinstance(value, str):
+            return value
+
+        # If the value contains template syntax, render it as a mini-template
+        if '{{' in value or '{%' in value:
+            try:
+                # Create a mini-template from the value
+                mini_template = self.environment.from_string(value)
+                # Render with the current context variables
+                parent_vars = context.get_all()
+                return mini_template.render(parent_vars)
+            except Exception:
+                # If template processing fails, return the original value
+                # This maintains compatibility with literal strings that might contain { }
+                return value
+
+        return value
 
     def _denormalize_attribute_name(self, name: str) -> str:
         """Convert normalized attribute names back to their original form.
@@ -350,8 +459,9 @@ class IncludeContentsExtension(Extension):
         if "_at_" in name and not name.startswith("_at_"):
             return name.replace("_at_", ".@").replace("_", ".")
 
-        # Handle nested attributes (inner_class -> inner.class)
+        # Handle nested attributes (inner_class -> inner.class, data_role -> data.role)
         if "_" in name and not (name.startswith("v_") or name.startswith("x_") or name.startswith("_")):
+            # Convert underscores to dots for nested attributes
             return name.replace("_", ".")
 
         # Handle regular kebab-case attributes

@@ -10,6 +10,25 @@ from typing import Any, Dict, Iterator, Tuple
 _re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 
+class ExtendedAttribute:
+    """Wrapper for attributes that have extended properties (class:active, etc.)"""
+
+    def __init__(self, base_value: Any, extended_attrs: Dict[str, bool]):
+        self._base_value = base_value
+        self._extended_attrs = extended_attrs
+
+    def __getattr__(self, name: str) -> bool:
+        """Access extended attributes like .active, .disabled, etc."""
+        return self._extended_attrs.get(name, False)
+
+    def __str__(self) -> str:
+        """Return the base value when converted to string"""
+        return str(self._base_value)
+
+    def __repr__(self) -> str:
+        return f"ExtendedAttribute({self._base_value!r}, {self._extended_attrs!r})"
+
+
 class BaseAttrs(MutableMapping[str, Any]):
     """Collects attributes with support for nested groups and class merging."""
 
@@ -26,6 +45,16 @@ class BaseAttrs(MutableMapping[str, Any]):
     def __getattr__(self, key: str) -> Any:
         if key in self._nested_attrs:
             return self._nested_attrs[key]
+
+        # Check if this attribute has extended properties (class:active, etc.)
+        if key in self._extended:
+            try:
+                base_value = self[key]
+                return ExtendedAttribute(base_value, self._extended[key])
+            except KeyError:
+                # No base value, just return extended attrs with empty base
+                return ExtendedAttribute("", self._extended[key])
+
         try:
             return self[key]
         except KeyError as exc:
@@ -52,6 +81,7 @@ class BaseAttrs(MutableMapping[str, Any]):
             nested_attrs = self._nested_attrs.setdefault(nested_key, self._new_child())
             nested_attrs[remainder] = value
             return
+
 
         if ":" in key:
             base_key, extend_key = key.split(":", 1)

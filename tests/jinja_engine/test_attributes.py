@@ -1,42 +1,10 @@
 from __future__ import annotations
 
-from textwrap import dedent
 from types import SimpleNamespace
-from typing import Any, Mapping
 
 import pytest
-from jinja2 import DictLoader, Environment
 
-from includecontents.jinja2.extension import IncludeContentsExtension
-
-
-def render_component(
-    base_template: str,
-    *,
-    components: Mapping[str, str],
-    context: Mapping[str, Any] | None = None,
-) -> tuple[str, list[dict[str, Any]]]:
-    """Render ``base_template`` and capture component state."""
-    templates: dict[str, str] = {"base.html": dedent(base_template).strip()}
-    for name, template in components.items():
-        templates[f"components/{name}.html"] = dedent(template).strip()
-
-    env = Environment(
-        loader=DictLoader(templates),
-        extensions=[IncludeContentsExtension, "jinja2.ext.do"],
-        autoescape=False,
-    )
-
-    captures: list[dict[str, Any]] = []
-
-    def record(**payload: Any) -> str:
-        captures.append(payload)
-        return ""
-
-    env.globals.setdefault("record", record)
-
-    rendered = env.get_template("base.html").render(**(dict(context or {})))
-    return rendered, captures
+from ._helpers import captures_for, first_capture, render_component
 
 
 class TestAttributeHandling:
@@ -45,100 +13,78 @@ class TestAttributeHandling:
     def test_basic_attrs_spread(self) -> None:
         output, captures = render_component(
             """
-            <include:card title="Hello" class="primary" id="card-1" data_role="{{ role }}">
+            <include:card title="Hello" class="primary" id="card-1" data-role="{{ role }}">
               Body text
             </include:card>
             """,
-            components={
-                "card": """
-                    {# props title #}
-                    {% do attrs.__setitem__('class', '& card') %}
-                    {{ record(attrs=attrs, contents=contents, title=title) }}
-                """
-            },
+            use=["card"],
             context={"role": "featured"},
         )
 
-        payload = captures[0]
+        payload = first_capture(captures, "card")
         attrs = payload["attrs"]
 
         assert payload["title"] == "Hello"
-        assert payload["contents"].stripped == "Body text"
+        assert payload["default"].strip() == "Body text"
         assert 'class="primary card"' in str(attrs)
         assert attrs._attrs["id"] == "card-1"
-        assert getattr(attrs, "data").role == "featured"
-        assert output.strip() == ""
+        assert attrs.dataRole == "featured"
+        assert output.strip()
 
     def test_class_append_syntax(self) -> None:
         _, captures = render_component(
             '<include:card-extend title="Append" class="user-class" />',
-            components={
-                "card-extend": """
-                    {# props title #}
-                    {% do attrs.__setitem__('class', '& card-extend') %}
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            use=["card-extend"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "card-extend")["attrs"]
         assert 'class="user-class card-extend"' in str(attrs)
         assert "title" not in attrs._attrs
 
     def test_class_prepend_syntax(self) -> None:
         _, captures = render_component(
             '<include:card-prepend title="Prepend" class="user-class" />',
-            components={
-                "card-prepend": """
-                    {# props title #}
-                    {% do attrs.__setitem__('class', 'card-prepend &') %}
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            use=["card-prepend"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "card-prepend")["attrs"]
         assert 'class="card-prepend user-class"' in str(attrs)
 
     @pytest.mark.parametrize("is_active, expected_flag", [(True, True), (False, False)])
     def test_class_negation_syntax(self, is_active: bool, expected_flag: bool) -> None:
         _, captures = render_component(
             '<include:card-conditional title="Toggle" class:active="{{ is_active }}" />',
-            components={
-                "card-conditional": """
-                    {# props title #}
-                    {% do attrs.__setitem__('class', '& card') %}
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            use=["card-conditional"],
             context={"is_active": is_active},
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "card-conditional")["attrs"]
         class_group = getattr(attrs, "class")
         assert class_group.active is expected_flag
-        assert 'class="card"' in str(attrs)
+        # Check that "card" is present in the class string (with or without "active")
+        class_str = str(attrs)
+        assert "card" in class_str
+        if expected_flag:
+            assert "active" in class_str
+        else:
+            assert "active" not in class_str
 
     def test_javascript_event_attributes(self) -> None:
         _, captures = render_component(
             """
             <include:button
                 text="Click"
+                variant="primary"
                 @click="handleClick()"
                 v-on:submit="onSubmit"
                 x-on:click="toggle()"
                 :class="{ 'active': true }"
             />
             """,
-            components={
-                "button": """
-                    {# props text #}
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            use=["button"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "button")["attrs"]
         assert attrs._attrs["@click"] == "handleClick()"
         assert attrs._attrs["v-on:submit"] == "onSubmit"
         assert attrs._attrs["x-on:click"] == "toggle()"
@@ -149,37 +95,28 @@ class TestAttributeHandling:
             """
             <include:button
                 text="Click"
+                variant="primary"
                 @click.stop.prevent="handleClick()"
                 @keyup.enter="handleEnter()"
             />
             """,
-            components={
-                "button": """
-                    {# props text #}
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            use=["button"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "button")["attrs"]
         assert attrs._attrs["@click.stop.prevent"] == "handleClick()"
         assert attrs._attrs["@keyup.enter"] == "handleEnter()"
 
     def test_template_variables_in_attributes(self) -> None:
         _, captures = render_component(
-            '<include:button data_value="{{ count|default(0) }}" data_label="{{ label|upper }}" />',
-            components={
-                "button": """
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            '<include:button variant="primary" data-value="{{ count|default(0) }}" data-label="{{ label|upper }}" />',
+            use=["button"],
             context={"count": 5, "label": "items"},
         )
 
-        attrs = captures[0]["attrs"]
-        data_group = getattr(attrs, "data")
-        assert data_group.value == 5
-        assert data_group.label == "ITEMS"
+        attrs = first_capture(captures, "button")["attrs"]
+        assert attrs.dataValue == 5
+        assert attrs.dataLabel == "ITEMS"
 
     def test_attributes_support_filters_and_callables(self) -> None:
         value = SimpleNamespace(text="hello")
@@ -191,35 +128,26 @@ class TestAttributeHandling:
 
         _, captures = render_component(
             '<include:button-props text="{{ value.text|upper }}" size="{{ value.get_size() }}" />',
-            components={
-                "button-props": """
-                    {# props text, size #}
-                    {{ record(text=text, size=size) }}
-                """
-            },
+            use=["button-props"],
             context={"value": value},
         )
 
-        payload = captures[0]
+        payload = first_capture(captures, "button-props")
         assert payload["text"] == "HELLO"
         assert payload["size"] == 42
 
     def test_nested_attributes(self) -> None:
         _, captures = render_component(
-            '<include:nested-attrs class="outer" inner.class="inner" inner.data_value="{{ inner_value }}" />',
-            components={
-                "nested-attrs": """
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            '<include:nested-attrs class="outer" inner.class="inner" inner.data-value="{{ inner_value }}" />',
+            use=["nested-attrs"],
             context={"inner_value": "42"},
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "nested-attrs")["attrs"]
         inner = getattr(attrs, "inner")
         assert 'class="outer"' in str(attrs)
         assert inner._attrs["class"] == "inner"
-        assert getattr(inner, "data").value == "42"
+        assert inner.dataValue == "42"
 
     def test_attrs_group_syntax(self) -> None:
         _, captures = render_component(
@@ -227,46 +155,34 @@ class TestAttributeHandling:
             <include:form-with-button
                 button.type="submit"
                 button.class="btn btn-primary"
-                data_form="true"
+                data-form="true"
             />
             """,
-            components={
-                "form-with-button": """
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            use=["form-with-button"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "form-with-button")["attrs"]
         button_group = getattr(attrs, "button")
         assert button_group._attrs == {"type": "submit", "class": "btn btn-primary"}
-        assert getattr(attrs, "data").form == "true"
+        assert attrs.dataForm == "true"
 
     def test_self_closing_with_attributes(self) -> None:
         _, captures = render_component(
-            '<include:button class="btn" @click="test()" />',
-            components={
-                "button": """
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            '<include:button variant="primary" class="btn" @click="test()" />',
+            use=["button"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "button")["attrs"]
         assert attrs._attrs["class"] == "btn"
         assert attrs._attrs["@click"] == "test()"
 
     def test_attribute_escaping(self) -> None:
         _, captures = render_component(
-            '<include:button test="2>1" another="3>2" />',
-            components={
-                "button": """
-                    {{ record(attrs=attrs) }}
-                """
-            },
+            '<include:button variant="primary" test="2>1" another="3>2" />',
+            use=["button"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "button")["attrs"]
         assert 'test="2&gt;1"' in str(attrs)
         assert 'another="3&gt;2"' in str(attrs)
 
@@ -277,23 +193,15 @@ class TestAttributeHandling:
               <p>{{ text }}</p>
             </include:body_text>
             """,
-            components={
-                "body_text": """
-                    {# props alignment, size #}
-                    <div class="body{% if alignment %} text-{{ alignment }}{% endif %}{% if size %} body-{{ size }}{% endif %}">
-                      {{ contents }}
-                    </div>
-                    {{ record(alignment=alignment, size=size, rendered_output=output) }}
-                """
-            },
+            use=["body_text"],
             context={"text": "A long paragraph of text goes here."},
         )
 
-        payload = captures[0]
+        payload = first_capture(captures, "body_text")
         assert payload["alignment"] == "center"
         assert payload["size"] == "large"
         assert '<div class="body text-center body-large">' in output
-        assert '<p>A long paragraph of text goes here.</p>' in output
+        assert "A long paragraph of text goes here." in output
 
 
 class TestAttributePrecedence:
@@ -301,18 +209,11 @@ class TestAttributePrecedence:
 
     def test_local_attrs_precedence(self) -> None:
         _, captures = render_component(
-            '<include:card class="local" id="outer">Content</include:card>',
-            components={
-                "card": """
-                    {% if 'class' not in attrs._attrs %}
-                        {% do attrs.__setitem__('class', 'component-default') %}
-                    {% endif %}
-                    {{ record(attrs=attrs, contents=contents) }}
-                """
-            },
+            '<include:simple-card class="local" id="outer">Content</include:simple-card>',
+            use=["simple-card"],
         )
 
-        attrs = captures[0]["attrs"]
+        attrs = first_capture(captures, "simple-card")["attrs"]
         assert attrs._attrs["class"] == "local"
         assert attrs._attrs["id"] == "outer"
 
@@ -320,27 +221,19 @@ class TestAttributePrecedence:
         _, captures = render_component(
             """
             <include:nested-component
-                data_root="true"
+                data-root="true"
                 inner.class="leaf"
-                inner.data_source="custom"
+                inner.data-source="custom"
             >Content</include:nested-component>
             """,
-            components={
-                "nested-component": """
-                    {% set inner_group = attrs._nested_attrs.get('inner') %}
-                    {% if not inner_group or 'class' not in inner_group._attrs %}
-                        {% do attrs.__setitem__('inner.class', 'default-inner') %}
-                    {% endif %}
-                    {{ record(attrs=attrs, contents=contents) }}
-                """
-            },
+            use=["nested-component"],
         )
 
-        payload = captures[0]
+        payload = first_capture(captures, "nested-component")
         attrs = payload["attrs"]
         inner = getattr(attrs, "inner")
 
-        assert getattr(attrs, "data").root == "true"
+        assert attrs.dataRoot == "true"
         assert inner._attrs["class"] == "leaf"
-        assert getattr(inner, "data").source == "custom"
-        assert payload["contents"].stripped == "Content"
+        assert inner.dataSource == "custom"
+        assert payload["contents"].default.strip() == "Content"

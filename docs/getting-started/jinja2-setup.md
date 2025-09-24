@@ -442,6 +442,52 @@ Variables are passed the same way as Django:
 <include:article content="{{ article.body|markdown|safe }}" />
 ```
 
+### Template Tag Syntax Limitations
+
+!!! warning "Advanced Attributes Require HTML Syntax"
+    The traditional `{% includecontents %}` tag syntax in Jinja2 has **significant limitations** due to Jinja2's parser restrictions. Modern web development attributes only work with HTML component syntax.
+
+#### ❌ **Limited: Traditional Tag Syntax**
+
+```jinja2
+<!-- These WILL FAIL with parser errors -->
+{% includecontents "button" @click="handler()" %}{% endincludecontents %}
+{% includecontents "card" data-id="123" %}{% endincludecontents %}
+{% includecontents "form" v-on:submit="onSubmit" %}{% endincludecontents %}
+{% includecontents "modal" x-show="open" %}{% endincludecontents %}
+{% includecontents "component" inner.class="test" %}{% endincludecontents %}
+{% includecontents "button" class:active="true" %}{% endincludecontents %}
+
+<!-- Only basic Python identifiers work -->
+{% includecontents "card" title="Hello" variant="primary" %}{% endincludecontents %}
+```
+
+**Error:** `expected token 'name', got '-'` or `unexpected char '@'`
+
+#### ✅ **Recommended: HTML Component Syntax**
+
+```html
+<!-- All modern attributes work perfectly -->
+<include:button @click="handler()">Click me</include:button>
+<include:card data-id="123">Content</include:card>
+<include:form v-on:submit="onSubmit">Form</include:form>
+<include:modal x-show="open">Modal</include:modal>
+<include:component inner.class="test">Component</include:component>
+<include:button class:active="true">Toggle</include:button>
+```
+
+#### Alternative: Dictionary Syntax
+
+For advanced attributes with traditional syntax, use dictionary unpacking:
+
+```jinja2
+{% includecontents "button" {"@click": "handler()", "data-id": "123"} %}
+    Click me
+{% endincludecontents %}
+```
+
+**Recommendation:** Use HTML component syntax (`<include:>`) for all modern web development features. Reserve traditional syntax for simple attributes only.
+
 ### WrapIf Alternative
 
 Since `{% wrapif %}` isn't available in Jinja2, use conditional macros:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from includecontents.shared.attrs import BaseAttrs
 
 
@@ -10,6 +12,8 @@ class Attrs(BaseAttrs):
 
     def __init__(self) -> None:
         super().__init__()
+
+    # No custom __setitem__ needed - use parent behavior for Django parity
 
     def __str__(self) -> str:
         parts = []

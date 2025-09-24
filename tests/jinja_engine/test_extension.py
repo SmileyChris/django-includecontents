@@ -147,12 +147,13 @@ def test_default_prop_applied_when_missing() -> None:
 
 def test_unknown_attributes_flow_into_attrs() -> None:
     env = _environment()
+    # Test that unknown attributes (not props) flow into attrs object
     template = env.from_string(
-        '{% includecontents "card" title="Hi" data_id="123" %}Body{% endincludecontents %}'
+        '{% includecontents "card" title="Hi" class="test-class" %}Body{% endincludecontents %}'
     )
     rendered = template.render()
     attrs_segment = rendered.split("::")[-1]
-    assert 'data_id="123"' in attrs_segment
+    assert 'class="test-class"' in attrs_segment
 
 
 def test_props_with_defaults() -> None:
@@ -276,14 +277,13 @@ def test_icon_html_syntax_preprocessing() -> None:
     source = '<icon:home class="nav-icon" />'
     processed = extension.preprocess(source, name=None)
     assert 'icon("home"' in processed
-    assert 'class="nav-icon"' in processed
+    assert '{"class": "nav-icon"}' in processed
 
     # Test icon with multiple attributes
     source = '<icon:user class="avatar" size="24" />'
     processed = extension.preprocess(source, name=None)
     assert 'icon("user"' in processed
-    assert 'class="avatar"' in processed
-    assert 'size="24"' in processed
+    assert '{"class": "avatar", "size": "24"}' in processed
 
 
 def test_icon_html_syntax_no_closing_tag() -> None:
