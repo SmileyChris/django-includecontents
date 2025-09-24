@@ -1,394 +1,333 @@
-import pytest
-from jinja2 import Environment
+from __future__ import annotations
+
+from textwrap import dedent
+from typing import Any, Mapping
+
+from jinja2 import DictLoader, Environment
 
 from includecontents.jinja2.extension import IncludeContentsExtension
 
 
-def create_jinja_env():
-    """Create a Jinja environment with the extension."""
-    return Environment(
-        extensions=[IncludeContentsExtension],
-        loader=None,  # We'll use from_string
-        autoescape=True,
+DEFAULT_COMPONENTS: dict[str, str] = {
+    "card-with-footer": """
+        {# props title #}
+        {{ record(
+            component="card-with-footer",
+            title=title,
+            default=contents.default|trim,
+            footer=contents.footer|trim,
+            sidebar=contents.sidebar|trim,
+        ) }}
+        <card title="{{ title }}">
+            <main>{{ contents }}</main>
+            <footer>{{ contents.footer }}</footer>
+            <aside>{{ contents.sidebar }}</aside>
+        </card>
+    """,
+    "card": """
+        {# props title="" #}
+        {{ record(
+            component="card",
+            title=title|default(""),
+            default=contents.default|trim,
+            oldstyle=contents.oldstyle|trim,
+            newstyle=contents.newstyle|trim,
+        ) }}
+        <card title="{{ title|default("") }}">{{ contents }}</card>
+    """,
+    "outer-card": """
+        {# props title #}
+        {{ record(
+            component="outer-card",
+            title=title,
+            main=contents.main|trim,
+            footer=contents.footer|trim,
+        ) }}
+        <outer>{{ contents.main }}</outer>
+        <outer-footer>{{ contents.footer }}</outer-footer>
+    """,
+    "inner-card": """
+        {# props title #}
+        {{ record(
+            component="inner-card",
+            title=title,
+            body=contents.default|trim,
+            footer=contents.footer|trim,
+        ) }}
+        <inner>{{ contents }}</inner>
+    """,
+    "card-with-props": """
+        {# props title, variant, size #}
+        {{ record(
+            component="card-with-props",
+            title=title,
+            variant=variant,
+            size=size,
+            body=contents.body|trim,
+        ) }}
+        <card>{{ contents.body }}</card>
+    """,
+    "flexible-card": """
+        {# props title="" #}
+        {% set data_group = attrs._nested_attrs.get('data') %}
+        {{ record(
+            component="flexible-card",
+            title=title|default(""),
+            attrs=attrs._attrs,
+            data_attrs=data_group._attrs if data_group else {},
+            default=contents.default|trim,
+            header=contents.header|trim,
+        ) }}
+        <card>{{ contents }}</card>
+    """,
+    "level1": """
+        {{ record(component="level1", section1=contents.section1|trim) }}
+        {{ contents.section1 }}
+    """,
+    "level2": """
+        {{ record(component="level2", section2=contents.section2|trim) }}
+        {{ contents.section2 }}
+    """,
+    "level3": """
+        {{ record(component="level3", section3=contents.section3|trim) }}
+        {{ contents.section3 }}
+    """,
+    "level4": """
+        {{ record(component="level4", section4=contents.section4|trim) }}
+        {{ contents.section4 }}
+    """,
+}
+
+
+def _normalize(components: Mapping[str, str]) -> dict[str, str]:
+    return {
+        f"components/{name}.html": dedent(template).strip()
+        for name, template in components.items()
+    }
+
+
+def render_component(
+    template_source: str,
+    *,
+    components: Mapping[str, str] | None = None,
+    context: Mapping[str, Any] | None = None,
+) -> tuple[str, list[dict[str, Any]]]:
+    templates = {"page.html": dedent(template_source).strip()}
+    component_templates = _normalize(DEFAULT_COMPONENTS)
+    if components:
+        component_templates.update(_normalize(components))
+    templates.update(component_templates)
+
+    env = Environment(
+        loader=DictLoader(templates),
+        extensions=[IncludeContentsExtension, "jinja2.ext.do"],
+        autoescape=False,
     )
 
+    captures: list[dict[str, Any]] = []
 
-class TestHTMLContentSyntax:
-    """Test the new <content:name> HTML syntax for named content blocks."""
+    def record(**payload: Any) -> str:
+        captures.append(payload)
+        return ""
 
-    def test_basic_html_content_syntax(self):
-        """Test basic <content:name> syntax compilation."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-with-footer title="Test Card">
-            <p>Main content</p>
-            <content:footer>Footer content</content:footer>
-            <content:sidebar>Sidebar content</content:sidebar>
-        </include:card-with-footer>
-        '''
+    env.globals.setdefault("record", record)
 
-        # Test that the template compiles without error
-        template = env.from_string(template_source)
-        assert template is not None
+    rendered = env.get_template("page.html").render(**(dict(context or {})))
+    return rendered, captures
 
-    def test_mixed_content_syntax(self):
-        """Test mixing old {% contents %} and new <content:name> syntax."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card title="Mixed Syntax">
-            <p>Main content</p>
-            {% contents "oldstyle" %}
-                Old style content
-            {% endcontents %}
-            <content:newstyle>New style content</content:newstyle>
-        </include:card>
-        '''
 
-        template = env.from_string(template_source)
-        assert template is not None
+def _by_component(captures: list[dict[str, Any]], component: str) -> dict[str, Any]:
+    for entry in captures:
+        if entry.get("component") == component:
+            return entry
+    raise AssertionError(f"No capture for component {component!r}")
 
-    def test_html_content_empty_blocks(self):
-        """Test HTML content syntax with empty named blocks."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-with-footer title="Empty">
-            <p>Just main content</p>
-        </include:card-with-footer>
-        '''
 
-        template = env.from_string(template_source)
-        assert template is not None
+class TestHTMLContentBehaviour:
+    def test_named_slots_are_captured(self) -> None:
+        rendered, captures = render_component(
+            """
+            <include:card-with-footer title="Test Card">
+                <p>Main content</p>
+                <content:footer>Footer content</content:footer>
+                <content:sidebar>Sidebar</content:sidebar>
+            </include:card-with-footer>
+            """
+        )
 
-    def test_html_content_only_named_blocks(self):
-        """Test HTML content syntax with only named blocks and no main content."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-with-footer title="Only Named">
-            <content:footer>Just footer</content:footer>
-        </include:card-with-footer>
-        '''
+        data = _by_component(captures, "card-with-footer")
+        assert data["title"] == "Test Card"
+        assert "Main content" in data["default"]
+        assert data["footer"] == "Footer content"
+        assert data["sidebar"] == "Sidebar"
+        assert "<footer>Footer content</footer>" in rendered
 
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_html_content_with_variables(self):
-        """Test HTML content syntax with template variables."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-with-footer title="Variables">
-            <p>Hello {{ name }}!</p>
-            <content:footer>Copyright {{ year }}</content:footer>
-        </include:card-with-footer>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_html_content_multiline(self):
-        """Test HTML content syntax with multiline content."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-with-footer title="Multiline">
-            <content:footer>
-                <p>Line 1</p>
-                <p>Line 2</p>
-            </content:footer>
-        </include:card-with-footer>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_html_content_nested_components(self):
-        """Test HTML content syntax with nested components."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:outer-card title="Outer">
-            <content:main>
-                <include:inner-card title="Inner">
-                    <p>Nested content</p>
-                    <content:footer>Nested footer</content:footer>
-                </include:inner-card>
-            </content:main>
-            <content:footer>Outer footer</content:footer>
-        </include:outer-card>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_html_content_with_loops(self):
-        """Test HTML content syntax within loops."""
-        env = create_jinja_env()
-        template_source = '''
-        {% for item in items %}
-            <include:card title="{{ item.title }}">
-                <p>{{ item.content }}</p>
-                <content:footer>Item {{ loop.index }}</content:footer>
+    def test_old_and_new_content_syntax_mix(self) -> None:
+        _, captures = render_component(
+            """
+            <include:card title="Mixed">
+                Body text
+                {% contents "oldstyle" %}Old style{% endcontents %}
+                <content:newstyle>New style</content:newstyle>
             </include:card>
-        {% endfor %}
-        '''
+            """
+        )
 
-        template = env.from_string(template_source)
-        assert template is not None
+        data = _by_component(captures, "card")
+        assert data["title"] == "Mixed"
+        assert data["default"] == "Body text"
+        assert data["oldstyle"] == "Old style"
+        assert data["newstyle"] == "New style"
 
-    def test_html_content_with_conditionals(self):
-        """Test HTML content syntax with conditional blocks."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card title="Conditional">
-            <p>Always visible content</p>
-            {% if show_footer %}
-                <content:footer>Conditional footer</content:footer>
-            {% endif %}
-        </include:card>
-        '''
+    def test_nested_components_preserve_named_content(self) -> None:
+        _, captures = render_component(
+            """
+            <include:outer-card title="Outer">
+                <content:main>
+                    <include:inner-card title="Inner">
+                        Inner body
+                        <content:footer>Inner footer</content:footer>
+                    </include:inner-card>
+                </content:main>
+                <content:footer>Outer footer</content:footer>
+            </include:outer-card>
+            """
+        )
 
-        template = env.from_string(template_source)
-        assert template is not None
+        outer = _by_component(captures, "outer-card")
+        inner = _by_component(captures, "inner-card")
+        assert "Inner body" in inner["body"]
+        assert inner["footer"] == "Inner footer"
+        assert "Inner body" in outer["main"]
+        assert outer["footer"] == "Outer footer"
 
-    def test_html_content_complex_nesting(self):
-        """Test complex nesting of HTML content blocks."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:layout>
-            <content:header>
-                <include:navigation>
-                    <content:logo>Brand Name</content:logo>
-                    <content:menu>
-                        <include:menu-item href="/">Home</include:menu-item>
-                        <include:menu-item href="/about">About</include:menu-item>
-                    </content:menu>
-                </include:navigation>
-            </content:header>
+    def test_duplicate_named_blocks_last_wins(self) -> None:
+        _, captures = render_component(
+            """
+            <include:card-with-footer title="Duplicates">
+                <p>Original</p>
+                <content:footer>First footer</content:footer>
+                <content:footer>Second footer</content:footer>
+            </include:card-with-footer>
+            """
+        )
 
-            <content:main>
-                <include:article title="Article">
-                    <p>Article content</p>
-                    <content:sidebar>
-                        <include:widget title="Related">
-                            <p>Related content</p>
-                        </include:widget>
-                    </content:sidebar>
-                </include:article>
-            </content:main>
+        data = _by_component(captures, "card-with-footer")
+        assert data["footer"] == "Second footer"
 
-            <content:footer>
-                <p>Copyright info</p>
-            </content:footer>
-        </include:layout>
-        '''
+    def test_content_blocks_render_per_loop_iteration(self) -> None:
+        _, captures = render_component(
+            """
+            {% for item in items %}
+                <include:card title="{{ item.title }}">
+                    {{ item.body }}
+                    <content:newstyle>Item {{ loop.index }}</content:newstyle>
+                </include:card>
+            {% endfor %}
+            """,
+            context={"items": [{"title": "One", "body": "Body one"}, {"title": "Two", "body": "Body two"}]},
+        )
 
-        template = env.from_string(template_source)
-        assert template is not None
+        cards = [entry for entry in captures if entry.get("component") == "card"]
+        assert [card["title"] for card in cards] == ["One", "Two"]
+        assert [card["default"] for card in cards] == ["Body one", "Body two"]
+        assert [card["newstyle"] for card in cards] == ["Item 1", "Item 2"]
 
+    def test_missing_conditional_block_becomes_empty(self) -> None:
+        _, captures = render_component(
+            """
+            <include:card title="Conditional">
+                Always here
+                {% if show_footer %}
+                    <content:newstyle>Shown</content:newstyle>
+                {% endif %}
+            </include:card>
+            """,
+            context={"show_footer": False},
+        )
+
+        data = _by_component(captures, "card")
+        assert data["newstyle"] == ""
+
+    def test_deeply_nested_content_blocks(self) -> None:
+        _, captures = render_component(
+            """
+            <include:level1>
+                <content:section1>
+                    <include:level2>
+                        <content:section2>
+                            <include:level3>
+                                <content:section3>
+                                    <include:level4>
+                                        <content:section4>Deep value</content:section4>
+                                    </include:level4>
+                                </content:section3>
+                            </include:level3>
+                        </content:section2>
+                    </include:level2>
+                </content:section1>
+            </include:level1>
+            """
+        )
+
+        deepest = _by_component(captures, "level4")
+        assert deepest["section4"] == "Deep value"
+
+    def test_content_blocks_can_use_props(self) -> None:
+        _, captures = render_component(
+            """
+            <include:card-with-props title="Props" variant="primary" size="lg">
+                <content:body>Using Props and primary</content:body>
+            </include:card-with-props>
+            """
+        )
+
+        data = _by_component(captures, "card-with-props")
+        assert data["variant"] == "primary"
+        assert data["size"] == "lg"
+        assert data["body"] == "Using Props and primary"
+
+
+    def test_content_blocks_respect_component_attrs(self) -> None:
+        _, captures = render_component(
+            """
+            <include:flexible-card class="custom-card" data-role="banner" title="Flexible">
+                <content:header>Header text</content:header>
+                Body copy
+            </include:flexible-card>
+            """
+        )
+
+        data = _by_component(captures, "flexible-card")
+        assert data["attrs"] == {"class": "custom-card"}
+        assert data["data_attrs"] == {"role": "banner"}
+        assert data["header"] == "Header text"
+        assert data["default"] == "Body copy"
 
 class TestContentBlockEdgeCases:
-    """Test edge cases and error conditions for content blocks."""
+    def test_duplicate_blocks_last_value_used(self) -> None:
+        _, captures = render_component(
+            """
+            <include:card>
+                Content
+                <content:newstyle>First</content:newstyle>
+                <content:newstyle>Last</content:newstyle>
+            </include:card>
+            """
+        )
 
-    def test_duplicate_content_blocks(self):
-        """Test handling of duplicate content block names."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card title="Duplicate">
-            <content:footer>First footer</content:footer>
-            <content:footer>Second footer</content:footer>
-        </include:card>
-        '''
+        data = _by_component(captures, "card")
+        assert data["newstyle"] == "Last"
 
-        # This should either compile with last-wins behavior or raise an error
-        # The exact behavior should match Django implementation
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_content_block_outside_component_renders_plainly(self) -> None:
+        rendered, captures = render_component("<content:note>Loose content</content:note>")
+        assert rendered.strip() == "Loose content"
+        assert captures == []
 
-    def test_empty_content_block_names(self):
-        """Test content blocks with empty or invalid names."""
-        env = create_jinja_env()
-
-        # Empty name should potentially raise an error during parsing
-        try:
-            template_source = '<include:card><content:>Empty name</content:></include:card>'
-            template = env.from_string(template_source)
-            # If it doesn't raise an error, that's also valid behavior
-        except Exception:
-            # Expected - empty content block names should be invalid
-            pass
-
-    def test_content_blocks_outside_components(self):
-        """Test content blocks used outside of components (should be invalid)."""
-        env = create_jinja_env()
-
-        # Content blocks outside components should be invalid
-        template_source = '''
-        <div>Regular HTML</div>
-        <content:invalid>This should not work</content:invalid>
-        '''
-
-        # This might raise an error during compilation or rendering
-        # The exact behavior should match the intended design
-        try:
-            template = env.from_string(template_source)
-            # If compilation succeeds, rendering might fail
-        except Exception:
-            # Expected behavior - content blocks should only work inside components
-            pass
-
-    def test_deeply_nested_content_blocks(self):
-        """Test very deeply nested content block structures."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:level1>
-            <content:section1>
-                <include:level2>
-                    <content:section2>
-                        <include:level3>
-                            <content:section3>
-                                <include:level4>
-                                    <content:section4>
-                                        Deep content
-                                    </content:section4>
-                                </include:level4>
-                            </content:section3>
-                        </include:level3>
-                    </content:section2>
-                </include:level2>
-            </content:section1>
-        </include:level1>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_content_blocks_with_complex_content(self):
-        """Test content blocks containing complex template syntax."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:complex-card title="Complex">
-            <content:body>
-                {% for item in items %}
-                    <div class="item {{ loop.cycle('odd', 'even') }}">
-                        {% if item.featured %}
-                            <strong>{{ item.title }}</strong>
-                        {% else %}
-                            {{ item.title }}
-                        {% endif %}
-
-                        {% include "partials/item-details.html" %}
-
-                        {% set processed_content=item.content %}
-                            {{ processed_content }}
-                    </div>
-                {% endfor %}
-            </content:body>
-
-            <content:footer>
-                {% if user.is_authenticated %}
-                    <a href="/edit/{{ item.id }}/">Edit</a>
-                {% endif %}
-            </content:footer>
-        </include:complex-card>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-
-class TestContentBlockInteraction:
-    """Test interaction between content blocks and other features."""
-
-    def test_content_blocks_with_attrs(self):
-        """Test content blocks combined with attribute handling."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:flexible-card
-            class="custom-card"
-            data-id="123"
-            title="Flexible">
-            <content:header class="custom-header">
-                Header with custom class
-            </content:header>
-            <p>Main content</p>
-        </include:flexible-card>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_content_blocks_with_props(self):
-        """Test content blocks with component props."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-with-props
-            title="Props Test"
-            variant="primary"
-            size="large">
-            <content:body>
-                Content that uses {{ title }} and {{ variant }}
-            </content:body>
-        </include:card-with-props>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_content_blocks_inheritance_style(self):
-        """Test content blocks used in template inheritance style patterns."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:base-layout title="Page Title">
-            <content:breadcrumbs>
-                <a href="/">Home</a> &gt;
-                <a href="/section">Section</a> &gt;
-                Current Page
-            </content:breadcrumbs>
-
-            <content:main>
-                <h1>Page Content</h1>
-                <p>Main page content goes here</p>
-            </content:main>
-
-            <content:sidebar>
-                <include:widget type="recent-posts" />
-                <include:widget type="categories" />
-            </content:sidebar>
-
-            <content:scripts>
-                <script>
-                    // Page-specific JavaScript
-                    console.log('Page loaded');
-                </script>
-            </content:scripts>
-        </include:base-layout>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-
-if __name__ == "__main__":
-    # Simple test runner for development
-    import sys
-
-    test_classes = [TestHTMLContentSyntax, TestContentBlockEdgeCases, TestContentBlockInteraction]
-
-    passed = 0
-    failed = 0
-
-    for test_class in test_classes:
-        instance = test_class()
-        methods = [method for method in dir(instance) if method.startswith('test_')]
-
-        for method_name in methods:
-            try:
-                method = getattr(instance, method_name)
-                method()
-                print(f"✓ {test_class.__name__}.{method_name}")
-                passed += 1
-            except Exception as e:
-                print(f"✗ {test_class.__name__}.{method_name}: {e}")
-                failed += 1
-
-    print(f"\nResults: {passed} passed, {failed} failed")
-
-    if failed > 0:
-        sys.exit(1)
+    def test_empty_content_name_keeps_as_text(self) -> None:
+        rendered, captures = render_component(
+            "<include:card title='Blank'><content:>Empty</content:></include:card>"
+        )
+        data = _by_component(captures, "card")
+        assert data["default"] == '<content:>Empty</content:>'
+        assert '<content:>Empty</content:>' in rendered

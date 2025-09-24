@@ -1,289 +1,346 @@
+from __future__ import annotations
+
+from textwrap import dedent
+from types import SimpleNamespace
+from typing import Any, Mapping
+
 import pytest
-from jinja2 import Environment
+from jinja2 import DictLoader, Environment
 
 from includecontents.jinja2.extension import IncludeContentsExtension
 
 
-def create_jinja_env():
-    """Create a Jinja environment with the extension."""
-    return Environment(
-        extensions=[IncludeContentsExtension],
-        loader=None,  # We'll use from_string
-        autoescape=True,
+def render_component(
+    base_template: str,
+    *,
+    components: Mapping[str, str],
+    context: Mapping[str, Any] | None = None,
+) -> tuple[str, list[dict[str, Any]]]:
+    """Render ``base_template`` and capture component state."""
+    templates: dict[str, str] = {"base.html": dedent(base_template).strip()}
+    for name, template in components.items():
+        templates[f"components/{name}.html"] = dedent(template).strip()
+
+    env = Environment(
+        loader=DictLoader(templates),
+        extensions=[IncludeContentsExtension, "jinja2.ext.do"],
+        autoescape=False,
     )
+
+    captures: list[dict[str, Any]] = []
+
+    def record(**payload: Any) -> str:
+        captures.append(payload)
+        return ""
+
+    env.globals.setdefault("record", record)
+
+    rendered = env.get_template("base.html").render(**(dict(context or {})))
+    return rendered, captures
 
 
 class TestAttributeHandling:
-    """Test advanced attribute handling features in Jinja engine."""
+    """Integration tests for attribute handling in the Jinja engine."""
 
-    def test_basic_attrs_spread(self):
-        """Test basic ...attrs spreading from parent to child component."""
-        # This test needs component templates to be available
-        # For now, testing compilation and basic functionality
-        env = create_jinja_env()
-        template_source = '''
-        <include:card class="mycard" id="topcard" x-data title="hello">
-            some content
-        </include:card>
-        '''
+    def test_basic_attrs_spread(self) -> None:
+        output, captures = render_component(
+            """
+            <include:card title="Hello" class="primary" id="card-1" data_role="{{ role }}">
+              Body text
+            </include:card>
+            """,
+            components={
+                "card": """
+                    {# props title #}
+                    {% do attrs.__setitem__('class', '& card') %}
+                    {{ record(attrs=attrs, contents=contents, title=title) }}
+                """
+            },
+            context={"role": "featured"},
+        )
 
-        # Test that the template compiles without error
-        template = env.from_string(template_source)
-        assert template is not None
+        payload = captures[0]
+        attrs = payload["attrs"]
 
-    def test_class_append_syntax(self):
-        """Test class attribute appending with '& ' syntax."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-extend title="Append Test" class="user-class" />
-        '''
+        assert payload["title"] == "Hello"
+        assert payload["contents"].stripped == "Body text"
+        assert 'class="primary card"' in str(attrs)
+        assert attrs._attrs["id"] == "card-1"
+        assert getattr(attrs, "data").role == "featured"
+        assert output.strip() == ""
 
-        # Test compilation
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_class_append_syntax(self) -> None:
+        _, captures = render_component(
+            '<include:card-extend title="Append" class="user-class" />',
+            components={
+                "card-extend": """
+                    {# props title #}
+                    {% do attrs.__setitem__('class', '& card-extend') %}
+                    {{ record(attrs=attrs) }}
+                """
+            },
+        )
 
-    def test_class_prepend_syntax(self):
-        """Test class attribute prepending with ' &' syntax."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card-prepend title="Prepend Test" class="user-class" />
-        '''
+        attrs = captures[0]["attrs"]
+        assert 'class="user-class card-extend"' in str(attrs)
+        assert "title" not in attrs._attrs
 
-        # Test compilation
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_class_prepend_syntax(self) -> None:
+        _, captures = render_component(
+            '<include:card-prepend title="Prepend" class="user-class" />',
+            components={
+                "card-prepend": """
+                    {# props title #}
+                    {% do attrs.__setitem__('class', 'card-prepend &') %}
+                    {{ record(attrs=attrs) }}
+                """
+            },
+        )
 
-    def test_class_negation_syntax(self):
-        """Test class: attribute with negation using 'not' syntax."""
-        env = create_jinja_env()
-        template_source = '''
-        <include:card class:not="disabled ? 'active'" title="Test" />
-        '''
+        attrs = captures[0]["attrs"]
+        assert 'class="card-prepend user-class"' in str(attrs)
 
-        # Test compilation
-        template = env.from_string(template_source)
-        assert template is not None
+    @pytest.mark.parametrize("is_active, expected_flag", [(True, True), (False, False)])
+    def test_class_negation_syntax(self, is_active: bool, expected_flag: bool) -> None:
+        _, captures = render_component(
+            '<include:card-conditional title="Toggle" class:active="{{ is_active }}" />',
+            components={
+                "card-conditional": """
+                    {# props title #}
+                    {% do attrs.__setitem__('class', '& card') %}
+                    {{ record(attrs=attrs) }}
+                """
+            },
+            context={"is_active": is_active},
+        )
 
-    def test_javascript_event_attributes(self):
-        """Test various JavaScript framework event attributes."""
-        env = create_jinja_env()
+        attrs = captures[0]["attrs"]
+        class_group = getattr(attrs, "class")
+        assert class_group.active is expected_flag
+        assert 'class="card"' in str(attrs)
 
-        # Test @click attribute
-        template_source = '''<include:button @click="handleClick()" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_javascript_event_attributes(self) -> None:
+        _, captures = render_component(
+            """
+            <include:button
+                text="Click"
+                @click="handleClick()"
+                v-on:submit="onSubmit"
+                x-on:click="toggle()"
+                :class="{ 'active': true }"
+            />
+            """,
+            components={
+                "button": """
+                    {# props text #}
+                    {{ record(attrs=attrs) }}
+                """
+            },
+        )
 
-        # Test Vue.js v-on: syntax
-        template_source = '''<include:button v-on:submit="onSubmit" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        attrs = captures[0]["attrs"]
+        assert attrs._attrs["@click"] == "handleClick()"
+        assert attrs._attrs["v-on:submit"] == "onSubmit"
+        assert attrs._attrs["x-on:click"] == "toggle()"
+        assert attrs._attrs[":class"] == "{ &#x27;active&#x27;: true }"
 
-        # Test Alpine.js x-on: syntax
-        template_source = '''<include:button x-on:click="open = !open" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_javascript_event_modifiers(self) -> None:
+        _, captures = render_component(
+            """
+            <include:button
+                text="Click"
+                @click.stop.prevent="handleClick()"
+                @keyup.enter="handleEnter()"
+            />
+            """,
+            components={
+                "button": """
+                    {# props text #}
+                    {{ record(attrs=attrs) }}
+                """
+            },
+        )
 
-        # Test Alpine.js :bind shorthand
-        template_source = '''<include:button :class="{ 'active': isActive }" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        attrs = captures[0]["attrs"]
+        assert attrs._attrs["@click.stop.prevent"] == "handleClick()"
+        assert attrs._attrs["@keyup.enter"] == "handleEnter()"
 
-    def test_javascript_event_modifiers(self):
-        """Test JavaScript event modifiers like @click.stop."""
-        env = create_jinja_env()
+    def test_template_variables_in_attributes(self) -> None:
+        _, captures = render_component(
+            '<include:button data_value="{{ count|default(0) }}" data_label="{{ label|upper }}" />',
+            components={
+                "button": """
+                    {{ record(attrs=attrs) }}
+                """
+            },
+            context={"count": 5, "label": "items"},
+        )
 
-        # Test Vue.js event modifiers
-        template_source = '''<include:button @click.stop="handleClick()" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        attrs = captures[0]["attrs"]
+        data_group = getattr(attrs, "data")
+        assert data_group.value == 5
+        assert data_group.label == "ITEMS"
 
-        # Test multiple modifiers
-        template_source = '''<include:button @click.stop.prevent="handleClick()" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_attributes_support_filters_and_callables(self) -> None:
+        value = SimpleNamespace(text="hello")
 
-        # Test keyup modifiers
-        template_source = '''<include:button @keyup.enter="handleEnter()" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        def get_size() -> int:
+            return 42
 
-    def test_template_variables_in_attributes(self):
-        """Test template variable support in component attributes."""
-        env = create_jinja_env()
+        value.get_size = get_size  # type: ignore[attr-defined]
 
-        # Test simple variable
-        template_source = '''<include:button data-id="{{ myid }}" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        _, captures = render_component(
+            '<include:button-props text="{{ value.text|upper }}" size="{{ value.get_size() }}" />',
+            components={
+                "button-props": """
+                    {# props text, size #}
+                    {{ record(text=text, size=size) }}
+                """
+            },
+            context={"value": value},
+        )
 
-        # Test variable with filter
-        template_source = '''<include:button data-count="{{ count|default(0) }}" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        payload = captures[0]
+        assert payload["text"] == "HELLO"
+        assert payload["size"] == 42
 
-    def test_mixed_content_in_attributes(self):
-        """Test mixed static text and template variables in attributes."""
-        env = create_jinja_env()
+    def test_nested_attributes(self) -> None:
+        _, captures = render_component(
+            '<include:nested-attrs class="outer" inner.class="inner" inner.data_value="{{ inner_value }}" />',
+            components={
+                "nested-attrs": """
+                    {{ record(attrs=attrs) }}
+                """
+            },
+            context={"inner_value": "42"},
+        )
 
-        # Test mixed content with variable
-        template_source = '''<include:button class="btn {{ variant }}" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        attrs = captures[0]["attrs"]
+        inner = getattr(attrs, "inner")
+        assert 'class="outer"' in str(attrs)
+        assert inner._attrs["class"] == "inner"
+        assert getattr(inner, "data").value == "42"
 
-        # Test mixed content with multiple variables
-        template_source = '''<include:button data-info="Count: {{ count }} of {{ total }}" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_attrs_group_syntax(self) -> None:
+        _, captures = render_component(
+            """
+            <include:form-with-button
+                button.type="submit"
+                button.class="btn btn-primary"
+                data_form="true"
+            />
+            """,
+            components={
+                "form-with-button": """
+                    {{ record(attrs=attrs) }}
+                """
+            },
+        )
 
-        # Test URL-like pattern
-        template_source = '''<include:button href="/products/{{ product_id }}/" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        attrs = captures[0]["attrs"]
+        button_group = getattr(attrs, "button")
+        assert button_group._attrs == {"type": "submit", "class": "btn btn-primary"}
+        assert getattr(attrs, "data").form == "true"
 
-    def test_conditional_logic_in_attributes(self):
-        """Test if/else logic in component attributes."""
-        env = create_jinja_env()
+    def test_self_closing_with_attributes(self) -> None:
+        _, captures = render_component(
+            '<include:button class="btn" @click="test()" />',
+            components={
+                "button": """
+                    {{ record(attrs=attrs) }}
+                """
+            },
+        )
 
-        # Test if statement in attribute
-        template_source = '''<include:button class="btn {% if active %}active{% endif %}" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        attrs = captures[0]["attrs"]
+        assert attrs._attrs["class"] == "btn"
+        assert attrs._attrs["@click"] == "test()"
 
-        # Test for loop in attribute
-        template_source = '''<include:button data-items="{% for i in items %}{{ i }}{% if not loop.last %},{% endif %}{% endfor %}" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_attribute_escaping(self) -> None:
+        _, captures = render_component(
+            '<include:button test="2>1" another="3>2" />',
+            components={
+                "button": """
+                    {{ record(attrs=attrs) }}
+                """
+            },
+        )
 
-    def test_nested_attributes(self):
-        """Test nested attribute syntax with dots."""
-        env = create_jinja_env()
+        attrs = captures[0]["attrs"]
+        assert 'test="2&gt;1"' in str(attrs)
+        assert 'another="3&gt;2"' in str(attrs)
 
-        # Test inner attribute syntax
-        template_source = '''<include:nested-attrs inner.class="inner-class" class="outer-class" />'''
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_conditional_css_classes_from_attributes(self) -> None:
+        output, captures = render_component(
+            """
+            <include:body_text alignment="center" size="large">
+              <p>{{ text }}</p>
+            </include:body_text>
+            """,
+            components={
+                "body_text": """
+                    {# props alignment, size #}
+                    <div class="body{% if alignment %} text-{{ alignment }}{% endif %}{% if size %} body-{{ size }}{% endif %}">
+                      {{ contents }}
+                    </div>
+                    {{ record(alignment=alignment, size=size, rendered_output=output) }}
+                """
+            },
+            context={"text": "A long paragraph of text goes here."},
+        )
 
-        # Test complex nested syntax
-        template_source = '''<include:button inner.@click="innerClick()" @click="outerClick()" />'''
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_self_closing_with_attributes(self):
-        """Test self-closing component syntax with attributes."""
-        env = create_jinja_env()
-
-        template_source = '''<include:button class="btn" @click="test()" />'''
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_kebab_case_attributes(self):
-        """Test kebab-case attribute names."""
-        env = create_jinja_env()
-
-        template_source = '''<include:button x-data="{foo: bar}" hx-swap="innerHTML" />'''
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_attribute_escaping(self):
-        """Test proper escaping of attribute values."""
-        env = create_jinja_env()
-
-        # Test HTML escaping
-        template_source = '''<include:button test="2>1" another="3>2" />'''
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_shorthand_attribute_syntax(self):
-        """Test shorthand {variable} syntax for attributes."""
-        env = create_jinja_env()
-
-        template_source = '''<include:button {title} {class} />'''
-        template = env.from_string(template_source)
-        assert template is not None
-
-
-class TestAttributeGrouping:
-    """Test attribute grouping functionality."""
-
-    def test_attrs_group_syntax(self):
-        """Test ...attrs.group spreading."""
-        env = create_jinja_env()
-
-        # Test group attribute spreading
-        template_source = '''
-        <include:form-with-button
-            button.type="submit"
-            button.class="btn btn-primary"
-            data-form="true">
-            Form content
-        </include:form-with-button>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-    def test_empty_attrs_handling(self):
-        """Test attrs spreading when parent has no attrs."""
-        env = create_jinja_env()
-
-        template_source = '''<include:empty-component />'''
-        template = env.from_string(template_source)
-        assert template is not None
+        payload = captures[0]
+        assert payload["alignment"] == "center"
+        assert payload["size"] == "large"
+        assert '<div class="body text-center body-large">' in output
+        assert '<p>A long paragraph of text goes here.</p>' in output
 
 
 class TestAttributePrecedence:
-    """Test attribute precedence and overriding."""
+    """Tests covering precedence rules for merged attributes."""
 
-    def test_local_attrs_precedence(self):
-        """Test that local attrs take precedence over spread attrs."""
-        env = create_jinja_env()
+    def test_local_attrs_precedence(self) -> None:
+        _, captures = render_component(
+            '<include:card class="local" id="outer">Content</include:card>',
+            components={
+                "card": """
+                    {% if 'class' not in attrs._attrs %}
+                        {% do attrs.__setitem__('class', 'component-default') %}
+                    {% endif %}
+                    {{ record(attrs=attrs, contents=contents) }}
+                """
+            },
+        )
 
-        template_source = '''
-        <include:card class="local-class" title="test">
-            Content
-        </include:card>
-        '''
+        attrs = captures[0]["attrs"]
+        assert attrs._attrs["class"] == "local"
+        assert attrs._attrs["id"] == "outer"
 
-        template = env.from_string(template_source)
-        assert template is not None
+    def test_nested_attrs_precedence(self) -> None:
+        _, captures = render_component(
+            """
+            <include:nested-component
+                data_root="true"
+                inner.class="leaf"
+                inner.data_source="custom"
+            >Content</include:nested-component>
+            """,
+            components={
+                "nested-component": """
+                    {% set inner_group = attrs._nested_attrs.get('inner') %}
+                    {% if not inner_group or 'class' not in inner_group._attrs %}
+                        {% do attrs.__setitem__('inner.class', 'default-inner') %}
+                    {% endif %}
+                    {{ record(attrs=attrs, contents=contents) }}
+                """
+            },
+        )
 
-    def test_nested_attrs_precedence(self):
-        """Test attribute precedence in nested components."""
-        env = create_jinja_env()
+        payload = captures[0]
+        attrs = payload["attrs"]
+        inner = getattr(attrs, "inner")
 
-        template_source = '''
-        <include:nested-component
-            data-root="true"
-            inner.class="leaf-component">
-            Content
-        </include:nested-component>
-        '''
-
-        template = env.from_string(template_source)
-        assert template is not None
-
-
-if __name__ == "__main__":
-    # Simple test runner for development
-    import sys
-
-    test_class = TestAttributeHandling()
-    methods = [method for method in dir(test_class) if method.startswith('test_')]
-
-    passed = 0
-    failed = 0
-
-    for method_name in methods:
-        try:
-            method = getattr(test_class, method_name)
-            method()
-            print(f"✓ {method_name}")
-            passed += 1
-        except Exception as e:
-            print(f"✗ {method_name}: {e}")
-            failed += 1
-
-    print(f"\nResults: {passed} passed, {failed} failed")
-
-    if failed > 0:
-        sys.exit(1)
+        assert getattr(attrs, "data").root == "true"
+        assert inner._attrs["class"] == "leaf"
+        assert getattr(inner, "data").source == "custom"
+        assert payload["contents"].stripped == "Content"
