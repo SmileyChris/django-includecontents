@@ -98,6 +98,9 @@ Django Engine (154 tests)          →  Jinja Engine (151 tests)
 2. **Class Manipulation**: Identical `class:not`, append/prepend logic across both engines
 3. **JavaScript Framework Attributes**: Same `@click`, `v-on:`, `x-on:` syntax support in both engines
 4. **CSRF Token Handling**: Both engines preserve `csrf_token` and `csrf_input` in component contexts
+5. **Attrs Implementation**: Shared `BaseAttrs` with unified callable logic, engine-specific syntax:
+   - **Django**: `{% attrs class='btn' type='button' %}`
+   - **Jinja2**: `{{ attrs(class_='btn', type='button') }}`
 
 ## Validation Strategy
 
@@ -190,6 +193,7 @@ Comprehensive test coverage has been added for both engines, and **all implement
 3. ✅ HTML content block syntax (`<content:name>`)
 4. ✅ Advanced class manipulation (`class:not`, `class="& base"`)
 5. ✅ Template variables and logic in attributes (`{{ var }}`, `{% if %}`)
+6. ✅ Callable attrs with unified fallback API (engine-specific syntax, shared implementation)
 
 **Technical Implementation**:
 - Enhanced preprocessing layer with attribute normalization/denormalization
@@ -197,3 +201,8 @@ Comprehensive test coverage has been added for both engines, and **all implement
 - Added content block preprocessing (`<content:name>` → `{% contents %}`)
 - Implemented `_process_template_expression()` for template logic in attributes
 - Leveraged existing shared BaseAttrs class for class manipulation logic
+- Unified callable attrs API with shared `BaseAttrs.__call__()` and engine-specific string rendering:
+  - Trailing underscore support for reserved keywords (`class_='btn'` → `class='btn'`)
+  - Method chaining: `attrs(type='button')(class_='btn')(disabled=True)`
+  - Proper merging of extended/prepended/nested attribute dictionaries
+  - Engine-specific HTML escaping (Django escapes, Jinja2 delegates to template-level escaping)

@@ -217,6 +217,38 @@ class TestCallableAttrsSpecialAttributes:
         assert 'existing' in str_result
         assert 'added' in str_result
 
+    def test_html_escaping_behavior(self):
+        """Test HTML escaping behavior differs between Django and Jinja2."""
+        dangerous_value = 'Hello "World" & <script>alert("xss")</script>'
+
+        # Django should escape HTML characters
+        django_attrs = DjangoAttrs()
+        django_attrs['title'] = dangerous_value
+        django_str = str(django_attrs)
+        assert '&quot;' in django_str  # " escaped
+        assert '&amp;' in django_str   # & escaped
+        assert '&lt;' in django_str    # < escaped
+        assert '&gt;' in django_str    # > escaped
+        assert '<script>' not in django_str
+
+        # Jinja2 should not escape (handled at template level)
+        jinja_attrs = JinjaAttrs()
+        jinja_attrs['title'] = dangerous_value
+        jinja_str = str(jinja_attrs)
+        assert '&quot;' not in jinja_str
+        assert '&amp;' not in jinja_str
+        assert '<script>' in jinja_str
+
+        # Test with callable functionality
+        django_result = DjangoAttrs()(title=dangerous_value)
+        jinja_result = JinjaAttrs()(title=dangerous_value)
+
+        django_callable_str = str(django_result)
+        jinja_callable_str = str(jinja_result)
+
+        assert '&quot;' in django_callable_str
+        assert '&quot;' not in jinja_callable_str
+
 
 class TestCallableAttrsNestedAccess:
     """Test nested attrs functionality with callable."""

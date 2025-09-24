@@ -713,23 +713,12 @@ class Attrs(BaseAttrs):
         super().__init__()
 
     def __str__(self) -> str:
-        return mark_safe(
-            " ".join(
-                (f'{key}="{conditional_escape(value)}"' if value is not True else key)
-                for key, value in self.all_attrs()
-                if value is not None
-            )
-        )
+        """Render attributes with Django-specific HTML escaping and mark_safe."""
+        return mark_safe(super().__str__())
 
-    def update(self, attrs):
-        super().update(attrs)
-        if isinstance(attrs, BaseAttrs):
-            for key, extended in attrs._extended.items():
-                self._extended.setdefault(key, {}).update(extended)
-            for key, prepended in attrs._prepended.items():
-                self._prepended.setdefault(key, {}).update(prepended)
-            for key, nested_attrs in attrs._nested_attrs.items():
-                self._nested_attrs.setdefault(key, self._new_child()).update(nested_attrs)
+    def _render_attr(self, key: str, value: Any) -> str:
+        """Render a single attribute with Django's conditional HTML escaping."""
+        return f'{key}="{conditional_escape(value)}"'
 
     @staticmethod
     def _normalize_enum_values(value: Any) -> list[str]:

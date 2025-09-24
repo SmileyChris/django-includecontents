@@ -228,7 +228,25 @@ class BaseAttrs(MutableMapping[str, Any]):
             value = " ".join(value_parts) if value_parts else None
             yield key, value
 
-    # Intentionally leave __str__ abstract; engine wrappers should format output.
+    # ------------------------------------------------------------------
+    # String rendering
+    # ------------------------------------------------------------------
+
+    def __str__(self) -> str:
+        """Render attributes as HTML string with engine-specific formatting."""
+        parts = []
+        for key, value in self.all_attrs():
+            if value is None:
+                continue
+            if value is True:
+                parts.append(key)
+            else:
+                parts.append(self._render_attr(key, value))
+        return " ".join(parts)
+
+    def _render_attr(self, key: str, value: Any) -> str:
+        """Render a single attribute. Override in subclasses for engine-specific escaping."""
+        return f'{key}="{value}"'
 
 
 __all__ = ["BaseAttrs"]

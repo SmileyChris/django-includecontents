@@ -13,18 +13,7 @@ class Attrs(BaseAttrs):
     def __init__(self) -> None:
         super().__init__()
 
-    # No custom __setitem__ needed - use parent behavior for Django parity
-
-    def __str__(self) -> str:
-        parts = []
-        for key, value in self.all_attrs():
-            if value is None:
-                continue
-            if value is True:
-                parts.append(key)
-            else:
-                parts.append(f'{key}="{value}"')
-        return " ".join(parts)
+    # No custom _render_attr needed - use default behavior (no escaping)
 
 
 __all__ = ["Attrs"]
