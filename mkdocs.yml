@@ -86,6 +86,7 @@ nav:
     - Component Discovery: showcase/component-discovery.md
     - Metadata Reference: showcase/metadata.md
     - Live Preview: showcase/live-preview.md
+    - Showcase Templates: showcase/showcase-templates.md
     - Customisation Tips: showcase/customisation.md
   - Developing:
     - Example Project: example-project.md

@@ -42,6 +42,7 @@ class ComponentInfo:
     accessibility: str = ""
     related: List[str] = field(default_factory=list)
     content_blocks: List[str] = field(default_factory=list)
+    showcase_template_path: Optional[str] = None
 
     @property
     def slug(self) -> str:
@@ -71,6 +72,17 @@ class ComponentInfo:
                 if non_empty:
                     defaults[prop_name] = non_empty[0]
         return defaults
+
+    def has_showcase_template(self) -> bool:
+        """Check if this component has a custom showcase template."""
+        return self.showcase_template_path is not None
+
+    @property
+    def showcase_template_name(self) -> Optional[str]:
+        """Get the showcase template name for this component."""
+        if self.showcase_template_path:
+            return f"components/{self.showcase_template_path}"
+        return None
 
 
 @dataclass

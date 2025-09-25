@@ -1,0 +1,289 @@
+{% extends "showcase/preview.html" %}
+{% load includecontents %}
+
+{% block content %}
+<div class="button-showcase">
+    <h3>Button Showcase</h3>
+    <p>A comprehensive demonstration of the button component in various configurations.</p>
+
+    <!-- Primary Variants -->
+    <section class="showcase-section">
+        <h4>Primary Variants</h4>
+        <div class="button-grid">
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Small Primary" variant="primary" size="sm" %}{% endincludecontents %}
+                <small>Small</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Medium Primary" variant="primary" size="md" %}{% endincludecontents %}
+                <small>Medium (default)</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Large Primary" variant="primary" size="lg" %}{% endincludecontents %}
+                <small>Large</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secondary Variants -->
+    <section class="showcase-section">
+        <h4>Secondary Variants</h4>
+        <div class="button-grid">
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Small Secondary" variant="secondary" size="sm" %}{% endincludecontents %}
+                <small>Small</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Medium Secondary" variant="secondary" size="md" %}{% endincludecontents %}
+                <small>Medium (default)</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Large Secondary" variant="secondary" size="lg" %}{% endincludecontents %}
+                <small>Large</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ghost Variants -->
+    <section class="showcase-section">
+        <h4>Ghost Variants</h4>
+        <div class="button-grid">
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Small Ghost" variant="ghost" size="sm" %}{% endincludecontents %}
+                <small>Small</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Medium Ghost" variant="ghost" size="md" %}{% endincludecontents %}
+                <small>Medium (default)</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Large Ghost" variant="ghost" size="lg" %}{% endincludecontents %}
+                <small>Large</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- With Icons -->
+    <section class="showcase-section">
+        <h4>Buttons with Icons</h4>
+        <div class="button-grid">
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Save" variant="primary" icon_before="💾" %}{% endincludecontents %}
+                <small>Icon Before</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Download" variant="secondary" icon_after="⬇️" %}{% endincludecontents %}
+                <small>Icon After</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Delete" variant="ghost" icon_before="🗑️" icon_after="⚠️" %}{% endincludecontents %}
+                <small>Both Icons</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- Disabled States -->
+    <section class="showcase-section">
+        <h4>Disabled States</h4>
+        <div class="button-grid">
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Disabled Primary" variant="primary" disabled=True %}{% endincludecontents %}
+                <small>Disabled Primary</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Disabled Secondary" variant="secondary" disabled=True %}{% endincludecontents %}
+                <small>Disabled Secondary</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Disabled Ghost" variant="ghost" disabled=True %}{% endincludecontents %}
+                <small>Disabled Ghost</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- As Links -->
+    <section class="showcase-section">
+        <h4>Buttons as Links</h4>
+        <div class="button-grid">
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Visit Homepage" variant="primary" href="#" %}{% endincludecontents %}
+                <small>Primary Link</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Learn More" variant="secondary" href="#" %}{% endincludecontents %}
+                <small>Secondary Link</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="External Link" variant="ghost" href="#" icon_after="↗️" %}{% endincludecontents %}
+                <small>Ghost Link</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- Button Types -->
+    <section class="showcase-section">
+        <h4>Button Types</h4>
+        <div class="button-grid">
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Submit Form" variant="primary" type="submit" %}{% endincludecontents %}
+                <small>type="submit"</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Reset Form" variant="secondary" type="reset" %}{% endincludecontents %}
+                <small>type="reset"</small>
+            </div>
+            <div class="button-demo">
+                {% includecontents "components/forms/button.html" with label="Button Action" variant="ghost" type="button" %}{% endincludecontents %}
+                <small>type="button" (default)</small>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock content %}
+
+{% block styles %}
+    {{ block.super }}
+<style>
+.button-showcase {
+    font-family: system-ui, -apple-system, sans-serif;
+    padding: 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.button-showcase h3 {
+    margin-top: 0;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+}
+
+.button-showcase p {
+    color: #64748b;
+    margin-bottom: 2rem;
+}
+
+.showcase-section {
+    margin-bottom: 2rem;
+}
+
+.showcase-section h4 {
+    color: #334155;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.button-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.button-demo:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+}
+
+.button-demo small {
+    color: #64748b;
+    font-size: 0.75rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Basic button styles for the showcase */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.btn-primary {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+.btn-primary:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    color: #374151;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.btn-secondary:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-ghost {
+    background-color: transparent;
+    color: #6b7280;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.btn-ghost:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.btn-icon {
+    line-height: 1;
+}
+</style>
+{% endblock styles %}

@@ -96,6 +96,10 @@ class ComponentRegistry:
                 if item.name.startswith("_"):
                     continue
 
+                # Skip showcase templates (ending with .showcase.html)
+                if item.name.endswith(".showcase.html"):
+                    continue
+
                 relative_path = item.relative_to(root)
                 component_path = str(relative_path)
                 component_name = component_path.replace("/", ":").replace(".html", "")
@@ -111,6 +115,13 @@ class ComponentRegistry:
             with open(file_path, "r") as f:
                 content = f.read()
 
+            # Check for showcase template
+            showcase_template_path = None
+            showcase_file_path = file_path.with_suffix('.showcase.html')
+            if showcase_file_path.exists():
+                # Store relative path from components directory
+                showcase_template_path = str(Path(component_path).with_suffix('.showcase.html'))
+
             # Extract props comment
             props_match = re.search(r"{#\s*props\s+(.*?)\s*#}", content, re.DOTALL)
             if not props_match:
@@ -119,6 +130,7 @@ class ComponentRegistry:
                     name=component_name,
                     path=component_path,
                     category=self._guess_category(component_path),
+                    showcase_template_path=showcase_template_path,
                 )
                 metadata = self._load_component_metadata(file_path)
                 if metadata:
@@ -136,7 +148,8 @@ class ComponentRegistry:
                 path=component_path,
                 category=self._guess_category(component_path),
                 props=props,
-                content_blocks=content_blocks
+                content_blocks=content_blocks,
+                showcase_template_path=showcase_template_path,
             )
 
             metadata = self._load_component_metadata(file_path)

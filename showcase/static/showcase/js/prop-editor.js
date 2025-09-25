@@ -25,12 +25,99 @@
 
     // Wait for DOM ready
     document.addEventListener('DOMContentLoaded', function() {
-        initPropEditor();
+        // Check if this component has a showcase template
+        if (hasShowcaseTemplate()) {
+            initShowcasePreview();
+        } else {
+            initPropEditor();
+        }
         initPreviewControls();
         initCodeTabs();
         // Copy buttons are now handled by copy-clipboard.js
         initExampleLoaders();
     });
+
+    /**
+     * Check if this component has a showcase template
+     */
+    function hasShowcaseTemplate() {
+        return document.querySelector('.showcase-indicator') !== null;
+    }
+
+    /**
+     * Initialize showcase preview for components with showcase templates
+     */
+    function initShowcasePreview() {
+        // Load the showcase template immediately
+        loadShowcaseTemplate();
+    }
+
+    /**
+     * Load showcase template content
+     */
+    function loadShowcaseTemplate() {
+        const iframePreviewUrl = `/showcase/${componentData.category}/${componentData.slug}/iframe-preview/`;
+        const ajaxPreviewUrl = `/showcase/${componentData.category}/${componentData.slug}/preview/`;
+
+        // Create a form and submit to iframe for showcase preview
+        const iframe = document.getElementById('component-preview-iframe');
+        if (!iframe) {
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = iframePreviewUrl;
+        form.target = 'component-preview-iframe';
+        form.style.display = 'none';
+
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = getCsrfToken();
+        form.appendChild(csrfInput);
+
+        // Add empty data for showcase template
+        const dataInput = document.createElement('input');
+        dataInput.type = 'hidden';
+        dataInput.name = 'data';
+        dataInput.value = JSON.stringify({
+            props: {},
+            content: '',
+            content_blocks: {}
+        });
+        form.appendChild(dataInput);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        // Also get the HTML for the HTML preview mode
+        fetch(ajaxPreviewUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                props: {},
+                content: '',
+                content_blocks: {}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Preview error:', data.error);
+            } else {
+                updatePreviewHTML(data.html);
+            }
+        })
+        .catch(error => {
+            console.error('Preview error:', error);
+        });
+    }
 
     /**
      * Initialize the prop editor form
@@ -343,12 +430,29 @@
 
         controls.forEach(button => {
             button.addEventListener('click', function() {
+                const mode = this.dataset.mode || 'desktop';
+
+                // Always update button states first for all modes
                 controls.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
 
-                const mode = this.dataset.mode || 'desktop';
+                if (mode === 'desktop') {
+                    iframe.removeAttribute('hidden');
+                    previewHtml.setAttribute('hidden', '');
+                    frame.dataset.view = 'preview';
 
-                if (mode === 'html') {
+                    // Toggle between desktop (1024px) and desktop-wide (1280px)
+                    const currentMode = frame.dataset.mode;
+                    if (currentMode === 'desktop') {
+                        frame.dataset.mode = 'desktop-wide';
+                    } else if (currentMode === 'desktop-wide') {
+                        frame.dataset.mode = 'desktop';
+                    } else {
+                        // Coming from mobile/wide/html - start with desktop-wide
+                        frame.dataset.mode = 'desktop-wide';
+                    }
+                    activePreviewMode = frame.dataset.mode;
+                } else if (mode === 'html') {
                     iframe.setAttribute('hidden', '');
                     previewHtml.removeAttribute('hidden');
                     frame.dataset.view = 'html';

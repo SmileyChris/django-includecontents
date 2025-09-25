@@ -6,11 +6,16 @@
 {% block content %}
 <div class="showcase-header">
     <nav class="breadcrumb">
-        <a href="{% url 'showcase:index' %}">Home</a>
-        <span>/</span>
+        <a href="{% url 'showcase:index' %}">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
+                <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5z"/>
+            </svg>
+            Components
+        </a>
+        <span class="separator">→</span>
         <a href="{% url 'showcase:category' component.category|lower|slugify %}">{{ component.category }}</a>
-        <span>/</span>
-        <span>{{ component.name }}</span>
+        <span class="separator">→</span>
+        <span class="current">{{ component.name }}</span>
     </nav>
     <h1>{{ component.name }}</h1>
     {% if component.description %}
@@ -25,11 +30,17 @@
         <div class="preview-controls" role="group" aria-label="Change preview mode">
             <button class="btn-sm preview-mode-btn" data-mode="mobile">📱 Mobile</button>
             <button class="btn-sm preview-mode-btn active" data-mode="desktop">💻 Desktop</button>
-            <button class="btn-sm preview-mode-btn" data-mode="wide">🖥️ Wide</button>
+            <button class="btn-sm preview-mode-btn" data-mode="wide">🖥️ Full</button>
             <button class="btn-sm preview-mode-btn" data-mode="html">HTML</button>
         </div>
+        {% if component.has_showcase_template %}
+        <div class="showcase-indicator" style="display: none;">
+            <span class="showcase-badge">🎭 Custom Showcase</span>
+            <small>Using <code>{{ component.showcase_template_path }}</code></small>
+        </div>
+        {% endif %}
     </div>
-    <section class="preview-section" data-mode="desktop" data-view="preview">
+    <section class="preview-section" data-mode="desktop-wide" data-view="preview">
         <iframe
             id="component-preview-iframe"
             name="component-preview-iframe"
@@ -41,6 +52,7 @@
     </section>
 
     <!-- Props Editor -->
+    {% if not component.has_showcase_template %}
     <section class="props-section">
         <h2>Props</h2>
         <form id="prop-editor-form" class="prop-editor">
@@ -78,8 +90,10 @@
 
         </form>
     </section>
+    {% endif %}
 
     <!-- Code Section -->
+    {% if not component.has_showcase_template %}
     <section class="code-section">
         <h2>Code</h2>
         <div class="code-tabs">
@@ -97,6 +111,7 @@
             </div>
         </div>
     </section>
+    {% endif %}
 
     <!-- Examples -->
     {% if examples_with_json %}
@@ -109,6 +124,7 @@
             <p>{{ example.description }}</p>
             {% endif %}
             <pre><code>{{ example.code }}</code></pre>
+            {% if not component.has_showcase_template %}
             <button
                 class="btn-sm load-example"
                 data-props="{{ example.props_json|urlencode }}"
@@ -116,6 +132,7 @@
             >
                 Load Example
             </button>
+            {% endif %}
         </div>
         {% endfor %}
     </section>
@@ -236,6 +253,58 @@ const componentData = {
 </script>
 
 <style>
+/* Showcase indicator styling */
+.showcase-indicator {
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.showcase-badge {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0369a1;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.showcase-indicator small {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.showcase-indicator code {
+    background: rgba(226, 232, 240, 0.5);
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Showcase info styling */
+.showcase-info {
+    padding: 1rem;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    color: #92400e;
+}
+
+.showcase-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.showcase-info p:not(:last-child) {
+    margin-bottom: 0.5rem;
+}
+
 /* Related Components Styling */
 .related-components {
     display: grid;

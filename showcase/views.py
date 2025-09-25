@@ -197,22 +197,46 @@ class ComponentPreviewView(ShowcaseAccessMixin, View):
             content = data.get("content", "")
             content_blocks = data.get("content_blocks", {})
 
-            template_str, extra_context = build_component_template(
-                component,
-                props,
-                content,
-                content_blocks,
-            )
+            # Check if component has a showcase template
+            if component.has_showcase_template():
+                # Use showcase template directly
+                from django.template.loader import get_template
+                try:
+                    showcase_template = get_template(component.showcase_template_name)
+                    context_dict = {
+                        "request": request,
+                        "component": component,
+                        "props": props,
+                        "content": content,
+                        "content_blocks": content_blocks,
+                        "attrs": Attrs(),
+                    }
+                    rendered = showcase_template.render(context_dict)
 
-            # Render template
-            template = Template(template_str)
-            context = Context({"request": request, **extra_context})
-            rendered = template.render(context)
+                    return JsonResponse({
+                        "html": rendered,
+                        "template_code": f"<!-- Showcase template: {component.showcase_template_path} -->\n{rendered}"
+                    })
+                except Exception as e:
+                    return JsonResponse({"error": f"Error loading showcase template: {e}"}, status=400)
+            else:
+                # Use default preview generation
+                template_str, extra_context = build_component_template(
+                    component,
+                    props,
+                    content,
+                    content_blocks,
+                )
 
-            return JsonResponse({
-                "html": rendered,
-                "template_code": template_str
-            })
+                # Render template
+                template = Template(template_str)
+                context = Context({"request": request, **extra_context})
+                rendered = template.render(context)
+
+                return JsonResponse({
+                    "html": rendered,
+                    "template_code": template_str
+                })
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
@@ -243,17 +267,37 @@ class ComponentIframePreviewView(ShowcaseAccessMixin, View):
             content = data.get("content", "")
             content_blocks = data.get("content_blocks", {})
 
-            template_str, extra_context = build_component_template(
-                component,
-                props,
-                content,
-                content_blocks,
-            )
+            # Check if component has a showcase template
+            if component.has_showcase_template():
+                # Use showcase template directly
+                from django.template.loader import get_template
+                try:
+                    showcase_template = get_template(component.showcase_template_name)
+                    context_dict = {
+                        "request": request,
+                        "component": component,
+                        "props": props,
+                        "content": content,
+                        "content_blocks": content_blocks,
+                        "attrs": Attrs(),
+                    }
+                    rendered = showcase_template.render(context_dict)
+                except Exception as e:
+                    # Fallback to error message if showcase template fails
+                    rendered = f"<div class='error'>Error loading showcase template: {e}</div>"
+            else:
+                # Use default preview generation
+                template_str, extra_context = build_component_template(
+                    component,
+                    props,
+                    content,
+                    content_blocks,
+                )
 
-            # Render template
-            template = Template(template_str)
-            context = Context({"request": request, **extra_context})
-            rendered = template.render(context)
+                # Render template
+                template = Template(template_str)
+                context = Context({"request": request, **extra_context})
+                rendered = template.render(context)
 
             return render(request, "showcase/preview.html", {
                 "component_html": rendered
