@@ -443,53 +443,55 @@ def test_class_prepend():
 def test_javascript_event_attributes():
     """Test various JavaScript framework event attributes like @click, v-on:, x-on:, and :bind."""
     # Test single @click attribute
-    output = Template(
-        """<include:empty-props @click="handleClick()" />"""
-    ).render(Context())
+    output = Template("""<include:empty-props @click="handleClick()" />""").render(
+        Context()
+    )
     assert output == '@click="handleClick()"/'
-    
+
     # Test Vue.js v-on: syntax with colons (needs special handling)
-    output = Template(
-        """<include:empty-props v-on:submit="onSubmit" />"""
-    ).render(Context())
+    output = Template("""<include:empty-props v-on:submit="onSubmit" />""").render(
+        Context()
+    )
     assert output == 'v-on:submit="onSubmit"/'
-    
+
     # Test Alpine.js x-on: syntax
-    output = Template(
-        """<include:empty-props x-on:click="open = !open" />"""
-    ).render(Context())
+    output = Template("""<include:empty-props x-on:click="open = !open" />""").render(
+        Context()
+    )
     assert output == 'x-on:click="open = !open"/'
-    
+
     # Test Alpine.js :bind shorthand
     output = Template(
         """<include:empty-props :class="{ 'active': isActive }" />"""
     ).render(Context())
-    assert output == ':class="{ \'active\': isActive }"/'
-    
+    assert output == ":class=\"{ 'active': isActive }\"/"
+
     # Test combined attributes
     output = Template(
         """<include:empty-props @click="handleClick()" :disabled="isDisabled" v-model="value" />"""
     ).render(Context())
     assert output == '@click="handleClick()" :disabled="isDisabled" v-model="value"/'
-    
+
     # Test with inner attributes
     output = Template(
         """<include:empty-props @click="outerClick()" inner.@click="innerClick()" inner.:disabled="isDisabled" />"""
     ).render(Context())
-    assert output == '@click="outerClick()"/@click="innerClick()" :disabled="isDisabled"'
-    
+    assert (
+        output == '@click="outerClick()"/@click="innerClick()" :disabled="isDisabled"'
+    )
+
     # Test Vue.js event modifiers like @click.stop
-    output = Template(
-        """<include:empty-props @click.stop="handleClick()" />"""
-    ).render(Context())
+    output = Template("""<include:empty-props @click.stop="handleClick()" />""").render(
+        Context()
+    )
     assert output == '@click.stop="handleClick()"/'
-    
+
     # Test multiple Vue.js event modifiers
     output = Template(
         """<include:empty-props @click.stop.prevent="handleClick()" />"""
     ).render(Context())
     assert output == '@click.stop.prevent="handleClick()"/'
-    
+
     # Test Vue.js keyup modifiers
     output = Template(
         """<include:empty-props @keyup.enter="handleEnter()" />"""
@@ -500,26 +502,26 @@ def test_javascript_event_attributes():
 def test_template_variables_in_component_attributes():
     """Test template variable support in component attributes."""
     # Test 1: Simple variable (works)
-    output = Template(
-        '<include:empty-props data-id="{{ myid }}" />'
-    ).render(Context({"myid": "123"}))
+    output = Template('<include:empty-props data-id="{{ myid }}" />').render(
+        Context({"myid": "123"})
+    )
     assert output == 'data-id="123"/'
-    
+
     # Test 2: Variable with filter (works)
-    output = Template(
-        '<include:empty-props data-count="{{ count|add:1 }}" />'
-    ).render(Context({"count": 5}))
+    output = Template('<include:empty-props data-count="{{ count|add:1 }}" />').render(
+        Context({"count": 5})
+    )
     assert output == 'data-count="6"/'
-    
+
     # Test 3: Filter with single quotes (works when entire value is template var)
     output = Template(
-        '''<include:empty-props title="{{ name|default:'Untitled' }}" />'''
+        """<include:empty-props title="{{ name|default:'Untitled' }}" />"""
     ).render(Context({"name": ""}))
     assert output == 'title="Untitled"/'
-    
+
     # Test 4: yesno filter (works when entire value is template var)
     output = Template(
-        '''<include:empty-props active="{{ is_active|yesno:'true,false' }}" />'''
+        """<include:empty-props active="{{ is_active|yesno:'true,false' }}" />"""
     ).render(Context({"is_active": True}))
     assert output == 'active="true"/'
 
@@ -527,37 +529,37 @@ def test_template_variables_in_component_attributes():
 def test_mixed_content_in_attributes():
     """Test mixed static text and template variables in attributes."""
     # Test 1: Mixed content with variable
-    output = Template(
-        '''<include:empty-props class="btn {{ variant }}" />'''
-    ).render(Context({"variant": "primary"}))
+    output = Template("""<include:empty-props class="btn {{ variant }}" />""").render(
+        Context({"variant": "primary"})
+    )
     assert output == 'class="btn primary"/'
-    
+
     # Test 2: Mixed content with multiple variables
     output = Template(
-        '''<include:empty-props data-info="Count: {{ count }} of {{ total }}" />'''
+        """<include:empty-props data-info="Count: {{ count }} of {{ total }}" />"""
     ).render(Context({"count": 5, "total": 10}))
     assert output == 'data-info="Count: 5 of 10"/'
-    
+
     # Test 3: Mixed content with filter
     output = Template(
-        '''<include:empty-props class="btn btn-{{ size|default:'medium' }}" />'''
+        """<include:empty-props class="btn btn-{{ size|default:'medium' }}" />"""
     ).render(Context({"size": "large"}))
     assert output == 'class="btn btn-large"/'
-    
+
     # Test 4: URL-like pattern
     output = Template(
-        '''<include:empty-props href="/products/{{ product_id }}/" />'''
+        """<include:empty-props href="/products/{{ product_id }}/" />"""
     ).render(Context({"product_id": 123}))
     assert output == 'href="/products/123/"/'
-    
+
     # Test 5: Block tags in mixed content (should now work!)
     output = Template(
-        '''<include:empty-props class="btn {% if active %}active{% endif %}" />'''
+        """<include:empty-props class="btn {% if active %}active{% endif %}" />"""
     ).render(Context({"active": True}))
     assert output == 'class="btn active"/'
-    
+
     # Test 6: For loop in attribute
     output = Template(
-        '''<include:empty-props data-items="{% for i in items %}{{ i }}{% if not forloop.last %},{% endif %}{% endfor %}" />'''
+        """<include:empty-props data-items="{% for i in items %}{{ i }}{% if not forloop.last %},{% endif %}{% endfor %}" />"""
     ).render(Context({"items": ["a", "b", "c"]}))
     assert output == 'data-items="a,b,c"/'

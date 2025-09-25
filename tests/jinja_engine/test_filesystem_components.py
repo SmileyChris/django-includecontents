@@ -28,7 +28,7 @@ def create_multi_dir_jinja_env() -> Environment:
 def test_subdirectory_component_filesystem():
     """Test that subdirectory components work with filesystem templates."""
     env = create_filesystem_jinja_env()
-    template = env.from_string('<include:inside:cat />')
+    template = env.from_string("<include:inside:cat />")
     rendered = template.render()
     assert rendered.strip() == "Meow"
 
@@ -36,12 +36,12 @@ def test_subdirectory_component_filesystem():
 def test_multiple_subdirectory_components():
     """Test multiple calls to subdirectory components."""
     env = create_filesystem_jinja_env()
-    template = env.from_string('''
+    template = env.from_string("""
     <div>
         First cat: <include:inside:cat />
         Second cat: <include:inside:cat />
     </div>
-    ''')
+    """)
     rendered = template.render()
     assert rendered.count("Meow") == 2
 
@@ -49,7 +49,7 @@ def test_multiple_subdirectory_components():
 def test_regular_component_filesystem():
     """Test that regular components work with filesystem templates."""
     env = create_filesystem_jinja_env()
-    template = env.from_string('<include:container>Hello World</include:container>')
+    template = env.from_string("<include:container>Hello World</include:container>")
     rendered = template.render()
     assert 'class="container"' in rendered
     assert "Hello World" in rendered
@@ -58,11 +58,11 @@ def test_regular_component_filesystem():
 def test_mixed_regular_and_subdirectory_filesystem():
     """Test mixing regular and subdirectory components from filesystem."""
     env = create_filesystem_jinja_env()
-    template = env.from_string('''
+    template = env.from_string("""
     <include:container>
         The cat says: <include:inside:cat />
     </include:container>
-    ''')
+    """)
     rendered = template.render()
     assert 'class="container"' in rendered
     assert "Meow" in rendered
@@ -73,17 +73,21 @@ def test_multiple_template_directories():
     env = create_multi_dir_jinja_env()
 
     # Test component from first directory (templates/components/container.html)
-    template1 = env.from_string('<include:container>Content from first dir</include:container>')
+    template1 = env.from_string(
+        "<include:container>Content from first dir</include:container>"
+    )
     rendered1 = template1.render()
     assert 'class="container"' in rendered1
     assert "Content from first dir" in rendered1
 
     # Test component from second directory (templates2/components/cms/card.html)
-    template2 = env.from_string('<include:cms:card title="Test Card">Card content</include:cms:card>')
+    template2 = env.from_string(
+        '<include:cms:card title="Test Card">Card content</include:cms:card>'
+    )
     rendered2 = template2.render()
     assert 'class="cms-card' in rendered2
-    assert 'Test Card' in rendered2
-    assert 'Card content' in rendered2
+    assert "Test Card" in rendered2
+    assert "Card content" in rendered2
 
 
 def test_fallback_component_resolution():
@@ -91,7 +95,9 @@ def test_fallback_component_resolution():
     env = create_multi_dir_jinja_env()
 
     # Component exists only in first directory
-    template = env.from_string('<include:fallback-component>Fallback test</include:fallback-component>')
+    template = env.from_string(
+        "<include:fallback-component>Fallback test</include:fallback-component>"
+    )
     rendered = template.render()
     assert 'class="fallback-component"' in rendered
     assert "Fallback: Fallback test" in rendered
@@ -102,13 +108,15 @@ def test_namespaced_component_resolution():
     env = create_multi_dir_jinja_env()
 
     # Test cms:card resolves to components/cms/card.html
-    template = env.from_string('<include:cms:card title="CMS Card" variant="primary">CMS content</include:cms:card>')
+    template = env.from_string(
+        '<include:cms:card title="CMS Card" variant="primary">CMS content</include:cms:card>'
+    )
     rendered = template.render()
 
     # Check that it used the cms/card.html template
     assert 'class="cms-card cms-card--primary"' in rendered
-    assert 'CMS Card' in rendered
-    assert 'CMS content' in rendered
+    assert "CMS Card" in rendered
+    assert "CMS content" in rendered
 
 
 def test_namespaced_component_with_props():
@@ -116,10 +124,22 @@ def test_namespaced_component_with_props():
     env = create_multi_dir_jinja_env()
 
     # Test with different props
-    template = env.from_string('<include:cms:card variant="secondary">Secondary card</include:cms:card>')
+    template = env.from_string(
+        '<include:cms:card variant="secondary">Secondary card</include:cms:card>'
+    )
     rendered = template.render()
 
     # Should use default title and provided variant
-    assert 'Default Card' in rendered  # Default prop value
-    assert 'cms-card--secondary' in rendered  # Provided variant
-    assert 'Secondary card' in rendered
+    assert "Default Card" in rendered  # Default prop value
+    assert "cms-card--secondary" in rendered  # Provided variant
+    assert "Secondary card" in rendered
+
+
+def test_basic_content_rendering():
+    """Test that basic content rendering works with filesystem components."""
+    env = create_filesystem_jinja_env()
+
+    template = env.from_string("<include:content-test>incoming</include:content-test>")
+    rendered = template.render()
+
+    assert rendered.strip() == "<p>Testing: incoming</p>\n<p>Missing: </p>"
