@@ -52,7 +52,7 @@
         <div class="components-list">
             {% for component in components %}
             <div class="component-card search-result">
-                <a href="{% url 'showcase:component' component.category|slugify component.slug %}" class="component-card-link">
+                <a href="{% url 'showcase:component' component.name %}" class="component-card-link">
                     <div class="component-details">
                         <h3>{{ component.name }}</h3>
                         <p class="component-description">{{ component.description|default:"" }}</p>

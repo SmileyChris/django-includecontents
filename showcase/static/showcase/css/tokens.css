@@ -1,5 +1,191 @@
 /* Design Token Showcase Styles */
 
+/* Enhanced Stats Cards */
+.showcase-stats.enhanced {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    min-width: 120px;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.accent {
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+    border-color: rgba(168, 85, 247, 0.2);
+}
+
+.stat-card.style-dict {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-color: rgba(14, 165, 233, 0.2);
+}
+
+.stat-card.css {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-color: rgba(14, 165, 233, 0.2);
+}
+
+.stat-card.js {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: rgba(251, 191, 36, 0.2);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+/* Collapsible Sections */
+.section-header-collapsible {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.collapse-toggle {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    color: #475569;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.collapse-toggle:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.toggle-icon {
+    transition: transform 0.2s ease;
+}
+
+.collapsible-content {
+    transition: all 0.3s ease;
+}
+
+.source-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.source-card {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.source-card h3 {
+    margin: 0.5rem 0;
+    font-size: 1.125rem;
+    color: #1e293b;
+}
+
+.source-card p {
+    margin: 0.5rem 0 1rem 0;
+    color: #475569;
+    font-size: 0.875rem;
+}
+
+.source-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.source-badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid;
+}
+
+.source-badge-css {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #0369a1;
+    border-color: rgba(14, 165, 233, 0.2);
+}
+
+.source-badge-js {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border-color: rgba(251, 191, 36, 0.2);
+}
+
+.source-badge-json {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #166534;
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+/* Token Category Card Enhancements */
+.token-category-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+}
+
+.token-category-card.tailwind-token-card {
+    border-left: 3px solid #06b6d4;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+}
+
+.tailwind-badge {
+    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    color: white;
+}
+
+.complexity-badge.minimal {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #0369a1;
+    border-color: rgba(14, 165, 233, 0.2);
+}
+
+.source-mini-badge.source-badge-css {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #0369a1;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.source-mini-badge.source-badge-js {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
 /* Token Preview Cards */
 .token-preview-grid {
     display: grid;

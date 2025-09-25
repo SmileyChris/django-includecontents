@@ -127,7 +127,7 @@
         <div class="component-grid">
             {% for component in components %}
             <div class="component-card">
-                <a href="{% url 'showcase:component' component.category component.name %}">
+                <a href="{% url 'showcase:component' component.name %}">
                     <h4>{{ component.name }}</h4>
                     <p class="component-category">{{ component.category }}</p>
                     <p class="component-description">{{ component.description|truncatechars:100 }}</p>

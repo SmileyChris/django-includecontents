@@ -1,5 +1,5 @@
 name: Grid
-category: Layout
+category: Showcase
 description: CSS grid wrapper that spaces child components with configurable columns and gap.
 best_practices: |
   - Align the column count with the amount of content you expect to prevent awkward wrapping.

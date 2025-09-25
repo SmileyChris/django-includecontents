@@ -89,7 +89,7 @@
                     </div>
                     <div class="component-header-content">
                         <h3>
-                            <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}">
+                            <a href="{% url 'showcase:component' component.name %}">
                                 {{ component.name }}
                             </a>
                         </h3>
@@ -120,7 +120,7 @@
                         </span>
                         {% endif %}
                     </div>
-                    <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}" class="view-component-btn">
+                    <a href="{% url 'showcase:component' component.name %}" class="view-component-btn">
                         View Component →
                     </a>
                 </div>

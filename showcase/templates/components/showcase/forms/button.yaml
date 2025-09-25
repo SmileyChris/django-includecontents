@@ -1,5 +1,5 @@
 name: Button
-category: Forms
+category: Showcase
 description: Action button with flavor variants, sizing, and disabled support for the showcase gallery.
 best_practices: |
   - Keep copy short and verb-focused so buttons read as actions.

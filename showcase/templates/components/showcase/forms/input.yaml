@@ -1,5 +1,5 @@
 name: Form Input
-category: Forms
+category: Showcase
 description: Labeled text field with optional help text, placeholders, and required indicator for form demos.
 best_practices: |
   - Match the `name` with your form backing field or context key so submissions serialize correctly.

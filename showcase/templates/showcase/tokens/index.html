@@ -3,28 +3,46 @@
 
 {% block title %}Design Tokens{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'showcase/css/tokens.css' %}">
-{% endblock %}
 
 {% block content %}
-<div class="showcase-header">
-    <h1>Design Token Library</h1>
-    <p class="showcase-subtitle">
-        Design tokens from multiple sources: Style Dictionary, Tailwind @theme, and tailwind.config.js
-    </p>
-    <div class="showcase-stats">
-        <span class="stat">
-            <strong>{{ total_tokens }}</strong> tokens
-        </span>
-        <span class="stat">
-            <strong>{{ token_categories|length }}</strong> categories
-        </span>
-        {% if total_tokens %}
-        <span class="stat">
-            <strong>{{ style_dictionary_token_count }}</strong> Style Dictionary tokens
-        </span>
-        {% endif %}
+<div class="showcase-header enhanced">
+    <nav class="breadcrumb">
+        <a href="{% url 'showcase:index' %}">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
+                <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5z"/>
+            </svg>
+            Home
+        </a>
+        <span class="separator">→</span>
+        <span class="current">Design Tokens</span>
+    </nav>
+
+    <div class="header-content">
+        <div class="header-main">
+            <div class="header-text">
+                <h1 class="gradient-text">Design Token Library</h1>
+                <p class="showcase-subtitle">
+                    Design tokens from multiple sources: Style Dictionary, Tailwind @theme, and tailwind.config.js
+                </p>
+            </div>
+
+            <div class="showcase-stats enhanced">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_tokens }}</div>
+                    <div class="stat-label">Total Tokens</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ token_categories|length }}</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                {% if total_tokens %}
+                <div class="stat-card accent">
+                    <div class="stat-number">{{ style_dictionary_token_count }}</div>
+                    <div class="stat-label">Style Dictionary</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -74,22 +92,59 @@
 {% endif %}
 
 {% if token_categories %}
-<div class="showcase-grid">
-    <section class="showcase-section">
-        <h2>Token Categories</h2>
-        <div class="category-grid">
-            {% for category in token_categories %}
-            <div class="category-card">
-                <a href="{% url 'showcase:token_category' category.slug %}" class="category-link">
-                    <h3>{{ category.name }}</h3>
-                    <p class="category-description">{{ category.description }}</p>
-                    <span class="category-count">{{ category.count }} tokens</span>
+<div class="subcategory-group">
+    <h2 class="subcategory-title">Token Categories</h2>
+    <div class="components-grid modern">
+        {% for category in token_categories %}
+        <div class="component-card modern token-category-card">
+            <div class="component-header">
+                <div class="component-meta">
+                    <span class="component-badge">Tokens</span>
+                    {% if category.count > 20 %}
+                    <span class="complexity-badge">Rich</span>
+                    {% elif category.count > 5 %}
+                    <span class="complexity-badge simple">Standard</span>
+                    {% else %}
+                    <span class="complexity-badge minimal">Minimal</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="component-content">
+                <h3 class="component-title">
+                    <a href="{% url 'showcase:token_category' category.slug %}">
+                        {{ category.name|title }}
+                    </a>
+                </h3>
+
+                <p class="component-description">{{ category.description|default:"Design tokens for this category" }}</p>
+
+                <div class="props-preview modern">
+                    <h4>Token Details</h4>
+                    <div class="props-grid">
+                        <div class="prop-item">
+                            <code class="prop-name">tokens</code>
+                            <span class="prop-type-badge">{{ category.count }}</span>
+                        </div>
+                        <div class="prop-item">
+                            <code class="prop-name">category</code>
+                            <span class="prop-type-badge">{{ category.name|lower }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-footer">
+                <a href="{% url 'showcase:token_category' category.slug %}" class="component-link">
+                    <span>Explore {{ category.count }} token{{ category.count|pluralize }}</span>
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                    </svg>
                 </a>
             </div>
-            {% endfor %}
         </div>
-    </section>
-
+        {% endfor %}
+    </div>
 </div>
 {% else %}
 <div class="empty-state">
@@ -237,25 +292,5 @@ module.exports = {
 }
 </style>
 
-<script>
-function toggleSection(button) {
-    const content = button.closest('section').querySelector('.collapsible-content');
-    const toggleText = button.querySelector('.toggle-text');
-    const toggleIcon = button.querySelector('.toggle-icon');
-    const isExpanded = button.getAttribute('aria-expanded') === 'true';
-
-    if (isExpanded) {
-        content.style.display = 'none';
-        toggleText.textContent = 'Show Sources';
-        button.setAttribute('aria-expanded', 'false');
-        toggleIcon.style.transform = 'rotate(0deg)';
-    } else {
-        content.style.display = 'block';
-        toggleText.textContent = 'Hide Sources';
-        button.setAttribute('aria-expanded', 'true');
-        toggleIcon.style.transform = 'rotate(180deg)';
-    }
-}
-</script>
 {% endif %}
 {% endblock %}

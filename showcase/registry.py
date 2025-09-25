@@ -129,7 +129,7 @@ class ComponentRegistry:
                 component = ComponentInfo(
                     name=component_name,
                     path=component_path,
-                    category=self._guess_category(component_path),
+                    category=self._get_component_category(component_path),
                     showcase_template_path=showcase_template_path,
                 )
                 metadata = self._load_component_metadata(file_path)
@@ -146,7 +146,7 @@ class ComponentRegistry:
             component = ComponentInfo(
                 name=component_name,
                 path=component_path,
-                category=self._guess_category(component_path),
+                category=self._get_component_category(component_path),
                 props=props,
                 content_blocks=content_blocks,
                 showcase_template_path=showcase_template_path,
@@ -225,16 +225,13 @@ class ComponentRegistry:
 
         return props
 
-    def _guess_category(self, component_path: str) -> str:
-        """Guess component category from its path."""
-        parts = component_path.split("/")
-        if len(parts) > 1:
-            # Use subdirectory as category
-            category = parts[0]
-            return category.replace("-", " ").replace("_", " ").title()
+    def _format_path_segment(self, segment: str) -> str:
+        """Format a path segment into a human-readable name."""
+        return segment.replace("-", " ").replace("_", " ").title()
 
-        # Try to guess from component name
-        name = parts[0].replace(".html", "").lower()
+    def _guess_category_from_name(self, filename: str) -> str:
+        """Guess component category from its filename."""
+        name = filename.replace(".html", "").lower()
         if any(word in name for word in ["button", "input", "form", "field", "select", "checkbox"]):
             return "Forms"
         elif any(word in name for word in ["card", "container", "grid", "layout", "column", "row"]):
@@ -253,6 +250,30 @@ class ComponentRegistry:
             return "Icons"
         else:
             return "Uncategorized"
+
+    def _get_component_category(self, component_path: str) -> str:
+        """
+        Determine component category and sub-category from its path.
+        Returns a string like "Category / Sub-category" or just "Category".
+        """
+        path = Path(component_path)
+        dir_parts = path.parts[:-1]
+        filename = path.name
+
+        if not dir_parts:
+            # e.g. "button.html" -> guess from name
+            return self._guess_category_from_name(filename)
+
+        category = self._format_path_segment(dir_parts[0])
+
+        if len(dir_parts) > 1:
+            # e.g. "core/forms/button.html"
+            sub_category_parts = dir_parts[1:]
+            sub_category = " / ".join(self._format_path_segment(part) for part in sub_category_parts)
+            return f"{category} / {sub_category}"
+        else:
+            # e.g. "forms/button.html"
+            return category
 
     def _load_component_metadata(self, template_path: Path) -> Optional[Dict[str, Any]]:
         """Load metadata stored alongside a component template."""
@@ -341,10 +362,26 @@ class ComponentRegistry:
         component_names = self._categories.get(category, [])
         return [self._components[name] for name in component_names]
 
-    def get_categories(self) -> List[Tuple[str, int]]:
-        """Get all categories with component counts."""
+    def get_components_by_main_category(self, main_category: str) -> List[ComponentInfo]:
+        """Get all components belonging to a main category, including sub-categories."""
         self.discover()
-        return [(cat, len(names)) for cat, names in sorted(self._categories.items())]
+        results = []
+        main_category_prefix = f"{main_category} / "
+        for component in self._components.values():
+            if component.category == main_category or component.category.startswith(main_category_prefix):
+                results.append(component)
+        return results
+
+    def get_categories(self) -> List[Tuple[str, int]]:
+        """Get all main categories with component counts."""
+        self.discover()
+        main_categories = {}
+        for cat_string, components in self._categories.items():
+            main_cat = cat_string.split(" / ")[0]
+            if main_cat not in main_categories:
+                main_categories[main_cat] = 0
+            main_categories[main_cat] += len(components)
+        return sorted(main_categories.items())
 
     def search_components(self, query: str) -> List[ComponentInfo]:
         """Search components by name or description."""

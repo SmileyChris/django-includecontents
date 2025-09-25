@@ -88,15 +88,29 @@ def category_view(request: HttpRequest, category: str) -> HttpResponse:
     """View all components in a specific category."""
     # Replace hyphens with spaces for category name
     category_name = category.replace("-", " ").title()
-    components = registry.get_components_by_category(category_name)
+    components = registry.get_components_by_main_category(category_name)
 
-    if not components:
-        # Try without title case
-        components = registry.get_components_by_category(category)
+    # Group components by sub-category
+    grouped_components = {}
+    # Use a sorted list of components to ensure consistent ordering
+    sorted_components = sorted(components, key=lambda c: c.name)
+    for component in sorted_components:
+        parts = component.category.split(" / ")
+        # The subcategory is the rest of the path after the main category
+        if len(parts) > 1:
+            subcategory = " / ".join(parts[1:])
+        else:
+            # For components directly in the main category folder
+            subcategory = "General"  # A default for components without a sub-category
+
+        if subcategory not in grouped_components:
+            grouped_components[subcategory] = []
+        grouped_components[subcategory].append(component)
 
     return render(request, "showcase/category.html", {
         "category": category_name,
-        "components": components,
+        "grouped_components": grouped_components,
+        "components": components, # Keep for total count or other uses
         "categories": registry.get_categories(),
         "token_categories": registry.get_token_categories(),
         "tailwind_token_categories": registry.get_tailwind_token_categories()
@@ -104,18 +118,19 @@ def category_view(request: HttpRequest, category: str) -> HttpResponse:
 
 
 @showcase_view
-def component_view(request: HttpRequest, category: str, name: str) -> HttpResponse:
+def component_view(request: HttpRequest, component_name: str) -> HttpResponse:
     """View a specific component with interactive prop editor."""
-    component_name = f"{category}:{name}" if category != "root" else name
     component = registry.get_component(component_name)
 
     if not component:
         # Try to find component by searching
-        components = registry.search_components(name)
+        components = registry.search_components(component_name)
         if components:
             component = components[0]
         else:
             return redirect("showcase:index")
+
+    main_category = component.category.split(" / ")[0]
 
     # Get initial props (from query params or defaults)
     initial_props = component.get_default_props()
@@ -168,6 +183,7 @@ def component_view(request: HttpRequest, category: str, name: str) -> HttpRespon
 
     return render(request, "showcase/component.html", {
         "component": component,
+        "main_category": main_category,
         "form": form,
         "preview_props": preview_props,
         "preview_props_json": json.dumps(preview_props),
@@ -183,9 +199,8 @@ def component_view(request: HttpRequest, category: str, name: str) -> HttpRespon
 class ComponentPreviewView(ShowcaseAccessMixin, View):
     """AJAX view for live component preview."""
 
-    def post(self, request: HttpRequest, category: str, name: str) -> JsonResponse:
+    def post(self, request: HttpRequest, component_name: str) -> JsonResponse:
         """Render component with provided props."""
-        component_name = f"{category}:{name}" if category != "root" else name
         component = registry.get_component(component_name)
 
         if not component:
@@ -245,9 +260,8 @@ class ComponentPreviewView(ShowcaseAccessMixin, View):
 class ComponentIframePreviewView(ShowcaseAccessMixin, View):
     """View for rendering component in an iframe with project CSS."""
 
-    def post(self, request: HttpRequest, category: str, name: str) -> HttpResponse:
+    def post(self, request: HttpRequest, component_name: str) -> HttpResponse:
         """Render component with provided props in iframe template."""
-        component_name = f"{category}:{name}" if category != "root" else name
         component = registry.get_component(component_name)
 
         if not component:

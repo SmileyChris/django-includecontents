@@ -35,7 +35,165 @@
         initCodeTabs();
         // Copy buttons are now handled by copy-clipboard.js
         initExampleLoaders();
+        initDesktopMode();
     });
+
+
+    /**
+     * Initialize desktop mode on page load
+     */
+    function initDesktopMode() {
+        const frame = document.querySelector('.preview-section');
+        if (!frame) return;
+
+        // Get the actual available width from the outer container
+        const componentViewer = document.querySelector('.component-viewer');
+        const availableWidth = componentViewer ? componentViewer.offsetWidth : window.innerWidth;
+        const canFitWide = availableWidth >= 1280;
+
+        // Set initial desktop mode based on available space
+        if (canFitWide) {
+            frame.dataset.mode = 'desktop-wide';
+        } else {
+            frame.dataset.mode = 'desktop';
+        }
+
+        // Create and add width indicator
+        createWidthIndicator();
+        setupWidthObserver();
+    }
+
+    /**
+     * Create width indicator element
+     */
+    function createWidthIndicator() {
+        const frame = document.querySelector('.preview-section');
+        if (!frame || frame.querySelector('.width-indicator')) return;
+
+        const indicator = document.createElement('div');
+        indicator.className = 'width-indicator';
+        indicator.style.cssText = `
+            position: absolute;
+            top: 4px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        `;
+
+        // Create the ruler structure
+        indicator.innerHTML = `
+            <div style="
+                display: flex;
+                align-items: center;
+                flex: 1;
+                margin-right: 8px;
+            ">
+                <div style="
+                    width: 0;
+                    height: 0;
+                    border-top: 4px solid transparent;
+                    border-bottom: 4px solid transparent;
+                    border-right: 6px solid #ccc;
+                "></div>
+                <div style="
+                    flex: 1;
+                    height: 1px;
+                    border-top: 1px dotted #ccc;
+                "></div>
+            </div>
+            <div style="
+                background: rgba(255, 255, 255, 0.9);
+                color: #666;
+                font-size: 11px;
+                font-family: monospace;
+                padding: 1px 6px;
+                border-radius: 3px;
+                border: 1px solid #ddd;
+                white-space: nowrap;
+            "></div>
+            <div style="
+                display: flex;
+                align-items: center;
+                flex: 1;
+                margin-left: 8px;
+            ">
+                <div style="
+                    flex: 1;
+                    height: 1px;
+                    border-top: 1px dotted #ccc;
+                "></div>
+                <div style="
+                    width: 0;
+                    height: 0;
+                    border-top: 4px solid transparent;
+                    border-bottom: 4px solid transparent;
+                    border-left: 6px solid #ccc;
+                "></div>
+            </div>
+        `;
+
+        // Make sure preview-section is positioned relatively
+        if (getComputedStyle(frame).position === 'static') {
+            frame.style.position = 'relative';
+        }
+
+        // Add hover effect by listening to parent frame
+        frame.addEventListener('mouseenter', () => {
+            indicator.style.opacity = '1';
+        });
+
+        frame.addEventListener('mouseleave', () => {
+            indicator.style.opacity = '0.5';
+        });
+
+        frame.appendChild(indicator);
+    }
+
+    /**
+     * Setup ResizeObserver to watch preview section width changes
+     */
+    function setupWidthObserver() {
+        const frame = document.querySelector('.preview-section');
+        if (!frame || !window.ResizeObserver) return;
+
+        const resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                // Use offsetWidth to include padding, border, and scrollbar
+                const width = Math.round(entry.target.offsetWidth);
+                updateWidthDisplay(width);
+            }
+        });
+
+        resizeObserver.observe(frame);
+
+        // Initial update
+        updateWidthDisplay(frame.offsetWidth);
+    }
+
+    /**
+     * Update width indicator display
+     */
+    function updateWidthDisplay(width) {
+        const frame = document.querySelector('.preview-section');
+        const indicator = frame?.querySelector('.width-indicator');
+        if (!indicator) return;
+
+        const textElement = indicator.children[1]; // The middle div with the text
+        if (textElement) {
+            textElement.textContent = `${width}px`;
+        }
+
+        // Hide indicator in HTML mode
+        const isHtmlMode = frame.dataset.view === 'html';
+        indicator.style.display = isHtmlMode ? 'none' : 'flex';
+    }
 
     /**
      * Check if this component has a showcase template
@@ -56,8 +214,8 @@
      * Load showcase template content
      */
     function loadShowcaseTemplate() {
-        const iframePreviewUrl = `/showcase/${componentData.category}/${componentData.slug}/iframe-preview/`;
-        const ajaxPreviewUrl = `/showcase/${componentData.category}/${componentData.slug}/preview/`;
+        const iframePreviewUrl = `/showcase/component/${componentData.name}/iframe-preview/`;
+        const ajaxPreviewUrl = `/showcase/component/${componentData.name}/preview/`;
 
         // Create a form and submit to iframe for showcase preview
         const iframe = document.getElementById('component-preview-iframe');
@@ -276,8 +434,8 @@
      * Send preview request to server using iframe
      */
     function sendPreviewRequest(props, content, contentBlocks) {
-        const iframePreviewUrl = `/showcase/${componentData.category}/${componentData.slug}/iframe-preview/`;
-        const ajaxPreviewUrl = `/showcase/${componentData.category}/${componentData.slug}/preview/`;
+        const iframePreviewUrl = `/showcase/component/${componentData.name}/iframe-preview/`;
+        const ajaxPreviewUrl = `/showcase/component/${componentData.name}/preview/`;
 
         // Create a form and submit to iframe for preview
         const iframe = document.getElementById('component-preview-iframe');
@@ -351,13 +509,46 @@
     }
 
     /**
+     * Trigger iframe height recalculation after mode changes
+     */
+    function triggerIframeResize() {
+        const iframe = document.getElementById('component-preview-iframe');
+        if (!iframe || !iframe.contentWindow) return;
+
+        // Store current height to maintain layout during recalculation
+        const currentHeight = iframe.offsetHeight;
+
+        // Lock the iframe at current height to prevent any layout shift
+        iframe.style.height = currentHeight + 'px';
+        iframe.style.minHeight = currentHeight + 'px';
+        iframe.style.transition = 'height 0.15s ease';
+
+        // Give CSS time to apply new width, then recalculate height
+        setTimeout(() => {
+            try {
+                // Send recalculation message but keep height locked
+                iframe.contentWindow.postMessage({ type: 'recalculate-height' }, '*');
+            } catch (error) {
+                console.debug('Could not trigger iframe resize:', error);
+            }
+        }, 50);
+    }
+
+    /**
      * Listen for iframe resize messages
      */
     window.addEventListener('message', function(event) {
         if (event.data.type === 'resize') {
             const iframe = document.getElementById('component-preview-iframe');
             if (iframe) {
+                // Unlock minHeight and set new height with smooth transition
+                iframe.style.minHeight = '200px';
                 iframe.style.height = event.data.height + 'px';
+
+                // Clean up transition after animation completes
+                setTimeout(() => {
+                    iframe.style.transition = '';
+                }, 200);
             }
         }
     });
@@ -441,28 +632,39 @@
                     previewHtml.setAttribute('hidden', '');
                     frame.dataset.view = 'preview';
 
-                    // Toggle between desktop (1024px) and desktop-wide (1280px)
+                    // Get the actual available width from the outer container
+                    const componentViewer = document.querySelector('.component-viewer');
+                    const availableWidth = componentViewer ? componentViewer.offsetWidth : window.innerWidth;
+                    const canFitWide = availableWidth >= 1280;
                     const currentMode = frame.dataset.mode;
-                    if (currentMode === 'desktop') {
-                        frame.dataset.mode = 'desktop-wide';
-                    } else if (currentMode === 'desktop-wide') {
-                        frame.dataset.mode = 'desktop';
+
+                    if (canFitWide) {
+                        // Simple toggle: if currently desktop-wide go to desktop, otherwise go to desktop-wide
+                        frame.dataset.mode = (currentMode === 'desktop-wide') ? 'desktop' : 'desktop-wide';
                     } else {
-                        // Coming from mobile/wide/html - start with desktop-wide
-                        frame.dataset.mode = 'desktop-wide';
+                        // Container too narrow, can only use desktop mode
+                        frame.dataset.mode = 'desktop';
                     }
+
                     activePreviewMode = frame.dataset.mode;
+                    // Width will be updated automatically by ResizeObserver
+                    // Trigger iframe height recalculation after mode change
+                    triggerIframeResize();
                 } else if (mode === 'html') {
                     iframe.setAttribute('hidden', '');
                     previewHtml.removeAttribute('hidden');
                     frame.dataset.view = 'html';
                     frame.dataset.mode = 'wide';
+                    // Width will be updated automatically by ResizeObserver
                 } else {
                     activePreviewMode = mode;
                     iframe.removeAttribute('hidden');
                     previewHtml.setAttribute('hidden', '');
                     frame.dataset.view = 'preview';
                     frame.dataset.mode = activePreviewMode;
+                    // Width will be updated automatically by ResizeObserver
+                    // Trigger iframe height recalculation after mode change
+                    triggerIframeResize();
                 }
             });
         });

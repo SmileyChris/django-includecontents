@@ -1,5 +1,5 @@
 name: Alert
-category: Feedback
+namespaced: true
 description: Status message banner with tone-specific styling and optional dismiss control.
 best_practices: |
   - Use alerts sparingly for significant feedback rather than routine confirmations.

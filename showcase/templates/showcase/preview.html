@@ -63,39 +63,75 @@
 
     {% block scripts %}
       <script>
-        // Auto-resize iframe to content height
-        function updateParentHeight() {
-          const height = Math.max(
-            document.body.scrollHeight,
-            document.body.offsetHeight,
-            document.documentElement.clientHeight,
-            document.documentElement.scrollHeight,
-            document.documentElement.offsetHeight,
-          );
+        (function() {
+          'use strict';
 
-          // Send height to parent window
-          if (window.parent && window.parent !== window) {
-            window.parent.postMessage(
-              {
-                type: "resize",
-                height: height,
-              },
-              "*",
-            );
+          // Auto-resize iframe to content height
+          function updateParentHeight() {
+            // Force document to reset its height constraints
+            document.documentElement.style.height = 'auto';
+            document.body.style.height = 'auto';
+
+            // Force reflow
+            document.documentElement.offsetHeight;
+
+            // Get the actual rendered content height using bounding rect
+            const container = document.getElementById('component-container');
+            if (container) {
+              const rect = container.getBoundingClientRect();
+              // Add body padding (2rem = 32px typically)
+              const bodyStyles = window.getComputedStyle(document.body);
+              const paddingTop = parseFloat(bodyStyles.paddingTop) || 0;
+              const paddingBottom = parseFloat(bodyStyles.paddingBottom) || 0;
+              const height = Math.ceil(rect.height + paddingTop + paddingBottom);
+
+              // Send height to parent window
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage(
+                  {
+                    type: "resize",
+                    height: height,
+                  },
+                  "*",
+                );
+              }
+            } else {
+              // Fallback to body measurement, but avoid scrollHeight
+              const height = document.body.offsetHeight;
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage(
+                  {
+                    type: "resize",
+                    height: height,
+                  },
+                  "*",
+                );
+              }
+            }
           }
-        }
 
-        // Update height when content changes
-        document.addEventListener("DOMContentLoaded", updateParentHeight);
-        window.addEventListener("resize", updateParentHeight);
+          // Update height when content changes
+          document.addEventListener("DOMContentLoaded", updateParentHeight);
+          window.addEventListener("resize", updateParentHeight);
 
-        // Use MutationObserver to detect content changes
-        const observer = new MutationObserver(updateParentHeight);
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-        });
+          // Use MutationObserver to detect content changes
+          if (window.MutationObserver) {
+            const observer = new MutationObserver(updateParentHeight);
+            observer.observe(document.body, {
+              childList: true,
+              subtree: true,
+              attributes: true,
+            });
+          }
+
+          // Listen for height recalculation requests from parent
+          window.addEventListener('message', function(event) {
+            if (event.data.type === 'recalculate-height') {
+              // Force recalculation after a brief delay to ensure layout is complete
+              setTimeout(updateParentHeight, 10);
+            }
+          });
+        })();
       </script>
     {% endblock scripts %}
   </body>

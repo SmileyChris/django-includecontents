@@ -1,5 +1,5 @@
 name: Card
-category: Layout
+category: Showcase
 description: Structured container with optional header, footer, borders, and configurable shadow depth.
 best_practices: |
   - Keep titles short so the header wraps to at most two lines on smaller screens.

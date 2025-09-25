@@ -18,17 +18,19 @@ urlpatterns = [
     path("tailwind/search/", views.tailwind_tokens_search_view, name="tailwind_tokens_search"),
     path("tailwind/<str:category>/", views.tailwind_token_category_view, name="tailwind_token_category"),
 
-    # Component URLs (must come after tokens to avoid conflicts)
-    path("<str:category>/", views.category_view, name="category"),
-    path("<str:category>/<str:name>/", views.component_view, name="component"),
+    # Component URLs
+    path("component/<str:component_name>/", views.component_view, name="component"),
     path(
-        "<str:category>/<str:name>/preview/",
+        "component/<str:component_name>/preview/",
         views.ComponentPreviewView.as_view(),
-        name="component_preview"
+        name="component_preview",
     ),
     path(
-        "<str:category>/<str:name>/iframe-preview/",
+        "component/<str:component_name>/iframe-preview/",
         views.ComponentIframePreviewView.as_view(),
-        name="component_iframe_preview"
+        name="component_iframe_preview",
     ),
+
+    # Category URL must come after more specific component URLs.
+    path("<str:category>/", views.category_view, name="category"),
 ]

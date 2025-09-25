@@ -3,31 +3,50 @@
 
 {% block title %}Tailwind Design Tokens{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'showcase/css/tokens.css' %}">
-{% endblock %}
 
 {% block content %}
-<div class="showcase-header">
-    <h1>Tailwind Design Token Library</h1>
-    <p class="showcase-subtitle">
-        Design tokens discovered from Tailwind 4.0 @theme CSS and tailwind.config.js files
-    </p>
-    <div class="showcase-stats">
-        <span class="stat">
-            <strong>{{ total_tailwind_tokens }}</strong> tokens
-        </span>
-        <span class="stat">
-            <strong>{{ tailwind_token_categories|length }}</strong> categories
-        </span>
-        {% if total_tailwind_tokens %}
-        <span class="stat">
-            <strong>{{ css_token_count }}</strong> @theme tokens
-        </span>
-        <span class="stat">
-            <strong>{{ js_token_count }}</strong> config.js tokens
-        </span>
-        {% endif %}
+<div class="showcase-header enhanced">
+    <nav class="breadcrumb">
+        <a href="{% url 'showcase:index' %}">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 4px;">
+                <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5z"/>
+            </svg>
+            Home
+        </a>
+        <span class="separator">→</span>
+        <span class="current">Tailwind Tokens</span>
+    </nav>
+
+    <div class="header-content">
+        <div class="header-main">
+            <div class="header-text">
+                <h1 class="gradient-text">Tailwind Design Tokens</h1>
+                <p class="showcase-subtitle">
+                    Design tokens discovered from Tailwind 4.0 @theme CSS and tailwind.config.js files
+                </p>
+            </div>
+
+            <div class="showcase-stats enhanced">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_tailwind_tokens }}</div>
+                    <div class="stat-label">Total Tokens</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ tailwind_token_categories|length }}</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                {% if total_tailwind_tokens %}
+                <div class="stat-card accent">
+                    <div class="stat-number">{{ css_token_count }}</div>
+                    <div class="stat-label">@theme Tokens</div>
+                </div>
+                <div class="stat-card accent">
+                    <div class="stat-number">{{ js_token_count }}</div>
+                    <div class="stat-label">Config Tokens</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -68,32 +87,69 @@
 {% endif %}
 
 {% if tailwind_token_categories %}
-<div class="showcase-grid">
-    <section class="showcase-section">
-        <h2>Token Categories</h2>
-        <div class="category-grid">
-            {% for category in tailwind_token_categories %}
-            <div class="category-card">
-                <a href="{% url 'showcase:tailwind_token_category' category.slug %}" class="category-link">
-                    <h3>{{ category.name }}</h3>
-                    <p class="category-description">{{ category.description }}</p>
-                    <span class="category-count">{{ category.count }} tokens</span>
+<div class="subcategory-group">
+    <h2 class="subcategory-title">Tailwind Token Categories</h2>
+    <div class="components-grid modern">
+        {% for category in tailwind_token_categories %}
+        <div class="component-card modern token-category-card tailwind-token-card">
+            <div class="component-header">
+                <div class="component-meta">
+                    <span class="component-badge tailwind-badge">Tailwind</span>
+                    {% if category.count > 20 %}
+                    <span class="complexity-badge">Rich</span>
+                    {% elif category.count > 5 %}
+                    <span class="complexity-badge simple">Standard</span>
+                    {% else %}
+                    <span class="complexity-badge minimal">Minimal</span>
+                    {% endif %}
 
                     <!-- Show source breakdown -->
-                    <div class="category-sources">
-                        {% for token in category.tokens %}
-                            {% if token.source_type == "css" and forloop.first %}
-                                <span class="source-mini-badge source-badge-css">@theme</span>
-                            {% elif token.source_type == "js" and forloop.first %}
-                                <span class="source-mini-badge source-badge-js">config.js</span>
-                            {% endif %}
-                        {% endfor %}
+                    {% for token in category.tokens %}
+                        {% if token.source_type == "css" and forloop.first %}
+                            <span class="source-mini-badge source-badge-css">@theme</span>
+                        {% elif token.source_type == "js" and forloop.first %}
+                            <span class="source-mini-badge source-badge-js">config.js</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="component-content">
+                <h3 class="component-title">
+                    <a href="{% url 'showcase:tailwind_token_category' category.slug %}">
+                        {{ category.name|title }}
+                    </a>
+                </h3>
+
+                <p class="component-description">{{ category.description|default:"Tailwind design tokens for this category" }}</p>
+
+                <div class="props-preview modern">
+                    <h4>Token Details</h4>
+                    <div class="props-grid">
+                        <div class="prop-item">
+                            <code class="prop-name">tokens</code>
+                            <span class="prop-type-badge">{{ category.count }}</span>
+                        </div>
+                        <div class="prop-item">
+                            <code class="prop-name">category</code>
+                            <span class="prop-type-badge">{{ category.name|lower }}</span>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="component-footer">
+                <a href="{% url 'showcase:tailwind_token_category' category.slug %}" class="component-link">
+                    <span>Explore {{ category.count }} token{{ category.count|pluralize }}</span>
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                    </svg>
                 </a>
             </div>
-            {% endfor %}
         </div>
-    </section>
+        {% endfor %}
+    </div>
+</div>
 
     {% if recent_tailwind_tokens %}
     <section class="showcase-section">
@@ -516,41 +572,5 @@ module.exports = {
 }
 </style>
 
-<script>
-function copyToClipboard(text, button) {
-    navigator.clipboard.writeText(text).then(function() {
-        // Visual feedback
-        const originalText = button.innerHTML;
-        button.classList.add('copied');
-        button.innerHTML = button.innerHTML.replace(/CSS|Class/, 'Copied!');
-
-        setTimeout(function() {
-            button.classList.remove('copied');
-            button.innerHTML = originalText;
-        }, 2000);
-    }).catch(function(err) {
-        console.error('Could not copy text: ', err);
-    });
-}
-
-function toggleSection(button) {
-    const content = button.closest('section').querySelector('.collapsible-content');
-    const toggleText = button.querySelector('.toggle-text');
-    const toggleIcon = button.querySelector('.toggle-icon');
-    const isExpanded = button.getAttribute('aria-expanded') === 'true';
-
-    if (isExpanded) {
-        content.style.display = 'none';
-        toggleText.textContent = 'Show Sources';
-        button.setAttribute('aria-expanded', 'false');
-        toggleIcon.style.transform = 'rotate(0deg)';
-    } else {
-        content.style.display = 'block';
-        toggleText.textContent = 'Hide Sources';
-        button.setAttribute('aria-expanded', 'true');
-        toggleIcon.style.transform = 'rotate(180deg)';
-    }
-}
-</script>
 {% endif %}
 {% endblock %}

@@ -13,7 +13,7 @@
             Components
         </a>
         <span class="separator">→</span>
-        <a href="{% url 'showcase:category' component.category|lower|slugify %}">{{ component.category }}</a>
+        <a href="{% url 'showcase:category' main_category|lower|slugify %}">{{ component.category }}</a>
         <span class="separator">→</span>
         <span class="current">{{ component.name }}</span>
     </nav>
@@ -206,7 +206,7 @@
         <div class="related-components">
             {% for related in related_components %}
             <div class="related-component">
-                <a href="{% url 'showcase:component' related.category|lower|slugify related.slug %}" class="related-link">
+                <a href="{% url 'showcase:component' related.name %}" class="related-link">
                     <strong>{{ related.name }}</strong>
                     <span class="related-category">{{ related.category }}</span>
                 </a>

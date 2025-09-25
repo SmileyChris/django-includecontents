@@ -14,8 +14,7 @@
         <div class="hero-text">
             <h1 class="hero-title">Django Component Library</h1>
             <p class="hero-subtitle">
-                Build beautiful, consistent UIs with our collection of reusable Django components.
-                Interactive props, live previews, and comprehensive documentation included.
+                Browse reusable Django components with live previews and interactive documentation.
             </p>
         </div>
 
@@ -32,115 +31,9 @@
             </form>
         </div>
 
-        <!-- Animated Statistics -->
-        <div class="hero-stats">
-            <a href="#components-section" class="stat-card primary">
-                <div class="stat-number" data-count="{{ total_components }}">0</div>
-                <div class="stat-label">Components</div>
-                <div class="stat-icon">🧩</div>
-            </a>
-            <a href="#components-section" class="stat-card secondary">
-                <div class="stat-number" data-count="{{ categories|length }}">0</div>
-                <div class="stat-label">Categories</div>
-                <div class="stat-icon">📁</div>
-            </a>
-            <a href="#tokens-section" class="stat-card accent">
-                <div class="stat-number" data-count="{% if token_categories and tailwind_token_categories %}{{ token_categories|length|add:tailwind_token_categories|length }}{% elif token_categories %}{{ token_categories|length }}{% elif tailwind_token_categories %}{{ tailwind_token_categories|length }}{% else %}0{% endif %}">0</div>
-                <div class="stat-label">Token Sets</div>
-                <div class="stat-icon">🎨</div>
-            </a>
-        </div>
     </div>
 </div>
 
-<!-- Quick Start Guide -->
-<section class="quick-start-section">
-    <div class="section-header">
-        <h2>Quick Start</h2>
-        <p>Get up and running with Django IncludeContents in minutes</p>
-    </div>
-
-    <div class="quick-start-tabs">
-        <div class="tab-nav">
-            <button class="tab-btn active" data-tab="html">HTML Syntax</button>
-            <button class="tab-btn" data-tab="django">Django Templates</button>
-            <button class="tab-btn" data-tab="setup">Setup</button>
-        </div>
-
-        <div class="tab-content">
-            <div id="html-tab" class="tab-panel active">
-                <div class="code-example">
-                    <h3>Use HTML-like syntax for components</h3>
-                    <pre><code>&lt;include:forms:button label="Click me!" variant="primary" size="lg" /&gt;
-
-&lt;include:layout:card title="Card Title"&gt;
-    &lt;p&gt;Card content goes here&lt;/p&gt;
-&lt;/include:layout:card&gt;
-
-&lt;include:feedback:alert type="success"&gt;
-    Operation completed successfully!
-&lt;/include:feedback:alert&gt;</code></pre>
-                    <button class="copy-code-btn" onclick="copyToClipboard(this.previousElementSibling.textContent, this)">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                        </svg>
-                        Copy
-                    </button>
-                </div>
-            </div>
-
-            <div id="django-tab" class="tab-panel">
-                <div class="code-example">
-                    <h3>Traditional Django template syntax</h3>
-                    <pre><code>{% templatetag openblock %} load includecontents {% templatetag closeblock %}
-
-{% templatetag openblock %} includecontents "components/forms/button.html" with label="Click me!" variant="primary" size="lg" {% templatetag closeblock %}
-{% templatetag openblock %} endincludecontents {% templatetag closeblock %}
-
-{% templatetag openblock %} includecontents "components/layout/card.html" with title="Card Title" {% templatetag closeblock %}
-    &lt;p&gt;Card content goes here&lt;/p&gt;
-{% templatetag openblock %} endincludecontents {% templatetag closeblock %}
-
-{% templatetag openblock %} includecontents "components/feedback/alert.html" with type="success" {% templatetag closeblock %}
-    Operation completed successfully!
-{% templatetag openblock %} endincludecontents {% templatetag closeblock %}</code></pre>
-                    <button class="copy-code-btn" onclick="copyToClipboard(this.previousElementSibling.textContent, this)">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                        </svg>
-                        Copy
-                    </button>
-                </div>
-            </div>
-
-            <div id="setup-tab" class="tab-panel">
-                <div class="code-example">
-                    <h3>Installation and configuration</h3>
-                    <pre><code># Install the package
-pip install django-includecontents
-
-# Add to INSTALLED_APPS
-INSTALLED_APPS = [
-    ...
-    'includecontents',
-]
-
-# Optional: Use HTML syntax
-TEMPLATES = [{
-    ...
-    'BACKEND': 'includecontents.django.DjangoTemplates',
-}]</code></pre>
-                    <button class="copy-code-btn" onclick="copyToClipboard(this.previousElementSibling.textContent, this)">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                        </svg>
-                        Copy
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- Enhanced Categories Grid -->
 <section id="components-section" class="categories-section">
@@ -219,60 +112,6 @@ TEMPLATES = [{
     </div>
 </section>
 
-<!-- Featured Components -->
-{% if recent_components %}
-<section class="featured-section">
-    <div class="section-header">
-        <h2>Featured Components</h2>
-        <p>Popular and recently added components ready to use in your projects</p>
-    </div>
-
-    <div class="featured-grid">
-        {% for component in recent_components %}
-        <div class="featured-card">
-            <div class="featured-header">
-                <div class="featured-meta">
-                    <span class="category-badge">{{ component.category }}</span>
-                    {% if component.props|length > 5 %}
-                        <span class="complexity-badge advanced">Advanced</span>
-                    {% elif component.props|length > 2 %}
-                        <span class="complexity-badge moderate">Moderate</span>
-                    {% else %}
-                        <span class="complexity-badge simple">Simple</span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="featured-content">
-                <h3>{{ component.name }}</h3>
-                {% if component.description %}
-                <p class="featured-description">{{ component.description }}</p>
-                {% endif %}
-
-                {% if component.props %}
-                <div class="props-summary">
-                    <span class="props-count">{{ component.props|length }} props</span>
-                    {% if component.content_blocks %}
-                    <span class="blocks-count">{{ component.content_blocks|length }} content blocks</span>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="featured-actions">
-                <a href="{% url 'showcase:component' component.category|lower|slugify component.slug %}" class="btn-primary">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-                    </svg>
-                    View Component
-                </a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
 
 <!-- Design Tokens Summary -->
 {% if token_categories or tailwind_token_categories %}
@@ -473,71 +312,6 @@ html {
     transform: translateY(-1px);
 }
 
-/* Hero Stats */
-.hero-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.stat-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 20px;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(226, 232, 240, 0.5);
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    cursor: pointer;
-}
-
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    text-decoration: none;
-    color: inherit;
-}
-
-.stat-card.primary {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border-color: rgba(14, 165, 233, 0.2);
-}
-
-.stat-card.secondary {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-color: rgba(100, 116, 139, 0.2);
-}
-
-.stat-card.accent {
-    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-    border-color: rgba(168, 85, 247, 0.2);
-}
-
-.stat-number {
-    font-size: 3rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.stat-label {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #64748b;
-    margin-bottom: 1rem;
-}
-
-.stat-icon {
-    font-size: 1.5rem;
-    opacity: 0.7;
-}
 
 /* Section Headers */
 .section-header {
@@ -559,113 +333,6 @@ html {
     margin: 0 auto;
 }
 
-/* Quick Start Section */
-.quick-start-section {
-    margin: 5rem 0;
-    padding: 3rem 2rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 24px;
-    border: 1px solid rgba(226, 232, 240, 0.5);
-}
-
-.quick-start-tabs {
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.tab-nav {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-    background: white;
-    padding: 0.5rem;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.tab-btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    background: transparent;
-    color: #64748b;
-    font-weight: 500;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.tab-btn.active {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
-}
-
-.tab-btn:hover:not(.active) {
-    background: #f1f5f9;
-    color: #374151;
-}
-
-.tab-content {
-    position: relative;
-}
-
-.tab-panel {
-    display: none;
-}
-
-.tab-panel.active {
-    display: block;
-}
-
-.code-example {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(226, 232, 240, 0.5);
-}
-
-.code-example h3 {
-    padding: 1.5rem 2rem 1rem;
-    margin: 0;
-    color: #1e293b;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.code-example pre {
-    margin: 0;
-    padding: 1rem 2rem;
-    background: #1e293b;
-    color: #e2e8f0;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.875rem;
-    line-height: 1.6;
-    overflow-x: auto;
-}
-
-.copy-code-btn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    color: #e2e8f0;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.copy-code-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
-}
 
 /* Enhanced Categories Grid */
 .categories-section {
@@ -771,127 +438,6 @@ html {
     color: #4f46e5;
 }
 
-/* Featured Section */
-.featured-section {
-    margin: 5rem 0;
-}
-
-.featured-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.featured-card {
-    background: white;
-    border: 1px solid rgba(226, 232, 240, 0.5);
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.3s;
-}
-
-.featured-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.featured-header {
-    padding: 1.5rem 1.5rem 0;
-}
-
-.featured-meta {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.category-badge {
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.25rem 0.75rem;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    color: #0369a1;
-    border-radius: 9999px;
-    border: 1px solid rgba(14, 165, 233, 0.2);
-}
-
-.complexity-badge {
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    border: 1px solid;
-}
-
-.complexity-badge.simple {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    color: #047857;
-    border-color: rgba(16, 185, 129, 0.2);
-}
-
-.complexity-badge.moderate {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #92400e;
-    border-color: rgba(251, 191, 36, 0.2);
-}
-
-.complexity-badge.advanced {
-    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
-    color: #b91c1c;
-    border-color: rgba(239, 68, 68, 0.2);
-}
-
-.featured-content {
-    padding: 1.5rem;
-}
-
-.featured-content h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.75rem;
-}
-
-.featured-description {
-    color: #64748b;
-    margin-bottom: 1rem;
-    line-height: 1.5;
-}
-
-.props-summary {
-    display: flex;
-    gap: 1rem;
-    font-size: 0.875rem;
-    color: #64748b;
-}
-
-.featured-actions {
-    padding: 0 1.5rem 1.5rem;
-}
-
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: white;
-    text-decoration: none;
-    border-radius: 10px;
-    font-weight: 500;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-    color: white;
-    text-decoration: none;
-}
 
 /* Tokens Section */
 .tokens-section {
@@ -1008,30 +554,18 @@ html {
         font-size: 1.125rem;
     }
 
-    .hero-stats {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
 
     .categories-grid.enhanced {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
 
-    .featured-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
 
     .tokens-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
 
-    .tab-nav {
-        flex-direction: column;
-        gap: 0.25rem;
-    }
 
     .search-container {
         flex-direction: column;
@@ -1052,99 +586,16 @@ html {
     }
 }
 
-/* Animation for stat counters */
-@keyframes countUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
-.stat-number {
-    animation: countUp 0.6s ease-out forwards;
-}
-
-/* Copy functionality */
-.copy-code-btn.copied {
-    background: rgba(34, 197, 94, 0.2) !important;
-    color: #16a34a !important;
-}
 </style>
 
 <script>
-// Animated counters for statistics
-function animateCounters() {
-    const counters = document.querySelectorAll('.stat-number[data-count]');
 
-    counters.forEach(counter => {
-        const target = parseInt(counter.getAttribute('data-count'));
-        const duration = 2000; // 2 seconds
-        const step = target / (duration / 16); // 60fps
-        let current = 0;
 
-        const timer = setInterval(() => {
-            current += step;
-            counter.textContent = Math.floor(current);
-
-            if (current >= target) {
-                counter.textContent = target;
-                clearInterval(timer);
-            }
-        }, 16);
-    });
-}
-
-// Tab functionality
-function initTabs() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabPanels = document.querySelectorAll('.tab-panel');
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetTab = btn.getAttribute('data-tab');
-
-            // Remove active class from all buttons and panels
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabPanels.forEach(p => p.classList.remove('active'));
-
-            // Add active class to clicked button and corresponding panel
-            btn.classList.add('active');
-            document.getElementById(targetTab + '-tab').classList.add('active');
-        });
-    });
-}
-
-// Copy to clipboard functionality
-function copyToClipboard(text, button) {
-    // Decode HTML entities for cleaner copying
-    const decodedText = text.trim()
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&amp;/g, '&');
-
-    navigator.clipboard.writeText(decodedText).then(() => {
-        const originalText = button.innerHTML;
-        button.classList.add('copied');
-        button.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> Copied!';
-
-        setTimeout(() => {
-            button.classList.remove('copied');
-            button.innerHTML = originalText;
-        }, 2000);
-    }).catch(err => {
-        console.error('Could not copy text: ', err);
-    });
-}
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Add a small delay to see the animation effect
-    setTimeout(animateCounters, 500);
-    initTabs();
+    // Page ready
 });
 </script>
 
