@@ -128,9 +128,9 @@ class TestCallableAttrsConditionalClasses:
             'class:disabled': False
         })
 
-        # Check that the conditional classes are set in the extended attrs
-        assert result._extended['class']['active'] is True
-        assert result._extended['class']['disabled'] is False
+        # Check that the conditional classes are set in the conditional modifiers
+        assert result._conditional_modifiers['class']['active'] is True
+        assert result._conditional_modifiers['class']['disabled'] is False
 
     def test_conditional_class_mixed_with_regular_attrs(self):
         """Test mixing conditional classes with regular attributes."""
@@ -143,8 +143,8 @@ class TestCallableAttrsConditionalClasses:
             'data-id': '123'
         })
 
-        assert result._extended['class']['active'] is True
-        assert result._extended['class']['disabled'] is False
+        assert result._conditional_modifiers['class']['active'] is True
+        assert result._conditional_modifiers['class']['disabled'] is False
         assert result['data-id'] == '123'
 
 

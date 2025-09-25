@@ -1,42 +1,102 @@
-"""Engine-agnostic HTML attribute container."""
+"""Engine-agnostic HTML attribute container with advanced merging and modification capabilities.
+
+Supports multiple attribute syntaxes:
+
+1. **JavaScript Framework Attributes** (preserved verbatim):
+   - @click="handler()" - Alpine/Vue event handlers
+   - x-on:click="toggle()" - Alpine.js events
+   - v-model="value" - Vue.js directives
+   - :disabled="isLoading" - Vue/Alpine binding (except class:)
+
+2. **Conditional Modifiers** (merged into base attribute):
+   - class:active=True - conditionally add "active" to class
+   - class:disabled=False - conditionally remove "disabled" from class
+   - aria:current="page" - any non-JS attribute with colon
+
+3. **Nested Attributes** (dot notation):
+   - inner.class="nested" - creates nested attrs object
+   - button.data-id="123" - nested attribute with data
+
+4. **Class Merging Syntax**:
+   - class="& suffix" - append "suffix" to existing class
+   - class="prefix &" - prepend "prefix" to existing class
+
+5. **Callable Interface**:
+   - attrs(class_="default") - returns new attrs with fallbacks
+   - Existing attrs override provided fallbacks
+   - Trailing underscores are stripped (class_ → class)
+"""
 
 from __future__ import annotations
 
 import re
 from collections.abc import Iterable, MutableMapping
-from typing import Any, Dict, Iterator, Tuple
+from typing import Any, Dict, Iterator, Tuple, Union
 
 
 _re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 
-class ExtendedAttribute:
-    """Wrapper for attributes that have extended properties (class:active, etc.)"""
+class ConditionalAttribute:
+    """
+    Wrapper for attributes with conditional modifiers.
 
-    def __init__(self, base_value: Any, extended_attrs: Dict[str, bool]):
+    Used for attributes like class:active=True where sub-properties
+    can be conditionally toggled. Provides dot-notation access to
+    check modifier states.
+
+    Example:
+        attrs['class:active'] = True
+        attrs['class:disabled'] = False
+        attrs.class.active  # Returns True
+        attrs.class.disabled  # Returns False
+        str(attrs.class)  # Returns "active" (only truthy modifiers)
+    """
+
+    def __init__(self, base_value: Any, conditional_modifiers: Dict[str, bool]):
         self._base_value = base_value
-        self._extended_attrs = extended_attrs
+        self._conditional_modifiers = conditional_modifiers
 
     def __getattr__(self, name: str) -> bool:
-        """Access extended attributes like .active, .disabled, etc."""
-        return self._extended_attrs.get(name, False)
+        """Access conditional modifiers like .active, .disabled, etc."""
+        return self._conditional_modifiers.get(name, False)
 
     def __str__(self) -> str:
         """Return the base value when converted to string"""
         return str(self._base_value)
 
     def __repr__(self) -> str:
-        return f"ExtendedAttribute({self._base_value!r}, {self._extended_attrs!r})"
+        return f"ConditionalAttribute({self._base_value!r}, {self._conditional_modifiers!r})"
 
 
 class BaseAttrs(MutableMapping[str, Any]):
-    """Collects attributes with support for nested groups and class merging."""
+    """
+    HTML attribute container with advanced merging and modification capabilities.
+
+    This class handles complex attribute scenarios common in HTML component systems.
+    It distinguishes between different attribute syntaxes and applies appropriate
+    processing to each type.
+
+    Storage Strategy:
+    - _attrs: Regular HTML attributes and JS framework attributes
+    - _conditional_modifiers: Conditional modifiers that get merged (class:active, aria:current)
+    - _nested_attrs: Dot-notation attributes that create sub-objects
+    - _prepended_classes: Class parts that should come first in output
+
+    Examples:
+        attrs = BaseAttrs()
+        attrs['class'] = 'btn'           # Regular attribute
+        attrs['class:active'] = True     # Conditional modifier
+        attrs['@click'] = 'handler()'    # JS framework (preserved verbatim)
+        attrs['inner.class'] = 'nested'  # Nested attribute
+        attrs['class'] = '& primary'     # Merge syntax (append)
+    """
 
     def __init__(self) -> None:
         self._attrs: Dict[str, Any] = {}
         self._nested_attrs: Dict[str, BaseAttrs] = {}
-        self._extended: Dict[str, Dict[str, bool]] = {}
-        self._prepended: Dict[str, Dict[str, bool]] = {}
+        self._conditional_modifiers: Dict[str, Dict[str, bool]] = {}
+        self._prepended_classes: Dict[str, Dict[str, bool]] = {}
 
     # ------------------------------------------------------------------
     # Mapping protocol
@@ -46,14 +106,14 @@ class BaseAttrs(MutableMapping[str, Any]):
         if key in self._nested_attrs:
             return self._nested_attrs[key]
 
-        # Check if this attribute has extended properties (class:active, etc.)
-        if key in self._extended:
+        # Check if this attribute has conditional modifiers (class:active, etc.)
+        if key in self._conditional_modifiers:
             try:
                 base_value = self[key]
-                return ExtendedAttribute(base_value, self._extended[key])
+                return ConditionalAttribute(base_value, self._conditional_modifiers[key])
             except KeyError:
-                # No base value, just return extended attrs with empty base
-                return ExtendedAttribute("", self._extended[key])
+                # No base value, just return conditional attrs with empty base
+                return ConditionalAttribute("", self._conditional_modifiers[key])
 
         try:
             return self[key]
@@ -65,45 +125,101 @@ class BaseAttrs(MutableMapping[str, Any]):
             key = _re_camel_case.sub(r"-\1", key).lower()
         return self._attrs[key]
 
-    def __setitem__(self, key: str, value: Any) -> None:
-        # Preserve JavaScript style attributes verbatim (@click, :bind, etc.)
-        if (
-            key.startswith("@")
-            or (key.startswith(":") and not key.startswith("class:"))
-            or key.startswith("v-")
-            or key.startswith("x-")
-        ):
-            self._attrs[key] = value
-            return
+    @staticmethod
+    def _is_js_framework_attr(key: str) -> bool:
+        """
+        Check if attribute is a JavaScript framework directive that should be preserved.
 
-        if "." in key:
-            nested_key, remainder = key.split(".", 1)
-            nested_attrs = self._nested_attrs.setdefault(nested_key, self._new_child())
-            nested_attrs[remainder] = value
-            return
+        JavaScript framework attributes are stored verbatim without parsing:
+        - @click="handler()" (Alpine.js/Vue event handlers)
+        - x-on:click="toggle()" (Alpine.js events)
+        - v-model="value" (Vue.js directives)
+        - :disabled="isLoading" (Vue/Alpine binding, except class:)
+        """
+        return (
+            key.startswith("@") or  # Alpine/Vue events
+            (key.startswith(":") and not key.startswith("class:")) or  # Bindings except class:
+            key.startswith("v-") or  # Vue directives
+            key.startswith("x-")  # Alpine directives
+        )
 
+    @staticmethod
+    def _is_nested_attr(key: str) -> bool:
+        """Check if attribute uses dot notation for nested objects."""
+        return "." in key
 
-        if ":" in key:
-            base_key, extend_key = key.split(":", 1)
-            extended = self._extended.setdefault(base_key, {})
-            extended[extend_key] = value
-            return
+    @staticmethod
+    def _is_conditional_modifier(key: str) -> bool:
+        """
+        Check if attribute uses colon syntax for conditional modifiers.
 
-        if key == "class" and isinstance(value, str) and value.startswith("& "):
-            extended = self._extended.setdefault(key, {})
+        Conditional modifiers are merged into their base attribute:
+        - class:active=True adds "active" to class if True
+        - aria:current="page" sets aria["current"] = "page"
+        """
+        return ":" in key and not BaseAttrs._is_js_framework_attr(key)
+
+    @staticmethod
+    def _is_class_merge_syntax(key: str, value: Any) -> bool:
+        """Check if this is class merge syntax (& append/prepend)."""
+        return (
+            key == "class" and
+            isinstance(value, str) and
+            (value.startswith("& ") or value.endswith(" &"))
+        )
+
+    def _store_js_framework_attr(self, key: str, value: Any) -> None:
+        """Store JavaScript framework attribute verbatim."""
+        self._attrs[key] = value
+
+    def _store_nested_attr(self, key: str, value: Any) -> None:
+        """Store nested attribute using dot notation."""
+        nested_key, remainder = key.split(".", 1)
+        nested_attrs = self._nested_attrs.setdefault(nested_key, self._new_child())
+        nested_attrs[remainder] = value
+
+    def _store_conditional_modifier(self, key: str, value: Any) -> None:
+        """Store conditional modifier for later merging."""
+        base_key, modifier = key.split(":", 1)
+        conditional_modifiers = self._conditional_modifiers.setdefault(base_key, {})
+        conditional_modifiers[modifier] = value
+
+    def _handle_class_merge_syntax(self, key: str, value: str) -> None:
+        """Handle special class merge syntax (& append/prepend)."""
+        if value.startswith("& "):
+            # Append syntax: "& suffix"
+            conditional_modifiers = self._conditional_modifiers.setdefault(key, {})
             for bit in value[2:].split(" "):
                 if bit:
-                    extended[bit] = True
-            return
-
-        if key == "class" and isinstance(value, str) and value.endswith(" &"):
-            prepended = self._prepended.setdefault(key, {})
+                    conditional_modifiers[bit] = True
+        elif value.endswith(" &"):
+            # Prepend syntax: "prefix &"
+            prepended = self._prepended_classes.setdefault(key, {})
             for bit in value[:-2].strip().split(" "):
                 if bit:
                     prepended[bit] = True
-            return
 
-        self._attrs[key] = value
+    def __setitem__(self, key: str, value: Any) -> None:
+        """
+        Store attribute with appropriate handling based on key syntax.
+
+        Dispatches to specialized storage methods based on the key pattern:
+        - JS framework attrs (@click, v-model) → stored verbatim
+        - Nested attrs (inner.class) → creates nested object
+        - Conditional modifiers (class:active) → stored for merging
+        - Class merge syntax (& append) → handled specially
+        - Regular attrs → stored directly
+        """
+        if self._is_js_framework_attr(key):
+            self._store_js_framework_attr(key, value)
+        elif self._is_nested_attr(key):
+            self._store_nested_attr(key, value)
+        elif self._is_conditional_modifier(key):
+            self._store_conditional_modifier(key, value)
+        elif self._is_class_merge_syntax(key, value):
+            self._handle_class_merge_syntax(key, value)
+        else:
+            self._attrs[key] = value
 
     def __delitem__(self, key: str) -> None:
         del self._attrs[key]
@@ -152,21 +268,31 @@ class BaseAttrs(MutableMapping[str, Any]):
         # Need to merge all the internal dictionaries, not just _attrs
         new_attrs.update(self)
 
-        # Merge _extended dictionaries (conditional classes like class:active)
-        for base_key, extended_dict in self._extended.items():
-            new_extended = new_attrs._extended.setdefault(base_key, {})
-            new_extended.update(extended_dict)
+        # Merge _conditional_modifiers dictionaries (conditional classes like class:active)
+        for base_key, conditional_dict in self._conditional_modifiers.items():
+            new_conditional = new_attrs._conditional_modifiers.setdefault(base_key, {})
+            new_conditional.update(conditional_dict)
 
-        # Merge _prepended dictionaries (prepended classes)
-        for base_key, prepended_dict in self._prepended.items():
-            new_prepended = new_attrs._prepended.setdefault(base_key, {})
+        # Merge _prepended_classes dictionaries (prepended classes)
+        for base_key, prepended_dict in self._prepended_classes.items():
+            new_prepended = new_attrs._prepended_classes.setdefault(base_key, {})
             new_prepended.update(prepended_dict)
 
         # Merge _nested_attrs dictionaries
         for nested_key, nested_attrs in self._nested_attrs.items():
             if nested_key not in new_attrs._nested_attrs:
                 new_attrs._nested_attrs[nested_key] = nested_attrs._new_child()
-                new_attrs._nested_attrs[nested_key].update(nested_attrs)
+            # Always merge the nested attrs - don't skip if it already exists
+            new_attrs._nested_attrs[nested_key].update(nested_attrs)
+
+            # Also merge the internal structures (conditional_modifiers, prepended) for nested attrs
+            for base_key, conditional_dict in nested_attrs._conditional_modifiers.items():
+                new_conditional = new_attrs._nested_attrs[nested_key]._conditional_modifiers.setdefault(base_key, {})
+                new_conditional.update(conditional_dict)
+
+            for base_key, prepended_dict in nested_attrs._prepended_classes.items():
+                new_prepended = new_attrs._nested_attrs[nested_key]._prepended_classes.setdefault(base_key, {})
+                new_prepended.update(prepended_dict)
 
         return new_attrs
 
@@ -178,17 +304,27 @@ class BaseAttrs(MutableMapping[str, Any]):
         return type(self)()
 
     def all_attrs(self) -> Iterable[Tuple[str, Any]]:
-        """Yield flattened attribute key/value pairs with class merging applied."""
+        """
+        Yield flattened attribute key/value pairs with class merging applied.
+
+        Processing order:
+        1. Collect conditional modifiers that are truthy
+        2. Collect prepended class parts
+        3. For each regular attribute:
+           - If it has modifiers/prepends, merge them
+           - Otherwise, yield as-is
+        4. Handle orphaned modifiers (no base attribute exists)
+        """
 
         extended: Dict[str, list[str]] = {}
         prepended: Dict[str, list[str]] = {}
 
-        for key, parts in self._extended.items():
+        for key, parts in self._conditional_modifiers.items():
             active = [name for name, flag in parts.items() if flag]
             if active:
                 extended[key] = active
 
-        for key, parts in self._prepended.items():
+        for key, parts in self._prepended_classes.items():
             active = [name for name, flag in parts.items() if flag]
             if active:
                 prepended[key] = active
@@ -231,6 +367,35 @@ class BaseAttrs(MutableMapping[str, Any]):
     # ------------------------------------------------------------------
     # String rendering
     # ------------------------------------------------------------------
+
+    def __repr__(self) -> str:
+        """Return detailed representation for debugging."""
+        parts = [f"{self.__class__.__name__}("]
+
+        # Show regular attrs
+        if self._attrs:
+            parts.append(f"attrs={self._attrs!r}")
+
+        # Show conditional modifiers if present
+        if self._conditional_modifiers:
+            if self._attrs:
+                parts.append(", ")
+            parts.append(f"conditional={self._conditional_modifiers!r}")
+
+        # Show nested attrs keys if present
+        if self._nested_attrs:
+            if self._attrs or self._conditional_modifiers:
+                parts.append(", ")
+            parts.append(f"nested={list(self._nested_attrs.keys())}")
+
+        # Show prepended classes if present
+        if self._prepended_classes:
+            if self._attrs or self._conditional_modifiers or self._nested_attrs:
+                parts.append(", ")
+            parts.append(f"prepended={self._prepended_classes!r}")
+
+        parts.append(")")
+        return "".join(parts)
 
     def __str__(self) -> str:
         """Render attributes as HTML string with engine-specific formatting."""
