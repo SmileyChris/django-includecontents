@@ -18,9 +18,13 @@ The showcase system automatically detects and uses showcase templates based on a
 
 ```
 components/
-├── forms/
-│   ├── button.html              # Your component template
-│   └── button.showcase.html     # Showcase template (optional)
+├── showcase/                    # Showcase demo components (namespace)
+│   └── forms/
+│       ├── button.html          # Demo button component
+│       └── button.showcase.html # Showcase template
+├── forms/                       # Your project components
+│   ├── my-button.html           # Your actual component
+│   └── my-button.showcase.html  # Your component's showcase (optional)
 ```
 
 When a showcase template exists:
@@ -28,6 +32,15 @@ When a showcase template exists:
 - The preview section displays your showcase instead of the interactive props editor
 - The HTML/Django code tabs are hidden (since showcase is static)
 - Examples section still appears if defined in metadata
+
+## Namespace Considerations
+
+**Important**: The showcase app includes its own demo components under the `components/showcase/` namespace to avoid collisions with your project's components. When creating showcase templates, you can:
+
+1. **Reference showcase demo components** using paths like `components/showcase/forms/button.html`
+2. **Reference your own components** using their regular paths like `components/forms/my-button.html`
+
+The namespace separation ensures that showcase demo components don't interfere with your actual project components.
 
 ## Creating a Showcase Template
 
@@ -74,11 +87,11 @@ Use the `{% includecontents %}` tag to render your components with different pro
         <h4>Primary Variants</h4>
         <div class="button-grid">
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Small Primary" variant="primary" size="sm" %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Small Primary" variant="primary" size="sm" %}{% endincludecontents %}
                 <small>Small</small>
             </div>
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Medium Primary" variant="primary" size="md" %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Medium Primary" variant="primary" size="md" %}{% endincludecontents %}
                 <small>Medium (default)</small>
             </div>
         </div>
@@ -89,7 +102,7 @@ Use the `{% includecontents %}` tag to render your components with different pro
         <h4>Disabled States</h4>
         <div class="button-grid">
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Disabled" variant="primary" disabled=True %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Disabled" variant="primary" disabled=True %}{% endincludecontents %}
                 <small>Disabled Primary</small>
             </div>
         </div>
@@ -261,15 +274,15 @@ Here's a complete example of a button showcase template:
         <h4>Primary Variants</h4>
         <div class="button-grid">
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Small Primary" variant="primary" size="sm" %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Small Primary" variant="primary" size="sm" %}{% endincludecontents %}
                 <small>Small</small>
             </div>
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Medium Primary" variant="primary" size="md" %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Medium Primary" variant="primary" size="md" %}{% endincludecontents %}
                 <small>Medium (default)</small>
             </div>
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Large Primary" variant="primary" size="lg" %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Large Primary" variant="primary" size="lg" %}{% endincludecontents %}
                 <small>Large</small>
             </div>
         </div>
@@ -280,11 +293,11 @@ Here's a complete example of a button showcase template:
         <h4>Buttons with Icons</h4>
         <div class="button-grid">
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Save" variant="primary" icon_before="💾" %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Save" variant="primary" icon_before="💾" %}{% endincludecontents %}
                 <small>Icon Before</small>
             </div>
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Download" variant="secondary" icon_after="⬇️" %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Download" variant="secondary" icon_after="⬇️" %}{% endincludecontents %}
                 <small>Icon After</small>
             </div>
         </div>
@@ -295,7 +308,7 @@ Here's a complete example of a button showcase template:
         <h4>Disabled States</h4>
         <div class="button-grid">
             <div class="button-demo">
-                {% includecontents "components/forms/button.html" with label="Disabled" variant="primary" disabled=True %}{% endincludecontents %}
+                {% includecontents "components/showcase/forms/button.html" with label="Disabled" variant="primary" disabled=True %}{% endincludecontents %}
                 <small>Disabled Primary</small>
             </div>
         </div>
