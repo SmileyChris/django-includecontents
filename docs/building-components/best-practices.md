@@ -2,6 +2,9 @@
 
 Building maintainable, reusable components requires following established patterns and conventions. This guide covers the essential best practices for Django IncludeContents.
 
+!!! info "Jinja2 Users"
+    Components always render undefined variables as empty strings, matching Django template behavior. This works consistently regardless of your `DEBUG` setting or Jinja2's `undefined` configuration.
+
 ## Naming Conventions
 
 ### Component Names
@@ -116,6 +119,45 @@ Define clear props interfaces using comments:
     class:avatar-clickable=clickable
 %}>
     <!-- Component implementation -->
+</div>
+```
+
+### Undefined Variable Handling (Jinja2)
+
+When using Jinja2, components automatically handle undefined variables consistently, regardless of your Django debug settings:
+
+```html
+{# props title, description="" #}
+
+<!-- ✅ Undefined variables render as empty strings in components -->
+<div class="card {{ undefined_class }}">  <!-- Renders: class="card " -->
+    <h3>{{ title }}</h3>                  <!-- Works: passed as prop -->
+    <p>{{ description }}</p>              <!-- Works: has default value -->
+    <span>{{ missing_var }}</span>        <!-- Safe: renders empty string -->
+</div>
+```
+
+**Key behaviors for Jinja2:**
+
+- **Undefined variables render as empty strings** in components (not literal `{{ variable_name }}`)
+- **Consistent with Django templates**: Components behave the same way regardless of template engine
+- **Context isolation** prevents parent template variables from leaking into components
+- **Only explicitly passed props** are available in component templates
+- **Consistent behavior** across development (`DEBUG=True`) and production (`DEBUG=False`)
+
+!!! note "Django Templates"
+    Django template users will already experience this behavior since Django templates always render undefined variables as empty strings. This documentation is primarily for Jinja2 users who might expect `DebugUndefined` behavior in debug mode.
+
+```html
+<!-- ❌ Avoid: Relying on undefined variables -->
+<div class="{{ alignment }}">  <!-- Will be empty if not passed -->
+    {{ content }}              <!-- Will be empty if not passed -->
+</div>
+
+<!-- ✅ Good: Explicit props with defaults -->
+{# props content, alignment="left" #}
+<div class="{{ alignment }}">
+    {{ content }}
 </div>
 ```
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterator, List, Optional
 
-from jinja2 import Environment, nodes, pass_context
+from jinja2 import Environment, nodes, pass_context, Undefined
 from jinja2.exceptions import TemplateNotFound, TemplateRuntimeError
 from jinja2.ext import Extension
 from jinja2.lexer import Token, TokenStream
@@ -34,6 +34,23 @@ class IncludeContentsExtension(Extension):
         self._props_registry = create_props_registry(environment)
         self._render_stack: List[Dict[str, Any]] = []
         self.use_context_isolation = True
+        self._component_environment: Optional[Environment] = None
+
+    @property
+    def component_environment(self) -> Environment:
+        """Get or create an environment specifically for component rendering.
+
+        This environment uses standard Undefined behavior to ensure
+        components render undefined variables as empty strings,
+        regardless of the main environment's debug settings.
+
+        Uses Jinja2's overlay() method for efficient environment cloning.
+        """
+        if self._component_environment is None:
+            # Create overlay environment with standard Undefined behavior
+            # This automatically inherits all settings from parent environment
+            self._component_environment = self.environment.overlay(undefined=Undefined)
+        return self._component_environment
 
     # ------------------------------------------------------------------
     # Lifecycle hooks
@@ -173,7 +190,6 @@ class IncludeContentsExtension(Extension):
                 if key.startswith(":"):
                     prop_name = key[1:]  # Remove the : prefix
                     if prop_name in props:
-                        prop_spec = props[prop_name]
                         prop_values[prop_name] = processed_value
                         if isinstance(value, bool) and value:
                             attrs_obj[prop_name] = True
@@ -204,7 +220,6 @@ class IncludeContentsExtension(Extension):
                         # Bound attribute that's not a prop goes to attrs
                         attrs_obj[key] = value
                 elif key in props:
-                    prop_spec = props[key]
                     prop_values[key] = processed_value
                     if isinstance(value, bool) and value:
                         attrs_obj[key] = True
@@ -258,7 +273,7 @@ class IncludeContentsExtension(Extension):
                 attrs_obj[key] = processed_value
 
         try:
-            template = self.environment.get_template(identifier)
+            template = self.component_environment.get_template(identifier)
         except TemplateNotFound as e:
             # Enhance error message with component name
             component_name = identifier.replace("components/", "").replace(".html", "")

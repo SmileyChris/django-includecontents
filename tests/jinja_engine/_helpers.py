@@ -147,8 +147,20 @@ _COMPONENT_LIBRARY: dict[str, str] = {
             main=contents.main|trim,
             footer=contents.footer|trim,
         ) }}
-        <outer>{{ contents.main }}</outer>
-        <outer-footer>{{ contents.footer }}</outer-footer>
+        <card title="{{ title }}">
+            <main>{{ contents.main }}</main>
+            <footer>{{ contents.footer }}</footer>
+        </card>
+        """
+    ),
+    "test_undefined": dedent(
+        """
+        {# props defined_var #}
+        {{ record(component="test_undefined", defined_var=defined_var) }}
+        Component with undefined variables:
+        {{ defined_var }}
+        {{ undefined_var }}
+        {{ another_undefined }}
         """
     ),
     "inner-card": dedent(
