@@ -507,6 +507,74 @@ TEMPLATES[0]['OPTIONS']['debug'] = True
 <include:card title='Say "Hello"'>
 ```
 
+## Security and Escaping Issues
+
+### Understanding Escaping Behavior
+
+If you're seeing unexpected escaping or lack of escaping in component attributes:
+
+**Problem:** Hard-coded strings are being escaped when they shouldn't be
+```html
+<!-- Expected: text="Don't worry" -->
+<!-- Getting: text="Don&#x27;t worry" -->
+<include:button text="Don't worry" />
+```
+
+**Solution:** This indicates an older version behavior. Update to the latest version where hard-coded strings are not escaped.
+
+**Problem:** Template variables are not being escaped when they should be
+```html
+<!-- User input with quotes shows unescaped -->
+<include:button text="{{ user_input }}" />
+<!-- Shows: text="Don't worry" instead of text="Don&#x27;t worry" -->
+```
+
+**Solutions:**
+
+=== "Django Templates"
+
+    ```html
+    <!-- ✅ Variables should be automatically escaped -->
+    <include:button text="{{ user_input }}" />
+
+    <!-- If not escaping, check your Django version and settings -->
+    ```
+
+=== "Jinja2 Templates"
+
+    ```html
+    <!-- ✅ For consistent escaping, use explicit escaping -->
+    <include:button text="{{ user_input|e }}" />
+
+    <!-- Or configure autoescape in your Jinja2 environment -->
+    ```
+
+### XSS Prevention
+
+**Problem:** Potential XSS vulnerabilities in component attributes
+
+**Solution:** Never mark user input as safe:
+```html
+<!-- ❌ Dangerous -->
+<include:content html="{{ user_input|safe }}" />
+
+<!-- ✅ Safe -->
+<include:content text="{{ user_input }}" />  <!-- Automatically escaped -->
+
+<!-- ✅ Safe with sanitization -->
+<include:content html="{{ user_input|bleach|safe }}" />
+```
+
+### Security Best Practices
+
+For comprehensive security guidance, see the [Security Best Practices](../building-components/best-practices.md#security-best-practices) section.
+
+Key principles:
+- Hard-coded strings in components are trusted (not escaped)
+- Template variables are automatically escaped for security
+- Always validate and sanitize user-provided URLs and content
+- Use CSRF protection for forms within components
+
 ## Getting Help
 
 ### Before Asking for Help

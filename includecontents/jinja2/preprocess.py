@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from html import escape
+# html.escape no longer needed - escaping moved to Attrs class
 from typing import Iterable, List, Tuple
 
 from jinja2.exceptions import TemplateSyntaxError
@@ -152,7 +152,13 @@ class ComponentPreprocessor:
         return name
 
     def _build_attrs_dict(self, attrs: Iterable[Tuple[str, str]]) -> str:
-        """Build a Jinja2 dictionary string from attribute key-value pairs."""
+        """Build a Jinja2 dictionary string from attribute key-value pairs.
+
+        Note: This method does NOT HTML-escape attribute values, only escapes quotes
+        for template syntax safety. HTML escaping is handled later by the Attrs class
+        to maintain consistency with Django's behavior where hard-coded strings
+        are not escaped but template variables are.
+        """
         attr_items = []
         for key, value in attrs:
             if value == "True":
@@ -161,8 +167,10 @@ class ComponentPreprocessor:
                 expr = value[2:-2].strip()
                 attr_items.append(f'"{key}": {expr}')
             else:
-                quoted = escape(value, quote=True)
-                attr_items.append(f'"{key}": "{quoted}"')
+                # Escape quotes for template syntax but don't HTML-escape
+                # HTML escaping is handled by Attrs class based on value source
+                escaped_value = value.replace('\\', '\\\\').replace('"', '\\"')
+                attr_items.append(f'"{key}": "{escaped_value}"')
         return "{" + ", ".join(attr_items) + "}"
 
     def _build_component_tag(self, name: str, attrs: Iterable[Tuple[str, str]]) -> str:
@@ -191,8 +199,10 @@ class ComponentPreprocessor:
                     expr = value[2:-2].strip()
                     parts.append(f" {key}={expr}")
                 else:
-                    quoted = escape(value, quote=True)
-                    parts.append(f' {key}="{quoted}"')
+                    # Escape quotes for template syntax but don't HTML-escape
+                    # HTML escaping is handled by Attrs class based on value source
+                    escaped_value = value.replace('\\', '\\\\').replace('"', '\\"')
+                    parts.append(f' {key}="{escaped_value}"')
             parts.append(" %}")
             return "".join(parts)
 

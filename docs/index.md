@@ -17,6 +17,7 @@ Django IncludeContents provides three powerful features:
 - **🎭 Icon System**: SVG sprite sheets from 150,000+ Iconify icons and local files (e.g., `<icon:home>`)
 - **🎯 Props System**: Define required and optional props with validation and defaults
 - **🎨 CSS Class Management**: Advanced class handling with conditional and extended classes
+- **🔒 Security First**: Smart HTML escaping protects against XSS while preserving developer intent
 - **🔀 Conditional Wrapping**: Clean conditional HTML wrapper syntax with `{% wrapif %}`
 - **📄 Multi-line Tags**: Support for multi-line template tags for better readability
 - **⚡ Developer Experience**: Great integration with Prettier, VS Code, and Tailwind CSS
@@ -65,6 +66,17 @@ INCLUDECONTENTS_ICONS = {
 {% includecontents "components/card.html" title="Welcome" %}
     <p>Build reusable components!</p>
 {% endincludecontents %}
+```
+
+### Security by Design
+
+```html
+<!-- ✅ Hard-coded strings: Trusted, not escaped -->
+<include:alert type="info" message="Don't worry - this won't be escaped!" />
+
+<!-- ✅ User content: Automatically escaped for security -->
+<include:comment text="{{ user_input }}" author="{{ user.name }}" />
+<!-- Protects against XSS attacks while preserving developer intent -->
 ```
 
 ## Getting Started

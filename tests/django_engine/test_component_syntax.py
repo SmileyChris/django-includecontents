@@ -142,6 +142,20 @@ def test_escape_variables():
     assert output == 'test="2&gt;1&quot;" another="3>2"'
 
 
+def test_hardcoded_string_attributes():
+    output = Template(
+        """<include:escape-props test="Don't worry" another='Say "hello"'></include:escape-props>"""
+    ).render(Context())
+    assert output == 'test="Don\'t worry" another="Say "hello""'
+
+
+def test_variable_content_escaping():
+    output = Template(
+        """<include:escape-props test=quote_var another=apostrophe_var></include:escape-props>"""
+    ).render(Context({"quote_var": 'Say "hello"', "apostrophe_var": "Don't worry"}))
+    assert output == 'test="Say &quot;hello&quot;" another="Don&#x27;t worry"'
+
+
 def test_subdir():
     output = Template("<include:inside:cat />").render(Context())
     assert output == "Meow"

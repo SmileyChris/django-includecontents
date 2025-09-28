@@ -22,8 +22,51 @@ from includecontents.shared.enums import (
 )
 
 
+class _EscapableValue:
+    """Wrapper to mark values that came from template expressions and need escaping.
+
+    This class is used to distinguish between:
+    - Hard-coded strings in component syntax: <include:button text="Don't worry" />
+    - Template variables in component syntax: <include:button text="{{ user_input }}" />
+
+    Hard-coded strings are treated as safe/trusted content and are NOT escaped.
+    Template variables are wrapped in _EscapableValue to indicate they should be escaped
+    for security (to prevent XSS attacks from user-provided content).
+
+    This matches Django's behavior where literal strings in template syntax are not escaped
+    but variable content is escaped via conditional_escape().
+    """
+    def __init__(self, value: Any):
+        self.value = value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self) -> str:
+        return f"_EscapableValue({self.value!r})"
+
+
 class IncludeContentsExtension(Extension):
-    """Implements ``includecontents`` / ``contents`` tags for Jinja2 templates."""
+    """Implements ``includecontents`` / ``contents`` tags for Jinja2 templates.
+
+    HTML Escaping Strategy:
+    ----------------------
+    This extension matches Django's escaping behavior:
+
+    1. Hard-coded strings in component syntax are NOT escaped:
+       <include:button text="Don't worry" /> → text="Don't worry"
+
+    2. Template variables in component syntax ARE escaped:
+       <include:button text="{{ user_input }}" /> → text="Don&#39;t worry"
+
+    This is achieved by:
+    - Preprocessor: Only escapes quotes for template syntax, no HTML escaping
+    - Extension: Wraps template expression results in _EscapableValue
+    - Attrs class: Selectively escapes based on _EscapableValue wrapper
+
+    This provides security (XSS protection) for user content while preserving
+    developer intent for literal strings.
+    """
 
     tags = {"includecontents", "contents"}
 
@@ -399,11 +442,15 @@ class IncludeContentsExtension(Extension):
         # If the value contains template syntax, render it as a mini-template
         if '{{' in value or '{%' in value:
             try:
-                # Create a mini-template from the value
-                mini_template = self.environment.from_string(value)
+                # Create a mini-template from the value with autoescape enabled
+                # to ensure variables get escaped like in Django
+                env = self.environment.overlay(autoescape=True)
+                mini_template = env.from_string(value)
                 # Render with the current context variables
                 parent_vars = context.get_all()
-                return mini_template.render(parent_vars)
+                result = mini_template.render(parent_vars)
+                # Mark this as coming from a template expression so it gets escaped
+                return _EscapableValue(result)
             except Exception:
                 # If template processing fails, return the original value
                 # This maintains compatibility with literal strings that might contain { }

@@ -191,12 +191,12 @@ Provide sensible defaults for optional props:
 </button>
 ```
 
-### Data Validation
+#### Data Validation
 
 Use enum props for controlled values:
 
 ```html
-{# props 
+{# props
    size - Button size: small, medium, large
    variant - Button style: primary, secondary, danger
 #}
@@ -204,6 +204,156 @@ Use enum props for controlled values:
 {% if size not in "small,medium,large" %}
     {% error "Invalid size. Must be: small, medium, or large" %}
 {% endif %}
+```
+
+## Security Best Practices
+
+### Understanding HTML Escaping
+
+Django IncludeContents follows Django's security model with automatic HTML escaping for user content while preserving developer intent for hard-coded strings.
+
+#### Hard-coded Strings (Safe by Default)
+
+Hard-coded strings in component syntax are **NOT escaped** because they represent trusted developer content:
+
+```html
+<!-- ✅ Hard-coded strings: NOT escaped (trusted content) -->
+<include:button text="Don't worry" title='Say "hello"' />
+<!-- Renders: text="Don't worry" title="Say "hello"" -->
+
+<include:alert type="info" message="User's account" />
+<!-- Renders: message="User's account" -->
+```
+
+This behavior is consistent across both Django templates and Jinja2.
+
+#### Template Variables (Escaped for Security)
+
+Template variables are **automatically escaped** to prevent XSS attacks:
+
+=== "Django Templates"
+
+    ```html
+    <!-- ✅ Variables: ESCAPED (user content protection) -->
+    <include:button text="{{ user_input }}" />
+    <!-- If user_input = "Don't worry" -->
+    <!-- Renders: text="Don&#x27;t worry" -->
+
+    <include:message content="{{ malicious_script }}" />
+    <!-- If malicious_script = "<script>alert('xss')</script>" -->
+    <!-- Renders: content="&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;" -->
+    ```
+
+=== "Jinja2 Templates"
+
+    ```html
+    <!-- ✅ Variables: Handled by Jinja2's autoescape settings -->
+    <include:button text="{{ user_input }}" />
+    <!-- Escaping depends on your Jinja2 autoescape configuration -->
+
+    <!-- For consistent escaping in Jinja2, use explicit escaping: -->
+    <include:message content="{{ user_content|e }}" />
+    ```
+
+#### Why This Design?
+
+This escaping strategy provides:
+
+1. **Security**: Protects against XSS attacks from user-provided content
+2. **Developer Control**: Preserves intentional quotes and special characters in code
+3. **Consistency**: Matches Django's conditional escaping behavior
+4. **Predictability**: Clear distinction between trusted and untrusted content
+
+### Safe Content Handling
+
+When you need to include HTML content, use Django's `|safe` filter carefully:
+
+```html
+<!-- ❌ Dangerous: Never mark user input as safe -->
+<include:article content="{{ user_comment|safe }}" />
+
+<!-- ✅ Safe: Only mark trusted, sanitized content as safe -->
+<include:article content="{{ article.body|markdown|safe }}" />
+
+<!-- ✅ Better: Sanitize first, then mark safe -->
+<include:rich-text content="{{ user_content|bleach|safe }}" />
+```
+
+### Component Input Validation
+
+Always validate component inputs, especially for security-critical attributes:
+
+```html
+{# props user_role, content #}
+
+<!-- ✅ Validate security-critical props -->
+{% if user_role not in "admin,moderator,user" %}
+    {% error "Invalid user role" %}
+{% endif %}
+
+<!-- ✅ Escape user content in data attributes -->
+<div {% attrs
+    class="content"
+    data-user-role="{{ user_role }}"
+    data-content="{{ content }}"  {# Automatically escaped #}
+%}>
+    {{ content }}
+</div>
+```
+
+### URL and Attribute Security
+
+Be careful with user-provided URLs and attributes:
+
+```html
+<!-- ❌ Dangerous: User-controlled URLs -->
+<include:link href="{{ user_url }}" text="Click here" />
+
+<!-- ✅ Safe: Validate and sanitize URLs -->
+{% if user_url|is_safe_url %}
+    <include:link href="{{ user_url }}" text="Click here" />
+{% else %}
+    <include:link href="#" text="Invalid link" />
+{% endif %}
+
+<!-- ✅ Safe: Use allowlist for external domains -->
+{% if user_url|url_domain in "example.com,trusted-site.org" %}
+    <include:link href="{{ user_url }}" text="External link" />
+{% endif %}
+```
+
+### CSRF Protection
+
+Components automatically have access to CSRF tokens when available:
+
+```html
+{# Component automatically receives csrf_token from parent context #}
+<form method="post">
+    {% csrf_token %}
+    <include:form-field name="username" value="{{ user.username }}" />
+    <include:submit-button text="Update Profile" />
+</form>
+```
+
+### Content Security Policy (CSP)
+
+Components work well with Content Security Policy:
+
+```html
+<!-- ✅ Avoid inline JavaScript in components -->
+<include:interactive-button
+    data-action="submit"
+    data-target="#form"
+/>
+
+<!-- Use data attributes and external event handlers instead -->
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('click', function(e) {
+        if (e.target.dataset.action === 'submit') {
+            handleSubmit(e.target.dataset.target);
+        }
+    });
+</script>
 ```
 
 ## Component Patterns

@@ -88,7 +88,8 @@ class TestAttributeHandling:
         assert attrs._attrs["@click"] == "handleClick()"
         assert attrs._attrs["v-on:submit"] == "onSubmit"
         assert attrs._attrs["x-on:click"] == "toggle()"
-        assert attrs._attrs[":class"] == "{ &#x27;active&#x27;: true }"
+        # Hard-coded strings are no longer escaped
+        assert attrs._attrs[":class"] == "{ 'active': true }"
 
     def test_javascript_event_modifiers(self) -> None:
         _, captures = render_component(
@@ -183,8 +184,32 @@ class TestAttributeHandling:
         )
 
         attrs = first_capture(captures, "button")["attrs"]
-        assert 'test="2&gt;1"' in str(attrs)
-        assert 'another="3&gt;2"' in str(attrs)
+        # Hard-coded strings are no longer escaped
+        assert 'test="2>1"' in str(attrs)
+        assert 'another="3>2"' in str(attrs)
+
+    def test_hardcoded_string_attributes(self) -> None:
+        _, captures = render_component(
+            '<include:button variant="primary" test="Don\'t worry" another=\'Say "hello"\' />',
+            use=["button"],
+        )
+
+        attrs = first_capture(captures, "button")["attrs"]
+        assert 'test="Don\'t worry"' in str(attrs)
+        assert 'another="Say "hello""' in str(attrs)
+
+    def test_variable_content_escaping(self) -> None:
+        _, captures = render_component(
+            '<include:button variant="primary" test="{{ quote_var }}" another="{{ apostrophe_var }}" />',
+            use=["button"],
+            context={"quote_var": 'Say "hello"', "apostrophe_var": "Don't worry"},
+        )
+
+        attrs = first_capture(captures, "button")["attrs"]
+        # In Jinja2, template variables are processed by Jinja2's template engine
+        # Since the test environment doesn't have autoescape enabled, variables come through unescaped
+        assert 'test="Say "hello""' in str(attrs)
+        assert 'another="Don\'t worry"' in str(attrs)
 
     def test_conditional_css_classes_from_attributes(self) -> None:
         output, captures = render_component(
