@@ -1,0 +1,7 @@
+{# props title="", variant=False #}
+<div class="cms-card{% if variant %} cms-card--{{ variant }}{% endif %}">
+    <h3>{{ title or "Default Card" }}</h3>
+    <div class="cms-card-content">
+        {{ contents.default }}
+    </div>
+</div>

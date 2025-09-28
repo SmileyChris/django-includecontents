@@ -422,6 +422,59 @@ TEMPLATES = [{
 - [ ] Update team documentation
 - [ ] Plan future component development
 
+## Template Engine Migrations
+
+### Migrating from Jinja2 to Django Templates
+
+If you're currently using Jinja2 and want to adopt Django IncludeContents, you'll need to migrate your templates to Django's template syntax:
+
+**Common Jinja2 to Django conversions:**
+
+| Jinja2 | Django Templates |
+|--------|------------------|
+| `{{ variable \| filter }}` | `{{ variable\|filter }}` (no spaces around pipe) |
+| `{% if condition %}` | `{% if condition %}` (same) |
+| `{% for item in items %}` | `{% for item in items %}` (same) |
+| `{{ loop.index }}` | `{{ forloop.counter }}` |
+| `{{ loop.first }}` | `{{ forloop.first }}` |
+| `{% macro name() %}` | No direct equivalent - use `{% includecontents %}` |
+
+**Jinja2 alternatives within Django:**
+
+Instead of migrating from Jinja2, consider:
+1. **Dual template setup**: Use Django templates for components, Jinja2 for main templates
+2. **Macro-based approach**: Implement component-like functionality with Jinja2 macros
+3. **Custom Jinja2 extension**: See [Jinja2 Support Analysis](../future/jinja2-support.md) for implementation details
+
+### Considerations for Mixed Environments
+
+**Option 1: Dual template engines**
+```python
+# settings.py
+TEMPLATES = [
+    {
+        'BACKEND': 'includecontents.django.DjangoTemplates',  # For components
+        'DIRS': [BASE_DIR / 'templates/components'],
+        'APP_DIRS': False,
+    },
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',  # For main templates
+        'DIRS': [BASE_DIR / 'templates/jinja2'],
+        'APP_DIRS': True,
+    },
+]
+```
+
+**Option 2: Bridge pattern**
+Use Django's `render_to_string()` from within Jinja2 templates to render Django components:
+
+```jinja2
+{# Jinja2 template #}
+{{ django_component('components/card.html', title='Hello', content=content_var) }}
+```
+
+For detailed implementation, see [Jinja2 Support Analysis](../future/jinja2-support.md).
+
 ## Getting Help
 
 If you encounter issues during migration:
@@ -429,7 +482,8 @@ If you encounter issues during migration:
 1. **Check the [Troubleshooting Guide](troubleshooting.md)**
 2. **Review component examples in the documentation**
 3. **Test with minimal examples first**
-4. **Ask for help on GitHub Issues**
+4. **For Jinja2 questions, see [Jinja2 Support Analysis](../future/jinja2-support.md)**
+5. **Ask for help on GitHub Issues**
 
 ## Next Steps
 

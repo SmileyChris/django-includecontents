@@ -1,0 +1,6 @@
+{# props status=,pending,complete,failed special=,@,#,$,% single=,a numbers=,1,2,3 mixed=,test,other #}
+
+<div class="status" data-status="{{ status }}" data-special="{{ special }}" data-single="{{ single }}" data-numbers="{{ numbers }}" data-mixed="{{ mixed }}">
+  <span>Status: {{ status }}</span>
+  {{ contents }}
+</div>

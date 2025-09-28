@@ -1,6 +1,12 @@
 # HTML Component Syntax
 
-The HTML component syntax provides a modern, HTML-like way to use components in your Django templates. This feature requires the [custom template engine](../getting-started/installation.md#option-1-with-custom-template-engine-recommended).
+The HTML component syntax provides a modern, HTML-like way to use components in your templates.
+
+!!! info "Template Engine Support"
+    HTML component syntax works with both template engines:
+
+    - **Django**: Requires the [custom template engine](../getting-started/installation.md#option-1-django-templates-with-custom-engine-recommended)
+    - **Jinja2**: Automatic preprocessing via extension (see [Jinja2 Setup](../getting-started/jinja2-setup.md))
 
 ## Basic Syntax
 
@@ -93,6 +99,81 @@ All Django template syntax is supported in attributes:
     is-online="{{ user.is_active|yesno:'true,false' }}"
     href="{% url 'user_profile' user.pk %}"
 />
+```
+
+### JavaScript Framework Attributes
+
+Components fully support modern JavaScript framework attributes for both Django and Jinja2:
+
+#### Vue.js Integration
+
+```html
+<!-- Vue.js event handlers -->
+<include:button @click="handleClick()" @keyup.enter="submitForm()">
+    Submit
+</include:button>
+
+<!-- Vue.js directives -->
+<include:form
+    v-on:submit="onSubmit"
+    v-model="formData"
+    v-bind:class="{ 'loading': isLoading }"
+>
+    Form content
+</include:form>
+
+<!-- Vue.js bind shorthand -->
+<include:card :class="dynamicClasses" :disabled="isDisabled">
+    Dynamic card
+</include:card>
+```
+
+#### Alpine.js Integration
+
+```html
+<!-- Alpine.js event handlers and directives -->
+<include:modal
+    x-on:click="open = false"
+    x-show="open"
+    x-data="{ open: false }"
+    x-transition
+>
+    Modal content
+</include:modal>
+```
+
+#### Nested Attributes
+
+Pass attributes to nested elements within components:
+
+```html
+<!-- Attributes for nested elements -->
+<include:form-with-button
+    inner.class="form-control"
+    button.type="submit"
+    button.@click="handleSubmit()"
+    button.disabled="isSubmitting"
+>
+    Form content
+</include:form-with-button>
+```
+
+#### Advanced Class Manipulation
+
+```html
+<!-- Conditional classes -->
+<include:card class:not="disabled ? 'active'" variant="primary">
+    Conditional styling
+</include:card>
+
+<!-- Class append/prepend -->
+<include:button class="& btn-primary" size="large">
+    Extended base classes
+</include:button>
+
+<include:alert class="custom-alert &" type="warning">
+    Custom classes with base
+</include:alert>
 ```
 
 ### Shorthand Attribute Syntax

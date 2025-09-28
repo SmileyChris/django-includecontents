@@ -1,11 +1,10 @@
 import re
 from collections import abc
-from collections.abc import MutableMapping
-from contextlib import contextmanager
-from typing import Any
+from typing import Any, Dict, Iterable, Optional
 
 from django import template
-from django.template import TemplateSyntaxError, Variable
+from django.conf import settings
+from django.template import TemplateSyntaxError, TemplateDoesNotExist
 from django.template.base import FilterExpression, Node, NodeList, Parser, TokenType
 from django.template.context import Context
 from django.template.defaulttags import TemplateIfParser
@@ -15,6 +14,13 @@ from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
 
 from includecontents.django.base import Template
+from includecontents.shared.attrs import BaseAttrs
+from includecontents.shared.context import CapturedContents, ComponentContext
+from includecontents.shared.enums import (
+    build_enum_flag_key,
+    normalize_enum_values,
+    suggest_enum_value,
+)
 
 register = template.Library()
 
@@ -53,22 +59,6 @@ def is_pure_variable_expression(value):
 def not_filter(value):
     """Template filter to negate a boolean value."""
     return not value
-
-
-re_camel_case = re.compile(r"(?<=.)([A-Z])")
-
-
-class EnumVariable:
-    """A variable that validates against a list of allowed values."""
-
-    def __init__(self, allowed_values, required=True):
-        self.allowed_values = allowed_values
-        self.required = required
-
-    def resolve(self, context):
-        # This should not be called for enum validation
-        # The actual value comes from the component usage
-        return None
 
 
 @register.tag
@@ -250,33 +240,52 @@ def includecontents(parser, token):
 
 
 class RenderedContents(abc.Mapping):
+    """Wrapper providing mapping semantics for captured contents."""
+
     def __init__(
-        self, context: Context, nodelist: NodeList, named_nodelists: dict[str, NodeList]
-    ):
-        self.rendered_contents = self.render(nodelist, context)
-        self.rendered_areas = {}
-        for key, named_nodelist in named_nodelists.items():
-            self.rendered_areas[key] = self.render(named_nodelist, context)
+        self, context: Context, nodelist: NodeList, named_nodelists: Dict[str, NodeList]
+    ) -> None:
+        default = self._render_block(nodelist, context)
+        named = {
+            key: self._render_block(named_nodelist, context)
+            for key, named_nodelist in named_nodelists.items()
+        }
+        self._captured = CapturedContents(default, named)
 
     @staticmethod
-    def render(nodelist, context):
+    def _render_block(nodelist: NodeList, context: Context) -> str:
         with context.push():
             rendered = nodelist.render(context)
         if not rendered.strip():
             rendered = ""
         return mark_safe(rendered)
 
-    def __str__(self):
-        return self.rendered_contents
+    def __str__(self) -> str:
+        return str(self._captured)
 
-    def __getitem__(self, key):
-        return self.rendered_areas[key]
+    def __getitem__(self, key: str) -> Any:
+        return self._captured._named[key]
 
-    def __iter__(self):
-        return iter(self.rendered_areas)
+    def __iter__(self) -> Iterable[str]:
+        return iter(self._captured.keys())
 
-    def __len__(self):
-        return len(self.rendered_contents)
+    def __len__(self) -> int:
+        return len(str(self._captured))
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._captured, name)
+
+    def __contains__(self, name: str) -> bool:
+        return name in self._captured
+
+    def get(self, name: Optional[str], default: str = "") -> str:
+        return self._captured.get(name, default)
+
+    def keys(self) -> Iterable[str]:
+        return self._captured.keys()
+
+    def items(self) -> Iterable[tuple[str, str]]:
+        return self._captured.items()
 
 
 class IncludeContentsNode(template.Node):
@@ -287,7 +296,7 @@ class IncludeContentsNode(template.Node):
         include_node,
         nodelist,
         named_nodelists,
-    ):
+    ) -> None:
         self.token_name = token_name
         self.advanced_attrs = advanced_attrs
         self.include_node = include_node
@@ -296,155 +305,272 @@ class IncludeContentsNode(template.Node):
 
         self.is_component = token_name.startswith("<")
 
-        # We'll handle the include_node context isolation ourselves.
         isolated_context = True if self.is_component else include_node.isolated_context
         include_node.isolated_context = False
         self.isolated_context = isolated_context
 
-    def render(self, context):
-        if self.isolated_context:
-            # If we have a RequestContext with processor data, grab it before creating new context
-            processor_data = {}
-            processors_index = getattr(context, "_processors_index", None)
-            if processors_index is not None and hasattr(context, "dicts"):
-                # Get the already-computed processor values from Django's RequestContext
-                processor_data = context.dicts[processors_index].copy()
-            elif hasattr(context, "_processor_data"):
-                # If this is a nested component, get processor data from the parent context
-                processor_data = context._processor_data.copy()
+    def render(self, context: Context) -> str:
+        component_props: Optional[Dict[str, "PropDefinition"]] = None
+        prop_values: Dict[str, Any] = {}
+        attrs_obj: Optional["Attrs"] = None
 
-            # Ensure request and csrf_token are available (if not already provided by processors)
-            if request := context.get("request"):
-                processor_data.setdefault("request", request)
-            if csrf_token := context.get("csrf_token"):
-                processor_data.setdefault("csrf_token", csrf_token)
+        if self.is_component:
+            try:
+                template = self.get_component_template(context)
+            except TemplateDoesNotExist as e:
+                self._raise_enhanced_template_error(e)
+            component_props = self.get_component_props(template)
+            prop_values, attrs_obj = self._resolve_component_bindings(
+                context, component_props
+            )
 
-            # Create new isolated context and inject all processor data at once
-            new_context = context.new()
-            new_context.update(processor_data)
-            # Store processor data for nested components to access
-            new_context._processor_data = processor_data
-        else:
-            new_context = context
+        new_context = context.new() if self.isolated_context else context
+
+        processor_data: Dict[str, Any] = {}
+        component_scope: Optional[Dict[str, Any]] = None
+
+        inherit_parent_values = False
+        if self.is_component and self.isolated_context:
+            processor_data = self._collect_processor_data(context)
+            parent_vars = context.flatten()
+            scope_values = (
+                {**processor_data, **prop_values}
+                if processor_data
+                else prop_values
+            )
+            inherit_parent_values = bool(processor_data.get("request"))
+            component_scope = ComponentContext.create_isolated(
+                parent_vars,
+                scope_values,
+                inherit_parent=inherit_parent_values,
+            )
+
         with new_context.push():
+            if self.is_component:
+                if component_scope is not None:
+                    new_context.update(component_scope)
+                    if processor_data:
+                        new_context._processor_data = processor_data
+                else:
+                    new_context.update(prop_values)
+
+                if attrs_obj is not None:
+                    new_context["attrs"] = attrs_obj
+
+            render_context = new_context if inherit_parent_values else context
             new_context["contents"] = RenderedContents(
-                # Contents aren't rendered with isolation, hence the use of context
-                # rather than new_context.
-                context,
+                context=render_context,
                 nodelist=self.nodelist,
                 named_nodelists=self.named_nodelists,
             )
-            with self.set_component_attrs(context, new_context):
-                rendered = self.include_node.render(new_context)
+
+            rendered = self._render_include(new_context)
             if self.is_component:
                 rendered = rendered.strip()
         return rendered
 
-    @contextmanager
-    def set_component_attrs(self, context: Context, new_context: Context):
-        """
-        Set the attributes of the component tag in the new context.
-
-        Use as a context manager around rendering the include node so that when in
-        component "props" mode, the non-listed attributes will be set as in the
-        ``attrs`` variable rather than directly in the new context.
-        """
+    def _render_include(self, render_context: Context) -> str:
         if not self.is_component:
-            yield
-            return
-        template = self.get_component_template(context)
-        component_props = self.get_component_props(template)
-        if component_props is not None:
-            undefined_attrs = Attrs()
-        
-        # First, handle spread syntax
-        spread_attrs = None
-        for key, value in self.all_attrs():
-            if key == "...":
-                # Resolve the spread expression (e.g., attrs or attrs.button)
-                spread_attrs = value.resolve(context)
-                break
-        
-        for key, value in self.all_attrs():
-            if key == "...":
-                # Skip the spread syntax itself
-                continue
-            elif component_props is None:
+            return self.include_node.render(render_context)
+        extra_context = self.include_node.extra_context
+        self.include_node.extra_context = {}
+        try:
+            return self.include_node.render(render_context)
+        except TemplateDoesNotExist as e:
+            # Enhance error message for component templates
+            self._raise_enhanced_template_error(e)
+        finally:
+            self.include_node.extra_context = extra_context
+
+    def _collect_processor_data(self, context: Context) -> Dict[str, Any]:
+        processor_data: Dict[str, Any] = {}
+        processors_index = getattr(context, "_processors_index", None)
+        if processors_index is not None and hasattr(context, "dicts"):
+            processor_data = context.dicts[processors_index].copy()
+        elif hasattr(context, "_processor_data"):
+            processor_data = context._processor_data.copy()
+
+        request = context.get("request")
+        if request is None:
+            request = getattr(context, "request", None)
+        should_run_processors = not processor_data
+
+        if request is not None:
+            processor_data.setdefault("request", request)
+
+        manual_csrf = None
+        if hasattr(context, "dicts"):
+            for mapping in reversed(context.dicts):
+                if "csrf_token" in mapping:
+                    manual_csrf = mapping["csrf_token"]
+                    break
+
+        if manual_csrf is not None:
+            processor_data["csrf_token"] = manual_csrf
+            if request is not None and isinstance(manual_csrf, str):
+                if hasattr(request, "META"):
+                    request.META["CSRF_COOKIE"] = manual_csrf
+                if hasattr(request, "COOKIES"):
+                    request.COOKIES[settings.CSRF_COOKIE_NAME] = manual_csrf
+        if should_run_processors and request is not None:
+            engine = getattr(getattr(context, "template", None), "engine", None)
+            processors = getattr(engine, "template_context_processors", None)
+            if processors:
+                for processor in processors:
+                    if (
+                        manual_csrf is not None
+                        and getattr(processor, "__name__", "") == "csrf"
+                        and getattr(processor, "__module__", "").endswith("context_processors")
+                    ):
+                        continue
+                    try:
+                        processor_data.update(processor(request))
+                    except Exception:  # pragma: no cover - defensive
+                        continue
+
+        if processor_data and not hasattr(context, "_processor_data"):
+            context._processor_data = processor_data.copy()
+
+        csrf_token = context.get("csrf_token")
+        if csrf_token is not None:
+            processor_data.setdefault("csrf_token", csrf_token)
+
+        return processor_data
+
+    def _resolve_component_bindings(
+        self,
+        context: Context,
+        component_props: Optional[Dict[str, "PropDefinition"]],
+    ) -> tuple[Dict[str, Any], Optional["Attrs"]]:
+        attrs_sequence = list(self.all_attrs())
+        spread_attrs = self._resolve_spread(context, attrs_sequence)
+
+        if component_props is None:
+            prop_values: Dict[str, Any] = {}
+            for key, value_expr in attrs_sequence:
+                if key == "...":
+                    continue
                 if "." in key or ":" in key:
                     raise TemplateSyntaxError(
                         f"Advanced attribute {key!r} only allowed if component template"
                         " defines props"
                     )
-                new_context[key] = value.resolve(context)
+                prop_values[key] = value_expr.resolve(context)
+            return prop_values, None
+
+        prop_values = {}
+        provided_props: set[str] = set()
+        undefined_attrs = Attrs()
+
+        for key, value_expr in attrs_sequence:
+            if key == "...":
+                continue
+            resolved_value = value_expr.resolve(context)
+            prop_def = component_props.get(key)
+            if prop_def is not None:
+                provided_props.add(key)
+                prop_values[key] = resolved_value
+                if prop_def.is_enum():
+                    allowed_values = prop_def.enum_values or ()
+                    for enum_value in normalize_enum_values(resolved_value):
+                        if enum_value not in allowed_values:
+                            allowed = ", ".join(repr(v) for v in allowed_values)
+                            suggestion = suggest_enum_value(enum_value, allowed_values)
+                            suggestion_text = f" Did you mean {suggestion!r}?" if suggestion else ""
+
+                            # Create a helpful example
+                            first_value = allowed_values[0] if allowed_values else "value"
+                            component_name = self.token_name.replace("<", "").replace(">", "")
+                            example = f'<{component_name} {key}="{first_value}">'
+
+                            raise TemplateSyntaxError(
+                                f'Invalid value "{enum_value}" for attribute "{key}" '
+                                f"in {self.token_name}. Allowed values: {allowed}.{suggestion_text}\n"
+                                f"Example: {example}"
+                            )
+                        flag_key = build_enum_flag_key(key, enum_value)
+                        if flag_key:
+                            prop_values[flag_key] = True
             else:
-                if key in component_props:
-                    resolved_value = value.resolve(context)
-                    prop_def = component_props[key]
-                    # Validate enum values
-                    if isinstance(prop_def, EnumVariable):
-                        # Support multiple space-separated enum values
-                        enum_values = resolved_value.split() if resolved_value else []
+                undefined_attrs[key] = resolved_value
 
-                        # Validate each value
-                        for enum_value in enum_values:
-                            if enum_value not in prop_def.allowed_values:
-                                raise TemplateSyntaxError(
-                                    f'Invalid value "{enum_value}" for attribute "{key}" in {self.token_name}. '
-                                    f"Allowed values: {', '.join(repr(v) for v in prop_def.allowed_values)}"
-                                )
+        if isinstance(spread_attrs, Attrs):
+            for key, value in spread_attrs.all_attrs():
+                if key not in undefined_attrs:
+                    undefined_attrs[key] = value
 
-                        # Set the original value as-is
-                        new_context[key] = resolved_value
+        for name, definition in component_props.items():
+            if name in provided_props:
+                continue
+            if definition.is_enum():
+                if definition.required:
+                    raise TemplateSyntaxError(
+                        f'Missing required attribute "{name}" in {self.token_name}'
+                    )
+                continue
+            if definition.required:
+                raise TemplateSyntaxError(
+                    f'Missing required attribute "{name}" in {self.token_name}'
+                )
+            prop_values[name] = definition.clone_default()
 
-                        # Set boolean attributes for each enum value
-                        # e.g., variant="primary icon" sets variantPrimary=True and variantIcon=True
-                        for enum_value in enum_values:
-                            if enum_value:  # Don't set True for empty string
-                                # CamelCase version: variantPrimary or variantDarkMode (from dark-mode)
-                                # Convert hyphens to camelCase
-                                parts = enum_value.split("-")
-                                camel_value = parts[0] + "".join(
-                                    p.capitalize() for p in parts[1:]
-                                )
-                                camel_key = (
-                                    key + camel_value[0].upper() + camel_value[1:]
-                                )
-                                new_context[camel_key] = True
-                    else:
-                        new_context[key] = resolved_value
-                else:
-                    undefined_attrs[key] = value.resolve(context)
+        return prop_values, undefined_attrs
 
-        if component_props is not None:
-            # If we have spread attrs, merge them into undefined_attrs
-            if spread_attrs and isinstance(spread_attrs, Attrs):
-                # Merge spread attrs into undefined_attrs
-                for key, value in spread_attrs.all_attrs():
-                    # Only add if not already defined (local attrs take precedence)
-                    if key not in undefined_attrs:
-                        undefined_attrs[key] = value
-            
-            new_context["attrs"] = undefined_attrs
+    @staticmethod
+    def _resolve_spread(
+        context: Context, attrs_sequence: Iterable[tuple[str, Any]]
+    ) -> Any:
+        for key, value_expr in attrs_sequence:
+            if key == "...":
+                return value_expr.resolve(context)
+        return None
 
-            # Put default values in the new context.
-            for key, value in component_props.items():
-                if value:
-                    if key in new_context:
-                        continue
-                    # Check if it's a required enum that wasn't provided
-                    if isinstance(value, EnumVariable) and value.required:
-                        raise TemplateSyntaxError(
-                            f'Missing required attribute "{key}" in {self.token_name}'
-                        )
-                    elif not isinstance(value, EnumVariable):
-                        new_context[key] = value.resolve(context)
+    def _raise_enhanced_template_error(self, original_error: TemplateDoesNotExist) -> None:
+        """Raise an enhanced TemplateDoesNotExist error with helpful debugging info."""
+        template_name = original_error.args[0] if original_error.args else "unknown"
 
-        # Don't use the extra context for the include tag if it's a component
-        # since we've handled adding it to the new context ourselves.
-        extra_context = self.include_node.extra_context
-        self.include_node.extra_context = {}
-        yield
-        self.include_node.extra_context = extra_context
+        # Extract component name from token
+        component_name = self.token_name.replace("<include:", "").replace(">", "")
+
+        # Create helpful suggestions
+        suggestions = []
+
+        # Suggest common naming conventions
+        if not template_name.startswith("components/"):
+            suggestions.append(f"Create template: templates/components/{component_name}.html")
+        else:
+            suggestions.append(f"Create template: templates/{template_name}")
+
+        # Suggest checking template directories
+        suggestions.append("Check TEMPLATES['DIRS'] setting includes your template directory")
+
+        # Suggest checking app structure
+        if "components/" in template_name:
+            suggestions.append("For app-based components: create template in <app>/templates/components/")
+
+        # Create enhanced error message
+        message_parts = [
+            f"Component template not found: {self.token_name}",
+            f"Looked for: {template_name}",
+            "",
+            "Suggestions:",
+        ]
+
+        for i, suggestion in enumerate(suggestions, 1):
+            message_parts.append(f"  {i}. {suggestion}")
+
+        if hasattr(original_error, 'tried') and original_error.tried:
+            message_parts.extend([
+                "",
+                "Template loader tried:",
+            ])
+            for origin, reason in original_error.tried:
+                message_parts.append(f"  - {origin} ({reason})")
+
+        enhanced_message = "\n".join(message_parts)
+
+        # Raise new error with enhanced message but preserve original exception chain
+        raise TemplateDoesNotExist(enhanced_message, tried=getattr(original_error, 'tried', [])) from original_error
 
     def all_attrs(self):
         for key, value in self.include_node.extra_context.items():
@@ -452,50 +578,11 @@ class IncludeContentsNode(template.Node):
         for key, value in self.advanced_attrs.items():
             yield key, value
 
-    def get_component_props(self, template):
-        if not template.first_comment:
-            return None
-        if (
-            template.first_comment.startswith("props ")
-            or template.first_comment == "props"
-        ):
-            first_comment = template.first_comment[6:]
-        elif (
-            template.first_comment.startswith("def ") or template.first_comment == "def"
-        ):
-            first_comment = template.first_comment[4:]
-        else:
-            return None
-        props = {}
-        for bit in smart_split(first_comment.strip()):
-            if match := re.match(r"^(\w+)(?:=(.+?))?,?$", bit):
-                attr, value = match.groups()
-                if value is None:
-                    # Check both extra_context and advanced_attrs for required attributes
-                    if (
-                        attr not in self.include_node.extra_context
-                        and attr not in self.advanced_attrs
-                    ):
-                        raise TemplateSyntaxError(
-                            f'Missing required attribute "{attr}" in {self.token_name}'
-                        )
-                    props[attr] = None
-                else:
-                    # Check if value contains comma-separated values (enum) without spaces
-                    if "," in value and " " not in value:
-                        # Strip quotes if present
-                        if (value.startswith('"') and value.endswith('"')) or (
-                            value.startswith("'") and value.endswith("'")
-                        ):
-                            value = value[1:-1]
-                        # Parse enum values
-                        enum_values = value.split(",")
-                        # First value empty means optional
-                        required = bool(enum_values[0])
-                        props[attr] = EnumVariable(enum_values, required)
-                    else:
-                        props[attr] = Variable(value)
-        return props
+    def get_component_props(self, template: Template):
+        resolver = getattr(template, "get_component_prop_definitions", None)
+        if callable(resolver):
+            return resolver()
+        return None
 
     def get_component_template(self, context) -> Template:
         template = self.include_node.template.resolve(context)
@@ -522,6 +609,20 @@ class IncludeContentsNode(template.Node):
         elif hasattr(template, "template"):
             template = template.template
         return template
+
+    @staticmethod
+    def _normalize_enum_values(value: Any) -> list[str]:
+        return normalize_enum_values(value)
+
+    @staticmethod
+    def _build_enum_flag_key(prop_name: str, enum_value: str) -> Optional[str]:
+        return build_enum_flag_key(prop_name, enum_value)
+
+    @staticmethod
+    def _suggest_closest_enum_value(
+        invalid_value: str, allowed_values: tuple[str, ...]
+    ) -> Optional[str]:
+        return suggest_enum_value(invalid_value, allowed_values)
 
 
 def get_contents_nodelists(
@@ -607,139 +708,31 @@ def get_contents_nodelists(
 NO_VALUE = object()
 
 
-class Attrs(MutableMapping):
-    def __init__(self):
-        self._attrs: dict[str, Any] = {}
-        self._nested_attrs: dict[str, Attrs] = {}
-        self._extended: dict[str, dict[str, bool]] = {}
-        self._prepended: dict[str, dict[str, bool]] = {}
+class Attrs(BaseAttrs):
+    def __init__(self) -> None:
+        super().__init__()
 
-    def __getattr__(self, key):
-        # First check if it's a nested attribute group
-        if key in self._nested_attrs:
-            return self._nested_attrs[key]
-        # Then check if it's a regular attribute (converting from camelCase if needed)
-        try:
-            return self[key]
-        except KeyError:
-            raise AttributeError(key)
+    def __str__(self) -> str:
+        """Render attributes with Django-specific HTML escaping and mark_safe."""
+        return mark_safe(super().__str__())
 
-    def __getitem__(self, key):
-        if key not in self._attrs:
-            key = re_camel_case.sub(r"-\1", key).lower()
-        return self._attrs[key]
+    def _render_attr(self, key: str, value: Any) -> str:
+        """Render a single attribute with Django's conditional HTML escaping."""
+        return f'{key}="{conditional_escape(value)}"'
 
-    def __setitem__(self, key, value):
-        # Check if this is a JavaScript framework attribute that should be preserved as-is
-        # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
-        # This check must come BEFORE dot splitting to handle event modifiers like @click.stop
-        if (key.startswith("@") or (key.startswith(":") and not key.startswith("class:")) or key.startswith("v-") or key.startswith("x-")):
-            # Store these attributes without any special processing
-            self._attrs[key] = value
-            return
-        if "." in key:
-            nested_key, key = key.split(".", 1)
-            nested_attrs = self._nested_attrs.setdefault(nested_key, Attrs())
-            nested_attrs[key] = value
-            return
-        if ":" in key:
-            key, extend = key.split(":", 1)
-            extended = self._extended.setdefault(key, {})
-            extended[extend] = value
-            return
-        if key == "class" and value.startswith("& "):
-            extended = self._extended.setdefault(key, {})
-            for bit in value[2:].split(" "):
-                extended[bit] = True
-            return
-        if key == "class" and value.endswith(" &"):
-            prepended = self._prepended.setdefault(key, {})
-            for bit in value[:-2].strip().split(" "):
-                if bit:
-                    prepended[bit] = True
-            return
-        self._attrs[key] = value
+    @staticmethod
+    def _normalize_enum_values(value: Any) -> list[str]:
+        return normalize_enum_values(value)
 
-    def __delitem__(self, key):
-        del self._attrs[key]
+    @staticmethod
+    def _build_enum_flag_key(prop_name: str, enum_value: str) -> Optional[str]:
+        return build_enum_flag_key(prop_name, enum_value)
 
-    def __iter__(self):
-        return iter(self._attrs)
-
-    def __len__(self):
-        return len(self._attrs)
-
-    def __str__(self):
-        return mark_safe(
-            " ".join(
-                (f'{key}="{conditional_escape(value)}"' if value is not True else key)
-                for key, value in self.all_attrs()
-                if value is not None
-            )
-        )
-
-    def all_attrs(self):
-        extended = {}
-        prepended = {}
-
-        # Collect extended and prepended values
-        for key, parts in self._extended.items():
-            parts = [key for key, value in parts.items() if value]
-            if parts:
-                extended[key] = parts
-
-        for key, parts in self._prepended.items():
-            parts = [key for key, value in parts.items() if value]
-            if parts:
-                prepended[key] = parts
-
-        # Process all keys (from attrs, extended, and prepended)
-        # Maintain order: attrs keys first, then any additional extended/prepended keys
-        seen = set()
-
-        for key in self._attrs:
-            seen.add(key)
-            value = self._attrs[key]
-            # Handle class merging
-            if key in extended or key in prepended:
-                if value is True or not value:
-                    value_parts = []
-                else:
-                    value_parts = str(value).split(" ")
-
-                # Prepend parts come first
-                if key in prepended:
-                    value_parts = prepended[key] + [
-                        p for p in value_parts if p not in prepended[key]
-                    ]
-
-                # Extended parts come last
-                if key in extended:
-                    for part in extended[key]:
-                        if part not in value_parts:
-                            value_parts.append(part)
-
-                value = " ".join(value_parts) if value_parts else None
-
-            yield key, value
-
-        # Handle keys that only exist in extended/prepended
-        for key in list(extended.keys()) + list(prepended.keys()):
-            if key not in seen:
-                seen.add(key)
-                value_parts = prepended.get(key, []) + extended.get(key, [])
-                value = " ".join(value_parts) if value_parts else None
-                yield key, value
-
-    def update(self, attrs):
-        super().update(attrs)
-        if isinstance(attrs, Attrs):
-            for key, extended in attrs._extended.items():
-                self._extended.setdefault(key, {}).update(extended)
-            for key, prepended in attrs._prepended.items():
-                self._prepended.setdefault(key, {}).update(prepended)
-            for key, nested_attrs in attrs._nested_attrs.items():
-                self._nested_attrs.setdefault(key, Attrs()).update(nested_attrs)
+    @staticmethod
+    def _suggest_closest_enum_value(
+        invalid_value: str, allowed_values: tuple[str, ...]
+    ) -> Optional[str]:
+        return suggest_enum_value(invalid_value, allowed_values)
 
 
 @register.tag
@@ -791,20 +784,19 @@ class AttrsNode(template.Node):
             )
         if self.sub_key:
             context_attrs = getattr(context_attrs, self.sub_key, None)
-        attrs = Attrs()
-        attrs.update(
-            {
-                key: (
-                    value.resolve(context)  # type: ignore
-                    if isinstance(value, FilterExpression)
-                    else value
-                )
-                for key, value in self.fallbacks.items()
-            }
-        )
-        if isinstance(context_attrs, Attrs):
-            attrs.update(context_attrs)
-        return str(attrs)
+
+        # Build kwargs dict from resolved fallbacks
+        kwargs = {}
+        for key, value in self.fallbacks.items():
+            if isinstance(value, FilterExpression):
+                kwargs[key] = value.resolve(context)
+            elif value is NO_VALUE:  # Boolean attribute
+                kwargs[key] = True
+            else:
+                kwargs[key] = value
+
+        # Call the attrs object with kwargs - this now uses the new callable interface
+        return str(context_attrs(**kwargs))
 
 
 class ContentsObject:

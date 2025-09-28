@@ -560,6 +560,25 @@ Invalid component syntax: unclosed tag 'include:card'
 
 - **Django**: 3.2+ (LTS), 4.0+, 4.1+, 4.2+ (LTS), 5.0+
 - **Python**: 3.8+, 3.9+, 3.10+, 3.11+, 3.12+
-- **Template engines**: Works with Django's template system
+- **Template engines**: Django templates AND Jinja2 templates
 
-The custom template engine is fully compatible with Django's standard template features and can be used as a drop-in replacement.
+### Template Engine Support
+
+| Feature | Django Templates | Jinja2 | Notes |
+|---------|-----------------|--------|-------|
+| `{% includecontents %}` tag | ✅ Full support | ✅ Full support | Core template tag functionality |
+| HTML component syntax (`<include:component>`) | ✅ Full support | ✅ Full support | Via preprocessing in Jinja2 |
+| Props system | ✅ Full support | ✅ Full support | Shared props validation system |
+| Named content blocks | ✅ Full support | ✅ Full support | `{% contents name %}` syntax |
+| Context isolation | ✅ Full support | ✅ Full support | Configurable in Jinja2 |
+| Attrs object | ✅ Full support | ✅ Full support | Undefined attribute collection |
+| Multi-line tags | ✅ Full support | ✅ Native support | Built into Jinja2 |
+
+!!! success "Dual Template Engine Support"
+    Django IncludeContents supports both Django templates and Jinja2 with feature parity! Choose the template engine that best fits your project.
+
+    **Setup guides:**
+    - [Django Templates](../getting-started/installation.md#option-1-django-templates-with-custom-engine-recommended)
+    - [Jinja2 Templates](../getting-started/jinja2-setup.md)
+
+The custom template engine is fully compatible with Django's standard template features and can be used as a drop-in replacement for `django.template.backends.django.DjangoTemplates`.

@@ -1,0 +1,1 @@
+Add comprehensive Jinja2 template engine support with full Django template parity for HTML component syntax, including JavaScript framework attributes (@click, v-model, x-data), nested attributes, HTML content blocks, CSRF token handling, consistent escaping behavior, and proper undefined variable rendering

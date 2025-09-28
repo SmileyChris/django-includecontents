@@ -19,17 +19,43 @@ In Django IncludeContents, **components** are reusable template fragments that c
 </include:card>
 ```
 
+## Template Engine Support
+
+Django IncludeContents works with both Django templates and Jinja2:
+
+| Feature | Django Templates | Jinja2 |
+|---------|-----------------|--------|
+| **Component System** | ✅ Full support | ✅ Full support |
+| **HTML Syntax** | ✅ Custom engine required | ✅ Extension required |
+| **Template Tags** | ✅ Always available | ✅ Extension required |
+| **Props & Validation** | ✅ Full support | ✅ Full support |
+| **Enum Validation** | ✅ Full support | ✅ Full support |
+| **Named Contents** | ✅ Full support | ✅ Full support |
+| **Icons** | ✅ Full support | ✅ Full support |
+| **Icon HTML Syntax** | ✅ Full support | ✅ Full support |
+| **WrapIf Tag** | ✅ Available | ❌ Use conditionals instead |
+
 ## Two Ways to Use Components
 
 Django IncludeContents offers two syntaxes for the same functionality:
 
 ### HTML Syntax (Recommended)
 
-```html
-<include:card title="Welcome" class="highlight">
-    <p>This looks and feels like HTML!</p>
-</include:card>
-```
+=== "Django Templates"
+
+    ```html
+    <include:card title="Welcome" class="highlight">
+        <p>This looks and feels like HTML!</p>
+    </include:card>
+    ```
+
+=== "Jinja2"
+
+    ```html
+    <include:card title="Welcome" class="highlight">
+        <p>This looks and feels like HTML!</p>
+    </include:card>
+    ```
 
 **Benefits:**
 - Familiar HTML-like syntax
@@ -39,20 +65,30 @@ Django IncludeContents offers two syntaxes for the same functionality:
 
 ### Template Tag Syntax
 
-```django
-{% load includecontents %}
-{% includecontents "components/card.html" title="Welcome" class="highlight" %}
-    <p>Traditional Django template syntax</p>
-{% endincludecontents %}
-```
+=== "Django Templates"
+
+    ```django
+    {% load includecontents %}
+    {% includecontents "components/card.html" title="Welcome" class="highlight" %}
+        <p>Traditional Django template syntax</p>
+    {% endincludecontents %}
+    ```
+
+=== "Jinja2"
+
+    ```jinja2
+    {% includecontents "components/card.html" title="Welcome" class="highlight" %}
+        <p>Jinja2 template syntax</p>
+    {% endincludecontents %}
+    ```
 
 **Benefits:**
-- Works with any Django template engine
-- Familiar to Django developers
-- No setup required
+- Works with any template engine
+- Familiar to template developers
+- No additional setup beyond the extension
 
 !!! tip "Which Should I Use?"
-    We recommend the **HTML syntax** for new projects as it provides a better developer experience. The template tag syntax is perfect for existing projects or when you can't use the custom template engine.
+    We recommend the **HTML syntax** for new projects as it provides a better developer experience. The template tag syntax is perfect for existing projects or when you prefer traditional template syntax.
 
 ## Component Discovery
 

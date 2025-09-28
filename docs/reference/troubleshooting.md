@@ -74,7 +74,7 @@ TemplateSyntaxError: Malformed template tag at token 'includecontents'
    {% includecontents %}
        Content
    {% endincludecontents %}
-   
+
    <!-- ✅ Correct -->
    {% includecontents "components/card.html" %}
        Content
@@ -85,10 +85,135 @@ TemplateSyntaxError: Malformed template tag at token 'includecontents'
    ```html
    <!-- ❌ Wrong -->
    <include:card title=Hello World>
-   
+
    <!-- ✅ Correct -->
    <include:card title="Hello World">
    ```
+
+### Enhanced Error Messages
+
+Django IncludeContents provides enhanced error messages to help you quickly identify and fix issues:
+
+#### Props Definition Errors
+
+**Enhanced props error messages include:**
+- Exact line number where the error occurs
+- Specific problematic token
+- Common issues and solutions
+- Concrete examples of correct syntax
+
+**Example error:**
+```
+Props parsing error: Invalid prop name 'invalid name'. Prop names must be valid Python identifiers.
+  In template line 2: {# props "invalid name"=value #}
+  Problem with: 'invalid name=value'
+
+Common issues:
+  - Prop names must be valid Python identifiers (no spaces, special chars)
+  - String values should be quoted: name="value"
+  - Lists should use brackets: items=[1,2,3]
+  - Use commas or spaces to separate props: prop1=value1 prop2=value2
+
+Examples:
+  {# props title required_field=True items=[1,2,3] #}
+  {# props variant=primary,secondary,accent size="large" #}
+```
+
+**Common props definition errors:**
+
+1. **Invalid prop names with spaces:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props "user name"=default_value #}
+
+   <!-- ✅ Correct -->
+   {# props user_name=default_value #}
+   ```
+
+2. **Invalid prop names with special characters:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props prop-name=value #}
+
+   <!-- ✅ Correct -->
+   {# props prop_name=value #}
+   ```
+
+3. **Malformed list syntax:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props items=[1,2,3 #}
+
+   <!-- ✅ Correct -->
+   {# props items=[1,2,3] #}
+   ```
+
+4. **Unquoted string values with spaces:**
+   ```html
+   <!-- ❌ Wrong -->
+   {# props title=hello world #}
+
+   <!-- ✅ Correct -->
+   {# props title="hello world" #}
+   ```
+
+#### Enum Validation Errors
+
+**Enhanced enum error messages with suggestions:**
+
+**Example error:**
+```
+Invalid value "primari" for attribute "variant".
+Allowed values: 'primary', 'secondary', 'accent'. Did you mean 'primary'?
+Example: <include:button variant="primary">
+```
+
+**Common enum errors:**
+
+1. **Typos in enum values:**
+   ```html
+   <!-- ❌ Wrong -->
+   <include:button variant="primari">  <!-- typo -->
+
+   <!-- ✅ Correct -->
+   <include:button variant="primary">
+   ```
+
+2. **Case sensitivity issues:**
+   ```html
+   <!-- ❌ Wrong -->
+   <include:button variant="PRIMARY">  <!-- wrong case -->
+
+   <!-- ✅ Correct -->
+   <include:button variant="primary">
+   ```
+
+3. **Using underscores instead of hyphens:**
+   ```html
+   <!-- ❌ Wrong -->
+   <include:button variant="dark_mode">  <!-- underscore -->
+
+   <!-- ✅ Correct -->
+   <include:button variant="dark-mode">  <!-- hyphen -->
+   ```
+
+#### Missing Template Errors
+
+**Enhanced template not found errors include:**
+- Clear component identification
+- Specific template paths searched
+- Actionable suggestions for fixing
+
+**Example error:**
+```
+Component template not found: <include:my-component>
+Looked for: components/my-component.html
+
+Suggestions:
+  1. Create template: templates/components/my-component.html
+  2. Check TEMPLATES['DIRS'] setting includes your template directory
+  3. For app-based components: create template in <app>/templates/components/
+```
 
 ## Component Issues
 
@@ -381,6 +506,74 @@ TEMPLATES[0]['OPTIONS']['debug'] = True
 <!-- ✅ Alternative: different quote types -->
 <include:card title='Say "Hello"'>
 ```
+
+## Security and Escaping Issues
+
+### Understanding Escaping Behavior
+
+If you're seeing unexpected escaping or lack of escaping in component attributes:
+
+**Problem:** Hard-coded strings are being escaped when they shouldn't be
+```html
+<!-- Expected: text="Don't worry" -->
+<!-- Getting: text="Don&#x27;t worry" -->
+<include:button text="Don't worry" />
+```
+
+**Solution:** This indicates an older version behavior. Update to the latest version where hard-coded strings are not escaped.
+
+**Problem:** Template variables are not being escaped when they should be
+```html
+<!-- User input with quotes shows unescaped -->
+<include:button text="{{ user_input }}" />
+<!-- Shows: text="Don't worry" instead of text="Don&#x27;t worry" -->
+```
+
+**Solutions:**
+
+=== "Django Templates"
+
+    ```html
+    <!-- ✅ Variables should be automatically escaped -->
+    <include:button text="{{ user_input }}" />
+
+    <!-- If not escaping, check your Django version and settings -->
+    ```
+
+=== "Jinja2 Templates"
+
+    ```html
+    <!-- ✅ For consistent escaping, use explicit escaping -->
+    <include:button text="{{ user_input|e }}" />
+
+    <!-- Or configure autoescape in your Jinja2 environment -->
+    ```
+
+### XSS Prevention
+
+**Problem:** Potential XSS vulnerabilities in component attributes
+
+**Solution:** Never mark user input as safe:
+```html
+<!-- ❌ Dangerous -->
+<include:content html="{{ user_input|safe }}" />
+
+<!-- ✅ Safe -->
+<include:content text="{{ user_input }}" />  <!-- Automatically escaped -->
+
+<!-- ✅ Safe with sanitization -->
+<include:content html="{{ user_input|bleach|safe }}" />
+```
+
+### Security Best Practices
+
+For comprehensive security guidance, see the [Security Best Practices](../building-components/best-practices.md#security-best-practices) section.
+
+Key principles:
+- Hard-coded strings in components are trusted (not escaped)
+- Template variables are automatically escaped for security
+- Always validate and sanitize user-provided URLs and content
+- Use CSRF protection for forms within components
 
 ## Getting Help
 

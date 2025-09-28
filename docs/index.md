@@ -17,6 +17,7 @@ Django IncludeContents provides three powerful features:
 - **🎭 Icon System**: SVG sprite sheets from 150,000+ Iconify icons and local files (e.g., `<icon:home>`)
 - **🎯 Props System**: Define required and optional props with validation and defaults
 - **🎨 CSS Class Management**: Advanced class handling with conditional and extended classes
+- **🔒 Security First**: Smart HTML escaping protects against XSS while preserving developer intent
 - **🔀 Conditional Wrapping**: Clean conditional HTML wrapper syntax with `{% wrapif %}`
 - **📄 Multi-line Tags**: Support for multi-line template tags for better readability
 - **⚡ Developer Experience**: Great integration with Prettier, VS Code, and Tailwind CSS
@@ -67,12 +68,32 @@ INCLUDECONTENTS_ICONS = {
 {% endincludecontents %}
 ```
 
+### Security by Design
+
+```html
+<!-- ✅ Hard-coded strings: Trusted, not escaped -->
+<include:alert type="info" message="Don't worry - this won't be escaped!" />
+
+<!-- ✅ User content: Automatically escaped for security -->
+<include:comment text="{{ user_input }}" author="{{ user.name }}" />
+<!-- Protects against XSS attacks while preserving developer intent -->
+```
+
 ## Getting Started
 
 Ready to add component-like functionality to your Django templates?
 
 [Get Started →](getting-started/installation.md){ .md-button .md-button--primary }
 [Quick Start Guide →](getting-started/quickstart.md){ .md-button }
+
+## Template Engine Support
+
+Django IncludeContents supports both Django templates and Jinja2! Choose the approach that works best for your project:
+
+- **Django Templates**: Full native support with HTML component syntax
+- **Jinja2**: Complete feature parity via extension system
+
+See our [Jinja2 Setup Guide](getting-started/jinja2-setup.md) for Jinja2 installation and usage.
 
 ## Why Django IncludeContents?
 
