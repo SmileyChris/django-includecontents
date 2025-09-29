@@ -77,7 +77,7 @@ def test_tokenization_output():
     """Test that tokenization produces the expected output."""
     template_code = """<include:button href="{% url 'home' %}" class="btn-primary">Click</include:button>"""
 
-    template = Template(template_code)
+    Template(template_code)
 
     # Check the tokens produced
     from includecontents.django.base import Lexer
@@ -111,8 +111,9 @@ def test_backwards_compatibility():
 
 
 if __name__ == "__main__":
-    import django
     import os
+
+    import django
 
     # Set up Django
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")

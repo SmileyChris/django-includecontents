@@ -1,6 +1,6 @@
-from django.test import TestCase, override_settings, RequestFactory
 from django.template import Context
 from django.template.loader import render_to_string
+from django.test import RequestFactory, TestCase, override_settings
 
 from includecontents.django.base import Template
 
@@ -51,11 +51,6 @@ class ComplexNestedComponentsTest(TestCase):
 
     def test_deeply_nested_components_preserve_processor_data(self):
         """Test that processor data is preserved through multiple levels of nesting."""
-        template_source = """
-        <include:complex-nested/level1 title="Level 1">
-            <p>Root content</p>
-        </include:complex-nested/level1>
-        """
 
         content = render_to_string(
             "test_complex_nested.html",
@@ -150,7 +145,7 @@ class ComplexNestedComponentsTest(TestCase):
         </include:complex-nested/performance-test>
         """
 
-        template = Template(template_source)
+        Template(template_source)
 
         # Measure rendering time
         start_time = time.perf_counter()

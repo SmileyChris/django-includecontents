@@ -2,9 +2,50 @@ from pathlib import Path
 
 import django.template.base
 import django.template.engine
-from django.core.exceptions import ImproperlyConfigured
 
 from .base import Template
+
+
+def _replace_django_loaders(loaders):
+    """
+    Recursively replace Django's standard loaders with includecontents custom loaders.
+
+    This allows compatibility with third-party packages (like django-template-partials)
+    that wrap Django's loaders, while ensuring our custom Template class and
+    functionality is always used.
+
+    Args:
+        loaders: A loader configuration (string, tuple, or list)
+
+    Returns:
+        The same structure with Django loaders replaced
+    """
+    # Mapping of Django loaders to includecontents equivalents
+    LOADER_MAPPING = {
+        "django.template.loaders.filesystem.Loader": "includecontents.django.loaders.FilesystemLoader",
+        "django.template.loaders.app_directories.Loader": "includecontents.django.loaders.AppDirectoriesLoader",
+        "django.template.loaders.cached.Loader": "includecontents.django.loaders.CachedLoader",
+    }
+
+    if isinstance(loaders, str):
+        # Simple string loader - replace if it's a Django loader
+        return LOADER_MAPPING.get(loaders, loaders)
+
+    elif isinstance(loaders, (list, tuple)):
+        # List of loaders - recursively process each one
+        result = [_replace_django_loaders(loader) for loader in loaders]
+        return type(loaders)(result)  # Preserve tuple vs list
+
+    elif isinstance(loaders, tuple) and len(loaders) == 2:
+        # Tuple format: (loader_class, [wrapped_loaders])
+        loader_class, wrapped = loaders
+        return (
+            LOADER_MAPPING.get(loader_class, loader_class),
+            _replace_django_loaders(wrapped),
+        )
+
+    # Unknown format, return as-is
+    return loaders
 
 
 class Engine(django.template.Engine):
@@ -21,17 +62,6 @@ class Engine(django.template.Engine):
         *args,
         **kwargs,
     ):
-        if loaders is None:
-            loaders = ["includecontents.django.loaders.FilesystemLoader"]
-            if app_dirs:
-                loaders += ["includecontents.django.loaders.AppDirectoriesLoader"]
-            loaders = [("includecontents.django.loaders.CachedLoader", loaders)]
-        else:
-            if app_dirs:
-                raise ImproperlyConfigured(
-                    "app_dirs must not be set when loaders is defined."
-                )
-
         # Add all includecontents template tags to builtins so they're automatically available
         if builtins is None:
             builtins = []
@@ -51,7 +81,7 @@ class Engine(django.template.Engine):
 
         super().__init__(
             dirs=dirs,
-            app_dirs=False,
+            app_dirs=app_dirs,
             context_processors=context_processors,
             debug=debug,
             loaders=loaders,
@@ -59,7 +89,9 @@ class Engine(django.template.Engine):
             *args,
             **kwargs,
         )
-        self.app_dirs = app_dirs
+
+        # Replace Django's standard loaders with our custom ones
+        self.loaders = _replace_django_loaders(self.loaders)
 
     def from_string(self, template_code):
         """

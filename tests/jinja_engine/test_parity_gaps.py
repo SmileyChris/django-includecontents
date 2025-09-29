@@ -95,7 +95,7 @@ class TestAdvancedAttributeGaps:
         gaps_found = []
         for template_source, feature in test_cases:
             try:
-                template = env.from_string(template_source)
+                env.from_string(template_source)
                 print(f"✓ {feature} attributes work in Jinja")
             except TemplateSyntaxError:
                 gaps_found.append(feature)
@@ -272,7 +272,7 @@ class TestPerformanceGaps:
         # Measure compilation time
         start_time = time.perf_counter()
         for _ in range(50):
-            template = env.from_string(template_source)
+            env.from_string(template_source)
         compilation_time = time.perf_counter() - start_time
 
         # Should compile reasonably quickly (less than 150ms for 50 compilations)
@@ -293,7 +293,7 @@ class TestPerformanceGaps:
         # Measure rendering time
         start_time = time.perf_counter()
         for _ in range(100):
-            result = template.render()
+            template.render()
         rendering_time = time.perf_counter() - start_time
 
         # Should render reasonably quickly

@@ -2,13 +2,15 @@ import logging
 import re
 from collections import abc
 from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Dict, Iterable, NoReturn, Optional, cast
 
 from django import template
-from django.template import TemplateSyntaxError, TemplateDoesNotExist, Variable
+from django.contrib.gis.measure import D
+from django.template import TemplateDoesNotExist, TemplateSyntaxError, Variable
 from django.template.base import FilterExpression, Node, NodeList, Parser, TokenType
 from django.template.context import Context
 from django.template.defaulttags import TemplateIfParser
-from django.template.loader_tags import construct_relative_path, do_include
+from django.template.loader_tags import IncludeNode, construct_relative_path, do_include
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
@@ -18,8 +20,8 @@ try:
 except ImportError:
     difflib = None
 
-from includecontents.django.base import Template
 from includecontents.django.attrs import Attrs as DjangoAttrs
+from includecontents.django.base import Template
 from includecontents.shared.typed_props import (
     coerce_value,
     get_props_class,
@@ -28,8 +30,16 @@ from includecontents.shared.typed_props import (
 from includecontents.shared.validation import validate_props
 
 logger = logging.getLogger(__name__)
+from includecontents.shared.props import PropDefinition
 
 register = template.Library()
+
+
+if TYPE_CHECKING:
+
+    class ContextWithProcessors(Context):
+        _processor_data: Dict[str, Any]
+        _processors_index: int
 
 
 class TemplateAttributeExpression:
@@ -340,7 +350,7 @@ class IncludeContentsNode(template.Node):
     ):
         self.token_name = token_name
         self.advanced_attrs = advanced_attrs
-        self.include_node = include_node
+        self.include_node: IncludeNode = include_node
         self.nodelist = nodelist
         self.named_nodelists = named_nodelists
 
@@ -361,6 +371,7 @@ class IncludeContentsNode(template.Node):
                 processor_data = context.dicts[processors_index].copy()
             elif hasattr(context, "_processor_data"):
                 # If this is a nested component, get processor data from the parent context
+                context = cast("ContextWithProcessors", context)
                 processor_data = context._processor_data.copy()
             elif request := context.get("request"):
                 # No processor data found, but we have a request - manually run processors
@@ -581,7 +592,7 @@ class IncludeContentsNode(template.Node):
         for key, value in self.all_attrs():
             if key == "...":
                 # Resolve the spread expression (e.g., attrs or attrs.button)
-                spread_attrs = value.resolve(context)
+                spread_attrs = value.resolve(context)  # type: ignore
                 break
 
         for key, value in self.all_attrs():
@@ -594,10 +605,10 @@ class IncludeContentsNode(template.Node):
                         f"Advanced attribute {key!r} only allowed if component template"
                         " defines props"
                     )
-                new_context[key] = value.resolve(context)
+                new_context[key] = value.resolve(context)  # type: ignore
             else:
                 if key in component_props:
-                    resolved_value = value.resolve(context)
+                    resolved_value = value.resolve(context)  # type: ignore
                     prop_def = component_props[key]
 
                     # Handle new typed props
@@ -796,7 +807,7 @@ class IncludeContentsNode(template.Node):
         for key, value in self.advanced_attrs.items():
             yield key, value
 
-    def get_component_props(self, template):
+    def get_component_props(self, template) -> Dict[str, PropDefinition] | None:
         # Handle both Django backend template and Django template objects
         django_template = getattr(template, "template", template)
         first_comment = getattr(django_template, "first_comment", None)
@@ -1221,12 +1232,12 @@ class AttrsNode(template.Node):
 
     def render(self, context):
         context_attrs = context.get("attrs")
+        if self.sub_key:
+            context_attrs = getattr(context_attrs, self.sub_key, None)
         if not isinstance(context_attrs, DjangoAttrs):
             raise TemplateSyntaxError(
                 "The attrs tag requires an attrs variable in the context"
             )
-        if self.sub_key:
-            context_attrs = getattr(context_attrs, self.sub_key, None)
         attrs = DjangoAttrs()
         # First, apply fallbacks (component defaults)
         attrs.update(
@@ -1473,9 +1484,9 @@ def do_wrapif(parser, token):
         condition = TemplateIfParser(parser, bits).parse()
         # We need to parse differently for full syntax
         # Save the current position
-        wrapper_start = parser.tokens[:]
+        parser.tokens[:]
         wrapper_nodelist = parser.parse(("wrapelif", "wrapelse", "endwrapif"))
-        wrapper_end = parser.tokens[:]
+        parser.tokens[:]
 
         # Extract the contents from the wrapper
         contents_info = extract_contents_from_wrapper(wrapper_nodelist)

@@ -3,14 +3,14 @@ High-level tests for the icons system.
 Tests both HTML component syntax and template tag usage.
 """
 
-import pytest
 from unittest.mock import patch
-from django.template.loader import render_to_string
+
+import pytest
 from django.template import Context
+from django.template.loader import render_to_string
 
 from includecontents.django.base import Template as CustomTemplate
 from includecontents.icons import builder, utils
-
 
 # Tests now use real Django settings from tests/settings.py
 

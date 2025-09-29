@@ -207,7 +207,7 @@ class TestMissingTemplateErrors:
         template_source = "<include:>Content</include:>"
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             # This should fail during parsing/compilation
             pytest.fail("Expected syntax error for empty component name")
         except TemplateSyntaxError as e:
@@ -245,7 +245,7 @@ class TestAttributeValidationErrors:
         )
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             # This should fail during parsing
             pytest.fail("Expected syntax error for invalid attribute")
         except TemplateSyntaxError as e:
@@ -261,7 +261,7 @@ class TestAttributeValidationErrors:
         template_source = '<include:button class="unclosed>Malformed</include:button>'
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for malformed attribute")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -283,7 +283,7 @@ class TestContentBlockErrors:
         """
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for invalid content block name")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -301,7 +301,7 @@ class TestContentBlockErrors:
         """
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for unclosed content block")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -333,7 +333,7 @@ class TestSyntaxErrors:
         template_source = '<include:card title="Test">Unclosed component'
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for unclosed component")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -375,7 +375,7 @@ class TestSyntaxErrors:
         """
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for mismatched nested tags")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -402,7 +402,7 @@ class TestErrorMessageQuality:
             template.render()
             pytest.fail("Expected template error")
         except (TemplateSyntaxError, TemplateNotFound, ValueError) as e:
-            error_message = str(e)
+            str(e)
             # Error messages should ideally include line information
             # The exact format depends on Jinja's error reporting
             # This test documents the desired behavior

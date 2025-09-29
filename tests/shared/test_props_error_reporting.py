@@ -58,7 +58,7 @@ def test_malformed_prop_syntax():
 
     # This should either be caught by our parser or work as intended
     # Let's see what happens
-    result = parse_props_comment(template_source)
+    parse_props_comment(template_source)
     # This might actually work since title== would be parsed as title with default "=value"
 
 

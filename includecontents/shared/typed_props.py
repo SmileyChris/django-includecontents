@@ -178,7 +178,9 @@ def coerce_value(value: Any, type_hint: Any) -> Any:
 
     # Handle Union types (including Optional)
     origin = get_origin(type_hint)
-    if origin is Union:
+    # Handle both typing.Union and types.UnionType (Python 3.10+ | syntax)
+    import types
+    if origin is Union or (hasattr(types, 'UnionType') and origin is types.UnionType):
         args = get_args(type_hint)
         # Filter out None to get the actual type(s)
         non_none_types = [arg for arg in args if arg is not type(None)]
@@ -187,11 +189,12 @@ def coerce_value(value: Any, type_hint: Any) -> Any:
             return coerce_value(value, non_none_types[0])
         return value
 
-    # Handle Annotated types - coerce using the origin type
+    # Handle Annotated types - coerce using the first arg (actual type)
     if hasattr(type_hint, "__metadata__"):
-        origin = get_origin(type_hint)
-        if origin is not None:
-            return coerce_value(value, origin)
+        args = get_args(type_hint)
+        if args:
+            # First arg is the actual type, rest is metadata
+            return coerce_value(value, args[0])
 
     # Handle List types
     if origin is list:

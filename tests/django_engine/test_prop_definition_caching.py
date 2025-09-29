@@ -44,12 +44,12 @@ def test_prop_definitions_not_cached_across_template_instances():
 
 def test_prop_definitions_parsing_only_happens_once():
     """Test that prop parsing from source only happens once per template."""
-    # Test that _build_prop_definition is only called once per prop
+    # Test that build_prop_definition is only called once per prop
     template = Template("""{# props variant=primary,secondary size=small,large #}
     <div class="component {{ variant }} {{ size }}">{{ contents }}</div>""")
 
     with patch(
-        "includecontents.django.base._build_prop_definition",
+        "includecontents.django.base.build_prop_definition",
         wraps=lambda spec: type(
             "PropDef",
             (),
@@ -72,7 +72,7 @@ def test_prop_definitions_parsing_only_happens_once():
         template.get_component_prop_definitions()
         template.get_component_prop_definitions()
 
-        # _build_prop_definition should only be called once per prop (2 props = 2 calls)
+        # build_prop_definition should only be called once per prop (2 props = 2 calls)
         assert mock_build.call_count == 2
 
 
@@ -108,7 +108,7 @@ def test_prop_definition_caching_performance():
     </div>"""
 
     template = Template(template_source)
-    context = Context({})
+    Context({})
 
     # Time getting prop definitions multiple times
     times = []

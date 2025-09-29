@@ -8,6 +8,7 @@ potentially other template engines.
 import inspect
 from dataclasses import MISSING, is_dataclass
 from dataclasses import fields as dataclass_fields
+import types
 from typing import Any, Dict, Type, Union, get_args, get_origin, get_type_hints
 
 from django.core.exceptions import ValidationError
@@ -20,6 +21,28 @@ from .typed_props import (
     generate_multichoice_flags,
     mark_html_recursive,
 )
+
+
+def _check_coercion_failure(value, coerced_value, actual_type, field_name):
+    """
+    Check if type coercion failed and return appropriate error message.
+
+    Returns error message if coercion failed, None otherwise.
+    """
+    # Only check if coercion didn't change the value
+    if coerced_value != value:
+        return None
+
+    # Check for common type coercion failures
+    if actual_type is int and not isinstance(coerced_value, int):
+        return f"{field_name}: Cannot convert '{value}' to integer"
+    elif actual_type is float and not isinstance(coerced_value, float):
+        return f"{field_name}: Cannot convert '{value}' to float"
+    elif hasattr(actual_type, "__name__") and actual_type.__name__ == "Decimal":
+        if isinstance(value, str) and not isinstance(coerced_value, actual_type):
+            return f"{field_name}: Cannot convert '{value}' to decimal"
+
+    return None
 
 
 def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
@@ -90,7 +113,8 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
         else:
             # Check if it's Optional
             origin = get_origin(type_hint)
-            if origin is Union:
+            # Handle both typing.Union and types.UnionType (Python 3.10+ | syntax)
+            if origin is Union or (hasattr(types, 'UnionType') and origin is types.UnionType):
                 # Check if None is in the union (making it Optional)
                 args = get_args(type_hint)
                 if type(None) in args:
@@ -112,35 +136,27 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
 
             # Unwrap Optional/Union to get actual type
             origin = get_origin(type_hint)
-            if origin is Union:
+            # Handle both typing.Union and types.UnionType (Python 3.10+ | syntax)
+            if origin is Union or (hasattr(types, 'UnionType') and origin is types.UnionType):
                 args = get_args(type_hint)
                 non_none_types = [arg for arg in args if arg is not type(None)]
                 actual_type = non_none_types[0] if non_none_types else str
 
             # Get base type from Annotated
             if hasattr(actual_type, "__metadata__"):
-                origin = get_origin(actual_type)
-                if origin is not None:
-                    actual_type = origin
+                args = get_args(actual_type)
+                if args:
+                    # First arg is the actual type
+                    actual_type = args[0]
 
-            # Check for type mismatches that should error
-            if (
-                actual_type is int
-                and not isinstance(coerced_value, int)
-                and coerced_value == value
-            ):
-                error_msg = f"{field_name}: Cannot convert '{value}' to integer"
+            # Check for type coercion failures
+            error_msg = _check_coercion_failure(value, coerced_value, actual_type, field_name)
+            if error_msg:
                 errors.append(error_msg)
                 continue
-            elif (
-                actual_type is float
-                and not isinstance(coerced_value, float)
-                and coerced_value == value
-            ):
-                error_msg = f"{field_name}: Cannot convert '{value}' to float"
-                errors.append(error_msg)
-                continue
-            elif get_origin(actual_type) is list:
+
+            # Check for list item coercion failures
+            if get_origin(actual_type) is list:
                 # Check if coerced list has unconverted items when expecting int/float
                 if isinstance(coerced_value, list):
                     list_args = get_args(actual_type)

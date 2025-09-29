@@ -6,6 +6,8 @@ from includecontents.shared.attrs import BaseAttrs
 class TestAttrs(BaseAttrs):
     """Concrete test implementation of BaseAttrs."""
 
+    __test__ = False
+
     pass
 
 

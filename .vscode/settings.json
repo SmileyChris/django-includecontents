@@ -6,5 +6,18 @@
   "[django-html]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "cSpell.words": [
+    "Beaven",
+    "endincludecontents",
+    "Iconify",
+    "includecontents",
+    "mkdocs",
+    "mkdocstrings",
+    "pymdown",
+    "pytest",
+    "pythonpath",
+    "tabler",
+    "wrapif"
+  ]
 }

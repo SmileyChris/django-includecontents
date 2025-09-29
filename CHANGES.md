@@ -4,6 +4,13 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 4.0 (2025-09-29)
+
+## Features
+
+- Add comprehensive Jinja2 template engine support with full Django template parity for HTML component syntax, including JavaScript framework attributes (@click, v-model, x-data), nested attributes, HTML content blocks, CSRF token handling, consistent escaping behavior, and proper undefined variable rendering
+
+
 # Version 3.1.2 (2025-08-14)
 
 ### Bugfixes

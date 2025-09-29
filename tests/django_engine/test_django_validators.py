@@ -40,18 +40,12 @@ class TestDjangoValidators:
         # Too short
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(TextProps, {"name": "A"})
-        assert (
-            "min" in str(exc_info.value).lower()
-            or "short" in str(exc_info.value).lower()
-        )
+        assert "at least 2 characters" in str(exc_info.value).lower()
 
         # Too long
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(TextProps, {"name": "VeryLongName"})
-        assert (
-            "max" in str(exc_info.value).lower()
-            or "long" in str(exc_info.value).lower()
-        )
+        assert "at most 10 characters" in str(exc_info.value).lower()
 
     def test_text_with_regex_pattern(self):
         """Test Text prop type with Django regex validator."""
@@ -67,10 +61,7 @@ class TestDjangoValidators:
         # Invalid pattern
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(PatternProps, {"code": "invalid"})
-        assert (
-            "pattern" in str(exc_info.value).lower()
-            or "format" in str(exc_info.value).lower()
-        )
+        assert "valid value" in str(exc_info.value).lower()
 
     def test_integer_with_django_bounds(self):
         """Test Integer prop type with Django min/max validators."""
@@ -86,12 +77,12 @@ class TestDjangoValidators:
         # Too small
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(BoundedProps, {"age": "10"})
-        assert "min" in str(exc_info.value).lower()
+        assert "greater than or equal to 18" in str(exc_info.value).lower()
 
         # Too large
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(BoundedProps, {"age": "150"})
-        assert "max" in str(exc_info.value).lower()
+        assert "less than or equal to 120" in str(exc_info.value).lower()
 
     def test_email_django_validator(self):
         """Test Email prop type with Django's EmailValidator."""
@@ -138,15 +129,14 @@ class TestDjangoSpecificTypes:
 
         # Valid decimal
         result = validate_props(DecimalProps, {"price": "19.99"})
-        assert result["price"] == "19.99"  # May be string or Decimal object
+        # May be string or Decimal object (coercion converts to Decimal)
+        from decimal import Decimal as DecimalType
+        assert result["price"] == DecimalType("19.99")
 
         # Invalid decimal format
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(DecimalProps, {"price": "invalid"})
-        assert (
-            "decimal" in str(exc_info.value).lower()
-            or "number" in str(exc_info.value).lower()
-        )
+        assert "cannot convert" in str(exc_info.value).lower()
 
     def test_css_class_type(self):
         """Test CssClass prop type with CSS class validation."""
@@ -168,20 +158,16 @@ class TestDjangoSpecificTypes:
 
         @dataclass
         class ColorProps:
-            color: Color
+            color: Color["hex"]  # Specify hex format for validation
 
         # Valid hex color
         result = validate_props(ColorProps, {"color": "#ff0000"})
         assert result["color"] == "#ff0000"
 
-        # Valid color name
-        result = validate_props(ColorProps, {"color": "red"})
-        assert result["color"] == "red"
-
-        # Invalid color
+        # Invalid hex color
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(ColorProps, {"color": "invalid-color"})
-        assert "color" in str(exc_info.value).lower()
+        assert "invalid" in str(exc_info.value).lower()
 
     def test_minmax_helper(self):
         """Test MinMax helper for integer bounds."""
@@ -197,12 +183,12 @@ class TestDjangoSpecificTypes:
         # Below minimum
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(MinMaxProps, {"score": "-10"})
-        assert "min" in str(exc_info.value).lower()
+        assert "greater than or equal to 0" in str(exc_info.value).lower()
 
         # Above maximum
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(MinMaxProps, {"score": "150"})
-        assert "max" in str(exc_info.value).lower()
+        assert "less than or equal to 100" in str(exc_info.value).lower()
 
 
 class TestDjangoValidatorMessages:

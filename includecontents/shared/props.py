@@ -6,7 +6,7 @@ import ast
 import re
 import shlex
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Generic, Optional, Tuple, TypeVar
+from typing import Any, Callable, Dict, Generic, Optional, Sequence, Tuple, TypeVar
 
 
 _MISSING = object()
@@ -257,4 +257,57 @@ class PropsRegistry(Generic[K]):
         self._cache.clear()
 
 
-__all__ = ["PropSpec", "PropsRegistry", "parse_props_comment", "_MISSING"]
+@dataclass(frozen=True)
+class PropDefinition:
+    """
+    Represents a component prop definition with optional enum validation.
+
+    Wraps a PropSpec and adds enum-specific metadata when the prop
+    is defined with enum constraints.
+    """
+
+    spec: PropSpec
+    enum_values: Sequence[str] | None = None
+    enum_required: bool = False
+
+    @property
+    def name(self) -> str:
+        return self.spec.name
+
+    @property
+    def required(self) -> bool:
+        if self.enum_values is not None:
+            return self.enum_required
+        return self.spec.required
+
+    def clone_default(self) -> Any:
+        return self.spec.clone_default()
+
+    def is_enum(self) -> bool:
+        return self.enum_values is not None
+
+
+def build_prop_definition(spec: PropSpec) -> PropDefinition:
+    """
+    Build a PropDefinition from a PropSpec, parsing any enum constraints.
+
+    If the spec's default value contains enum definition syntax (e.g., "a,b,c" or "!a,b,c"),
+    this function extracts the allowed values and required flag.
+    """
+    from includecontents.shared.enums import parse_enum_definition
+
+    default = spec.default
+    allowed, required = parse_enum_definition(default)
+    if allowed:
+        return PropDefinition(spec=spec, enum_values=allowed, enum_required=required)
+    return PropDefinition(spec=spec)
+
+
+__all__ = [
+    "PropSpec",
+    "PropsRegistry",
+    "parse_props_comment",
+    "PropDefinition",
+    "build_prop_definition",
+    "_MISSING",
+]
