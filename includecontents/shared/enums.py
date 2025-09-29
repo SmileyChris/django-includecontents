@@ -54,7 +54,9 @@ def build_enum_flag_key(prop_name: str, enum_value: str) -> Optional[str]:
     return f"{prop_name}{camel_value[0].upper()}{camel_value[1:]}"
 
 
-def suggest_enum_value(invalid_value: str, allowed_values: Sequence[str]) -> Optional[str]:
+def suggest_enum_value(
+    invalid_value: str, allowed_values: Sequence[str]
+) -> Optional[str]:
     """Suggest the closest valid enum value based on string similarity."""
 
     if not allowed_values or not invalid_value:

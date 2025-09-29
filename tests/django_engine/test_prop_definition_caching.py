@@ -1,16 +1,15 @@
 import time
 import pytest
-from unittest.mock import patch, call
+from unittest.mock import patch
 from django.template import Context
 from includecontents.django.base import Template
-from includecontents.shared.props import parse_props_comment
 
 
 def test_prop_definitions_cached_on_template_instance():
     """Test that prop definitions are cached on template instances."""
     # Create a template with a props comment
-    template = Template('''{# props variant=primary,secondary size=small,large #}
-    <div class="component {{ variant }} {{ size }}">{{ contents }}</div>''')
+    template = Template("""{# props variant=primary,secondary size=small,large #}
+    <div class="component {{ variant }} {{ size }}">{{ contents }}</div>""")
 
     # First call should parse and cache the definitions
     props1 = template.get_component_prop_definitions()
@@ -27,8 +26,8 @@ def test_prop_definitions_cached_on_template_instance():
 
 def test_prop_definitions_not_cached_across_template_instances():
     """Test that different template instances have their own prop definition caches."""
-    template_source = '''{# props variant=primary,secondary size=small,large #}
-    <div class="component {{ variant }} {{ size }}">{{ contents }}</div>'''
+    template_source = """{# props variant=primary,secondary size=small,large #}
+    <div class="component {{ variant }} {{ size }}">{{ contents }}</div>"""
 
     template1 = Template(template_source)
     template2 = Template(template_source)
@@ -46,17 +45,28 @@ def test_prop_definitions_not_cached_across_template_instances():
 def test_prop_definitions_parsing_only_happens_once():
     """Test that prop parsing from source only happens once per template."""
     # Test that _build_prop_definition is only called once per prop
-    template = Template('''{# props variant=primary,secondary size=small,large #}
-    <div class="component {{ variant }} {{ size }}">{{ contents }}</div>''')
+    template = Template("""{# props variant=primary,secondary size=small,large #}
+    <div class="component {{ variant }} {{ size }}">{{ contents }}</div>""")
 
-    with patch('includecontents.django.base._build_prop_definition',
-               wraps=lambda spec: type('PropDef', (), {
-                   'spec': spec, 'name': spec.name, 'required': False,
-                   'is_enum': lambda: hasattr(spec, 'default') and ',' in str(spec.default),
-                   'enum_values': str(spec.default).split(',') if hasattr(spec, 'default') and ',' in str(spec.default) else None,
-                   'enum_required': False, 'clone_default': lambda: spec.default
-               })()) as mock_build:
-
+    with patch(
+        "includecontents.django.base._build_prop_definition",
+        wraps=lambda spec: type(
+            "PropDef",
+            (),
+            {
+                "spec": spec,
+                "name": spec.name,
+                "required": False,
+                "is_enum": lambda: hasattr(spec, "default")
+                and "," in str(spec.default),
+                "enum_values": str(spec.default).split(",")
+                if hasattr(spec, "default") and "," in str(spec.default)
+                else None,
+                "enum_required": False,
+                "clone_default": lambda: spec.default,
+            },
+        )(),
+    ) as mock_build:
         # Multiple calls to get prop definitions
         template.get_component_prop_definitions()
         template.get_component_prop_definitions()
@@ -68,14 +78,14 @@ def test_prop_definitions_parsing_only_happens_once():
 
 def test_component_rendering_uses_cached_prop_definitions():
     """Test that component rendering reuses cached prop definitions efficiently."""
-    template = Template('''{# props variant=primary,secondary count= #}
-    <div class="component {{ variant }}">Count: {{ count }}</div>''')
+    template = Template("""{# props variant=primary,secondary count= #}
+    <div class="component {{ variant }}">Count: {{ count }}</div>""")
 
     # Render multiple times with different contexts
     contexts = [
-        Context({'count': 1}),
-        Context({'count': 2}),
-        Context({'count': 3}),
+        Context({"count": 1}),
+        Context({"count": 2}),
+        Context({"count": 3}),
     ]
 
     # First call to get_component_prop_definitions builds the cache
@@ -92,13 +102,13 @@ def test_component_rendering_uses_cached_prop_definitions():
 def test_prop_definition_caching_performance():
     """Test that prop definition caching provides performance benefits."""
     # Create a template with complex prop definitions
-    template_source = '''{# props variant=primary,secondary,accent size=small,medium,large theme=light,dark alignment=left,center,right display=block,inline,flex #}
+    template_source = """{# props variant=primary,secondary,accent size=small,medium,large theme=light,dark alignment=left,center,right display=block,inline,flex #}
     <div class="complex {{ variant }} {{ size }} {{ theme }} {{ alignment }} {{ display }}">
         Complex component content
-    </div>'''
+    </div>"""
 
     template = Template(template_source)
-    context = Context({})
+    Context({})
 
     # Time getting prop definitions multiple times
     times = []
@@ -117,7 +127,7 @@ def test_prop_definition_caching_performance():
 
 def test_empty_props_comment_returns_none():
     """Test that templates without props comments return None for prop definitions."""
-    template = Template('<div>No props here</div>')
+    template = Template("<div>No props here</div>")
 
     props = template.get_component_prop_definitions()
     assert props is None
@@ -126,13 +136,13 @@ def test_empty_props_comment_returns_none():
 def test_props_comment_detection_caching():
     """Test that props comment detection is cached and doesn't reparse."""
     # Template with props comment
-    template_with_props = Template('''
+    template_with_props = Template("""
     {# props variant=primary,secondary #}
     <div>{{ variant }}</div>
-    ''')
+    """)
 
     # Template without props comment
-    template_without_props = Template('<div>No props</div>')
+    template_without_props = Template("<div>No props</div>")
 
     # Test that props comment detection works
     assert template_with_props.get_component_prop_definitions() is not None
@@ -145,8 +155,8 @@ def test_props_comment_detection_caching():
 
 def test_prop_definition_caching_with_enum_flags():
     """Test that enum flag generation works with cached prop definitions."""
-    template = Template('''{# props variant=primary,secondary,accent #}
-    <div class="btn {{ variant }}">Multi-value</div>''')
+    template = Template("""{# props variant=primary,secondary,accent #}
+    <div class="btn {{ variant }}">Multi-value</div>""")
 
     # Get prop definitions multiple times
     props1 = template.get_component_prop_definitions()
@@ -154,21 +164,27 @@ def test_prop_definition_caching_with_enum_flags():
 
     # Should be cached
     assert props1 is props2
-    assert 'variant' in props1
+    assert "variant" in props1
 
     # Test that enum properties are correctly identified
-    variant_prop = props1['variant']
+    variant_prop = props1["variant"]
     assert variant_prop.is_enum()
-    assert 'primary' in variant_prop.enum_values
-    assert 'secondary' in variant_prop.enum_values
-    assert 'accent' in variant_prop.enum_values
+    assert "primary" in variant_prop.enum_values
+    assert "secondary" in variant_prop.enum_values
+    assert "accent" in variant_prop.enum_values
 
 
-@pytest.mark.parametrize("template_source,has_props", [
-    ('{# props variant=primary,secondary #}\n<div>{{ variant }}</div>', True),
-    ('<div>No props comment</div>', False),
-    ('{# props size=small,large theme=light,dark #}\n<div>Multiple props</div>', True),
-])
+@pytest.mark.parametrize(
+    "template_source,has_props",
+    [
+        ("{# props variant=primary,secondary #}\n<div>{{ variant }}</div>", True),
+        ("<div>No props comment</div>", False),
+        (
+            "{# props size=small,large theme=light,dark #}\n<div>Multiple props</div>",
+            True,
+        ),
+    ],
+)
 def test_caching_behavior_with_different_templates(template_source, has_props):
     """Test caching behavior with various template patterns."""
     template = Template(template_source)
@@ -192,8 +208,8 @@ def test_concurrent_access_to_prop_definitions():
     import threading
     import queue
 
-    template = Template('''{# props variant=primary,secondary size=small,large #}
-    <div class="component {{ variant }} {{ size }}">Content</div>''')
+    template = Template("""{# props variant=primary,secondary size=small,large #}
+    <div class="component {{ variant }} {{ size }}">Content</div>""")
     results = queue.Queue()
 
     def get_props():

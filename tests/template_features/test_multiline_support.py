@@ -16,4 +16,4 @@ def test_multiline_content_closing_tag():
     assert '<div class="card">' in result
     assert '<div class="card-title">Test Title</div>' in result
     assert '<div class="card-body">' in result
-    assert 'Main content' in result
+    assert "Main content" in result

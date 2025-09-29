@@ -39,7 +39,8 @@ class TestNestedComponentScenarios:
 
     def test_many_sibling_components_record_individual_data(self) -> None:
         template_parts = [
-            f'<include:section name="section-{i}">Content {i}</include:section>' for i in range(20)
+            f'<include:section name="section-{i}">Content {i}</include:section>'
+            for i in range(20)
         ]
         _, captures = render_component("\n".join(template_parts), use=["section"])
 
@@ -73,14 +74,18 @@ class TestAttributeAndContentComplexity:
         _, captures = render_component(
             f"""
             <include:container>
-                {' '.join(blocks)}
+                {" ".join(blocks)}
             </include:container>
             """,
             use=["container"],
         )
 
         entries = captures_for(captures, "container")
-        slots = {entry["slot"]: entry["value"] for entry in entries if entry["slot"] is not None}
+        slots = {
+            entry["slot"]: entry["value"]
+            for entry in entries
+            if entry["slot"] is not None
+        }
         assert slots["slot-0"] == "Value 0"
         assert slots["slot-4"] == "Value 4"
 
@@ -111,7 +116,9 @@ class TestRenderingScenarios:
         )
 
         container_entries = captures_for(captures, "container")
-        default_entry = next(entry for entry in container_entries if entry["slot"] is None)
+        default_entry = next(
+            entry for entry in container_entries if entry["slot"] is None
+        )
         button = first_capture(captures, "simple-button")
         assert "Press" in default_entry["value"]
         assert button["variant"] == "secondary"

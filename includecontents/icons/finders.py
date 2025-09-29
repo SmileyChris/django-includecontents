@@ -45,8 +45,8 @@ class IconSpriteFinder(BaseFinder):
             String path if found (when find_all=False), list of paths (when find_all=True), or None/[]
         """
         # Handle Django < 5.2 compatibility where 'all' was used instead of 'find_all'
-        if 'all' in kwargs:
-            find_all = kwargs['all']
+        if "all" in kwargs:
+            find_all = kwargs["all"]
 
         # Note: find_all parameter is kept for Django compatibility but not used
         # since we only ever have one sprite file per path
@@ -67,9 +67,7 @@ class IconSpriteFinder(BaseFinder):
                 # Create a temporary file to serve the sprite
                 import tempfile
 
-                temp_fd, temp_path = tempfile.mkstemp(
-                    suffix=".svg", prefix="sprite-"
-                )
+                temp_fd, temp_path = tempfile.mkstemp(suffix=".svg", prefix="sprite-")
                 try:
                     with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
                         f.write(sprite_content)
@@ -91,17 +89,19 @@ class IconSpriteFinder(BaseFinder):
             # Django return a proper 404 rather than breaking the entire
             # static file serving system
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning(f"Icon sprite generation failed for {path}: {e}")
-            
+
             # IMPORTANT: Return a fake file path to stop Django from continuing
             # to other finders and wrapping None in a list (Django 5.2 bug).
             # This will cause a proper 404 error instead of a TypeError.
             if not find_all:
                 # Return a non-existent file path that will trigger a 404
                 import tempfile
+
                 # Create a path that doesn't exist
-                return os.path.join(tempfile.gettempdir(), 'sprite-error-404.svg')
+                return os.path.join(tempfile.gettempdir(), "sprite-error-404.svg")
             return []
 
         # Return None/[] when we don't have a matching sprite
@@ -137,7 +137,9 @@ class IconSpriteFinder(BaseFinder):
             # This is a configuration error that should be fixed
             if isinstance(e, IconBuildError):
                 raise  # Re-raise our custom exception as-is
-            raise IconBuildError(f"Failed to generate icon sprite during collectstatic: {e}") from e
+            raise IconBuildError(
+                f"Failed to generate icon sprite during collectstatic: {e}"
+            ) from e
 
     def _add_source_files_to_ignore_patterns(self, ignore_patterns):
         """Add source SVG files and cache files to ignore patterns to prevent duplicate serving."""
@@ -193,4 +195,3 @@ class IconSpriteFinder(BaseFinder):
         """Extract sprite hash from a path like 'icons/sprite-abc123.svg'."""
         filename = os.path.basename(path)  # sprite-abc123.svg
         return filename.replace("sprite-", "").replace(".svg", "")  # abc123
-

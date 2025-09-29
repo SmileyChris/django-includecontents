@@ -1,15 +1,13 @@
 """
 Test that icon build failures fail loudly in Jinja environment.
 """
+
 import pytest
 from unittest.mock import patch
 from jinja2 import Environment, DictLoader
 
 from includecontents.jinja2.extension import IncludeContentsExtension
-from includecontents.icons.builder import get_or_create_sprite
 from includecontents.icons.exceptions import (
-    IconConfigurationError,
-    IconNotFoundError,
     IconBuildError,
     IconAPIError,
 )
@@ -21,7 +19,7 @@ def create_jinja_env():
     return Environment(loader=loader, extensions=[IncludeContentsExtension])
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_api_error_handling(mock_fetch):
     """Test that API errors are handled gracefully in Jinja."""
     # Mock fetch to raise an API error
@@ -36,7 +34,7 @@ def test_jinja_icon_api_error_handling(mock_fetch):
     assert isinstance(result, str)  # Should return string, not crash
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_not_found_error(mock_fetch):
     """Test that missing icons show error in Jinja."""
     # Mock fetch to return empty results
@@ -60,14 +58,13 @@ def test_jinja_icon_preprocessing_error_handling():
     source = '<icon: class="test" />'  # Missing icon name
 
     # Should raise TemplateSyntaxError for malformed syntax
-    import pytest
     from jinja2.exceptions import TemplateSyntaxError
 
     with pytest.raises(TemplateSyntaxError, match="Empty component name"):
         extension.preprocess(source, name=None)
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_build_error_resilience(mock_fetch):
     """Test that build errors don't crash template rendering in Jinja."""
     # Mock fetch to raise a build error
@@ -82,11 +79,11 @@ def test_jinja_icon_build_error_resilience(mock_fetch):
     assert isinstance(result, str)  # Should return some result, not crash
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_with_invalid_attributes(mock_fetch):
     """Test that invalid attributes don't break icon rendering in Jinja."""
     mock_fetch.return_value = {
-        'home': {'body': '<path d="M10 10"/>', 'viewBox': '0 0 24 24'}
+        "home": {"body": '<path d="M10 10"/>', "viewBox": "0 0 24 24"}
     }
 
     env = create_jinja_env()
@@ -96,7 +93,7 @@ def test_jinja_icon_with_invalid_attributes(mock_fetch):
 
     # Should handle undefined variables gracefully
     result = template.render()
-    assert '<svg' in result  # Should still render SVG
+    assert "<svg" in result  # Should still render SVG
 
 
 if __name__ == "__main__":

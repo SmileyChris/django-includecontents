@@ -6,7 +6,7 @@ from includecontents.shared.props import parse_props_comment
 
 def test_invalid_prop_name_with_spaces():
     """Test error reporting for prop names with spaces."""
-    template_source = '{# props \"invalid name\"=value #}\n<div>{{ invalid }}</div>'
+    template_source = '{# props "invalid name"=value #}\n<div>{{ invalid }}</div>'
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -20,7 +20,7 @@ def test_invalid_prop_name_with_spaces():
 
 def test_invalid_prop_name_with_special_chars():
     """Test error reporting for prop names with special characters."""
-    template_source = '{# props prop-name=value #}\n<div>Test</div>'
+    template_source = "{# props prop-name=value #}\n<div>Test</div>"
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -32,7 +32,7 @@ def test_invalid_prop_name_with_special_chars():
 
 def test_empty_prop_name():
     """Test error reporting for empty prop names."""
-    template_source = '{# props =value #}\n<div>Test</div>'
+    template_source = "{# props =value #}\n<div>Test</div>"
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -43,7 +43,7 @@ def test_empty_prop_name():
 
 def test_duplicate_prop_names():
     """Test error reporting for duplicate prop definitions."""
-    template_source = '{# props title=first title=second #}\n<div>{{ title }}</div>'
+    template_source = "{# props title=first title=second #}\n<div>{{ title }}</div>"
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -54,17 +54,17 @@ def test_duplicate_prop_names():
 
 def test_malformed_prop_syntax():
     """Test error reporting for malformed prop syntax."""
-    template_source = '{# props title==value #}\n<div>{{ title }}</div>'
+    template_source = "{# props title==value #}\n<div>{{ title }}</div>"
 
     # This should either be caught by our parser or work as intended
     # Let's see what happens
-    result = parse_props_comment(template_source)
+    parse_props_comment(template_source)
     # This might actually work since title== would be parsed as title with default "=value"
 
 
 def test_unquoted_string_value_hint():
     """Test helpful hint for unquoted string values."""
-    template_source = '{# props title=[hello world] #}\n<div>{{ title }}</div>'
+    template_source = "{# props title=[hello world] #}\n<div>{{ title }}</div>"
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -75,7 +75,7 @@ def test_unquoted_string_value_hint():
 
 def test_invalid_list_syntax():
     """Test error reporting for invalid list syntax."""
-    template_source = '{# props items=[1,2,3 #}\n<div>Test</div>'
+    template_source = "{# props items=[1,2,3 #}\n<div>Test</div>"
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -86,7 +86,7 @@ def test_invalid_list_syntax():
 
 def test_error_includes_helpful_examples():
     """Test that error messages include helpful examples."""
-    template_source = '{# props invalid-name=value #}\n<div>Test</div>'
+    template_source = "{# props invalid-name=value #}\n<div>Test</div>"
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -99,7 +99,9 @@ def test_error_includes_helpful_examples():
 
 def test_error_includes_line_number():
     """Test that error messages include the line number."""
-    template_source = '<div>First line</div>\n{# props "invalid name"=value #}\n<div>Third line</div>'
+    template_source = (
+        '<div>First line</div>\n{# props "invalid name"=value #}\n<div>Third line</div>'
+    )
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -124,23 +126,23 @@ def test_error_includes_common_issues_section():
 
 def test_valid_props_still_work():
     """Test that valid props comments continue to work correctly."""
-    template_source = '{# props title variant=primary,secondary required_field=True items=[1,2,3] #}\n<div>Test</div>'
+    template_source = "{# props title variant=primary,secondary required_field=True items=[1,2,3] #}\n<div>Test</div>"
 
     result = parse_props_comment(template_source)
 
-    assert 'title' in result
-    assert 'variant' in result
-    assert 'required_field' in result
-    assert 'items' in result
-    assert result['title'].required
-    assert not result['variant'].required
-    assert result['required_field'].default is True
-    assert result['items'].default == [1, 2, 3]
+    assert "title" in result
+    assert "variant" in result
+    assert "required_field" in result
+    assert "items" in result
+    assert result["title"].required
+    assert not result["variant"].required
+    assert result["required_field"].default is True
+    assert result["items"].default == [1, 2, 3]
 
 
 def test_empty_props_comment():
     """Test that empty props comments don't raise errors."""
-    template_source = '{# props #}\n<div>Test</div>'
+    template_source = "{# props #}\n<div>Test</div>"
 
     result = parse_props_comment(template_source)
     assert result == {}
@@ -148,7 +150,7 @@ def test_empty_props_comment():
 
 def test_no_props_comment():
     """Test that templates without props comments work correctly."""
-    template_source = '<div>No props here</div>'
+    template_source = "<div>No props here</div>"
 
     result = parse_props_comment(template_source)
     assert result == {}
@@ -167,7 +169,7 @@ def test_complex_malformed_props():
 
 def test_prop_name_starting_with_underscore():
     """Test that prop names starting with underscore are rejected."""
-    template_source = '{# props _private=value #}\n<div>Test</div>'
+    template_source = "{# props _private=value #}\n<div>Test</div>"
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
@@ -179,10 +181,12 @@ def test_prop_name_starting_with_underscore():
 
 def test_error_preserves_original_exception_chain():
     """Test that enhanced errors preserve the original exception chain."""
-    template_source = '{# props items=[1,2,3 #}\n<div>Test</div>'  # Malformed list
+    template_source = "{# props items=[1,2,3 #}\n<div>Test</div>"  # Malformed list
 
     with pytest.raises(TemplateSyntaxError) as exc_info:
         parse_props_comment(template_source)
 
     # Should have the original exception in the chain
-    assert exc_info.value.__cause__ is not None or exc_info.value.__context__ is not None
+    assert (
+        exc_info.value.__cause__ is not None or exc_info.value.__context__ is not None
+    )

@@ -1,11 +1,10 @@
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 import django.template.base
 from django.utils.text import smart_split
 
-from includecontents.shared.context import CapturedContents, ComponentContext
 from includecontents.shared.enums import parse_enum_definition
 from includecontents.shared.props import PropSpec, parse_props_comment
 
@@ -25,7 +24,6 @@ def process_component_with_template_tags(token_string, position, lineno):
     tag_name = bits.pop(0)
 
     # Check if any attributes contain template tags
-    has_template_tags = False
     processed_attrs = []
 
     for attr in bits:
@@ -39,7 +37,6 @@ def process_component_with_template_tags(token_string, position, lineno):
                 template_tag_re = re.compile(r"({%.*?%}|{{.*?}}|{#.*?#})", re.DOTALL)
 
                 if template_tag_re.search(inner_content):
-                    has_template_tags = True
                     # For now, keep the attribute as-is - Django will process the template tags
                     processed_attrs.append(attr)
                 else:
@@ -187,8 +184,7 @@ class Template(django.template.base.Template):
         if self._component_prop_defs is None:
             specs = getattr(self, "_component_prop_specs", None) or {}
             self._component_prop_defs = {
-                name: _build_prop_definition(spec)
-                for name, spec in specs.items()
+                name: _build_prop_definition(spec) for name, spec in specs.items()
             }
         return self._component_prop_defs
 

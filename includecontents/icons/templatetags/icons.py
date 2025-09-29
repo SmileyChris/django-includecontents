@@ -7,7 +7,12 @@ from django.template.base import FilterExpression
 from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 
-from ..builder import get_or_create_sprite, get_sprite_hash, get_sprite_settings, get_sprite_filename
+from ..builder import (
+    get_or_create_sprite,
+    get_sprite_hash,
+    get_sprite_settings,
+    get_sprite_filename,
+)
 from ..utils import parse_icon_definitions, format_attributes
 
 # Import Attrs from the main templatetags module
@@ -36,7 +41,6 @@ def get_sprite_url(sprite_hash):
     return static(f"{location}{sprite_filename}")
 
 
-
 class IconNode(template.Node):
     """
     Template node for rendering individual icons using SVG <use> syntax.
@@ -52,25 +56,25 @@ class IconNode(template.Node):
     def _get_actual_icon_name(self, sprite_settings):
         """Get the actual icon name from component name using the icon definitions."""
         icon_definitions = sprite_settings.get("icons", [])
-        
+
         try:
             component_map = parse_icon_definitions(icon_definitions)
             actual_icon_name = component_map.get(self.icon_name)
-            
+
             if not actual_icon_name:
                 # Check if this icon exists in the configured icons list
                 from ..utils import get_icon_names_from_definitions
-                
+
                 configured_icons = get_icon_names_from_definitions(icon_definitions)
-                
+
                 if self.icon_name not in configured_icons:
                     return None
-                
+
                 # Use icon name directly
                 actual_icon_name = self.icon_name
-            
+
             return actual_icon_name
-            
+
         except ValueError:
             # If parsing fails, assume icon doesn't exist
             return None
@@ -79,42 +83,43 @@ class IconNode(template.Node):
         """Extract attributes from context if using component-style syntax."""
         svg_attrs = {}
         use_attrs = {}
-        
+
         context_attrs = context.get("attrs")
         if context_attrs and Attrs and isinstance(context_attrs, Attrs):
             # Get main attributes for the SVG element
             svg_attrs.update(dict(context_attrs.all_attrs()))
-            
+
             # Get nested attributes for the USE element
             if hasattr(context_attrs, "use"):
                 use_attrs.update(dict(context_attrs.use.all_attrs()))
-        
+
         return svg_attrs, use_attrs
 
     def _process_tag_attributes(self, context, svg_attrs, use_attrs):
         """Process tag-level attributes and handle special cases."""
         cache_bust = None
-        
+
         for key, value in self.attributes.items():
             if isinstance(value, FilterExpression):
                 resolved_value = value.resolve(context)
             else:
                 resolved_value = value
-            
+
             # Skip None, False, or empty string values
             if resolved_value in (None, False, ""):
                 continue
-            
+
             # Handle special cache-busting parameter
             if key == "cache_bust":
                 # If cache_bust is True (boolean attribute), use current timestamp
                 if resolved_value is True:
                     import time
+
                     cache_bust = f"_={int(time.time())}"
                 else:
                     cache_bust = resolved_value
                 continue
-            
+
             # Handle dot notation for nested attributes
             if "." in key and key.startswith("use."):
                 # This is a USE element attribute
@@ -123,18 +128,18 @@ class IconNode(template.Node):
             else:
                 # This is an SVG element attribute
                 svg_attrs[key] = resolved_value
-        
+
         return cache_bust
 
     def _build_sprite_url(self, sprite_hash, cache_bust):
         """Build the sprite URL with optional cache busting."""
         sprite_url = get_sprite_url(sprite_hash)
-        
+
         if cache_bust:
             # Add query parameter for cache busting
             separator = "&" if "?" in sprite_url else "?"
             sprite_url = f"{sprite_url}{separator}{cache_bust}"
-        
+
         return sprite_url
 
     def render(self, context):
@@ -145,7 +150,7 @@ class IconNode(template.Node):
         # Get sprite settings and find the actual icon name
         sprite_settings = get_sprite_settings()
         actual_icon_name = self._get_actual_icon_name(sprite_settings)
-        
+
         if not actual_icon_name:
             # Icon doesn't exist, handle as_var or return empty
             if self.as_var:

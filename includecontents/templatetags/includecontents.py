@@ -30,10 +30,11 @@ class TemplateAttributeExpression:
     A custom expression that evaluates template syntax in attribute values.
     This allows mixed content like 'class="btn {{ variant }}"' to work correctly.
     """
+
     def __init__(self, template_string):
         self.template_string = template_string
         self._template = None
-    
+
     def resolve(self, context):
         if self._template is None:
             # Compile the template once and cache it
@@ -43,14 +44,14 @@ class TemplateAttributeExpression:
 
 def is_pure_variable_expression(value):
     """
-    Check if a value is a pure variable expression like "{{ variable }}" 
+    Check if a value is a pure variable expression like "{{ variable }}"
     with no other content. Returns the variable expression if true, None otherwise.
     """
     if not value:
         return None
-    
+
     stripped = value.strip()
-    if stripped.startswith('{{') and stripped.endswith('}}'):
+    if stripped.startswith("{{") and stripped.endswith("}}"):
         return stripped[2:-2].strip()
     return None
 
@@ -106,7 +107,7 @@ def includecontents(parser, token):
     """
     # Store the original token contents for checking template syntax
     original_contents = token.contents
-    
+
     # Remove template {{ }} only for non-quoted contexts
     # This regex only removes {{ }} when they're not inside quotes
     token.contents = re.sub(r"(['\"]?)\{\{ *(.*?) *\}\}\1", r"\2", token.contents)
@@ -123,12 +124,12 @@ def includecontents(parser, token):
         # Split out nested attributes (those with a dot in the name).
         new_bits = []
         advanced_attrs = {}
-        
+
         # Parse the original token to find attributes with template syntax
         original_bits = list(smart_split(original_contents))
         if len(original_bits) >= 2 and original_bits[1].startswith("_"):
             original_bits = original_bits[2:]  # Skip includecontents and tag name
-        
+
         # Create a mapping of processed bits to original bits for template detection
         bit_to_original = {}
         for orig_bit in original_bits:
@@ -136,7 +137,7 @@ def includecontents(parser, token):
             processed = re.sub(r"(['\"]?)\{\{ *(.*?) *\}\}\1", r"\2", orig_bit)
             if processed in bits:
                 bit_to_original[processed] = orig_bit
-        
+
         for i, bit in enumerate(bits):
             if i < 3:
                 new_bits.append(bit)
@@ -144,7 +145,12 @@ def includecontents(parser, token):
                 # Handle spread syntax - strip the ... prefix
                 spread_value = bit[3:]
                 advanced_attrs["..."] = parser.compile_filter(spread_value)
-            elif bit.startswith("@") or (bit.startswith(":") and not bit.startswith("class:")) or bit.startswith("v-") or bit.startswith("x-"):
+            elif (
+                bit.startswith("@")
+                or (bit.startswith(":") and not bit.startswith("class:"))
+                or bit.startswith("v-")
+                or bit.startswith("x-")
+            ):
                 # JavaScript framework attributes (Vue, Alpine.js) can't be handled by the standard include.
                 # This includes: @ (Vue events), : (Vue/Alpine bind), v- (Vue directives), x- (Alpine directives)
                 # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
@@ -164,13 +170,16 @@ def includecontents(parser, token):
                     attr, value = bit.split("=", 1)
                     # Check if this attribute had template syntax in the original
                     original_bit = bit_to_original.get(bit, bit)
-                    if original_bit and ('{{' in original_bit or '{%' in original_bit):
+                    if original_bit and ("{{" in original_bit or "{%" in original_bit):
                         # Extract the original value with template syntax
-                        if '=' in original_bit:
-                            _, orig_value = original_bit.split('=', 1)
+                        if "=" in original_bit:
+                            _, orig_value = original_bit.split("=", 1)
                             # Remove quotes if present
-                            if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
-                                (orig_value.startswith("'") and orig_value.endswith("'"))):
+                            if (
+                                orig_value.startswith('"') and orig_value.endswith('"')
+                            ) or (
+                                orig_value.startswith("'") and orig_value.endswith("'")
+                            ):
                                 orig_value = orig_value[1:-1]
                             # Check if this is a pure variable expression
                             if var_expr := is_pure_variable_expression(orig_value):
@@ -178,9 +187,13 @@ def includecontents(parser, token):
                                 advanced_attrs[attr] = parser.compile_filter(var_expr)
                             else:
                                 # Use TemplateAttributeExpression for mixed content
-                                advanced_attrs[attr] = TemplateAttributeExpression(orig_value)
+                                advanced_attrs[attr] = TemplateAttributeExpression(
+                                    orig_value
+                                )
                         else:
-                            advanced_attrs[attr] = parser.compile_filter(value or "True")
+                            advanced_attrs[attr] = parser.compile_filter(
+                                value or "True"
+                            )
                     else:
                         advanced_attrs[attr] = parser.compile_filter(value or "True")
                 else:
@@ -197,12 +210,17 @@ def includecontents(parser, token):
             else:
                 # Check if this attribute had template syntax in the original
                 original_bit = bit_to_original.get(bit, bit)
-                if original_bit and "=" in original_bit and ('{{' in original_bit or '{%' in original_bit):
+                if (
+                    original_bit
+                    and "=" in original_bit
+                    and ("{{" in original_bit or "{%" in original_bit)
+                ):
                     # This is a regular attribute with template syntax
-                    attr, orig_value = original_bit.split('=', 1)
+                    attr, orig_value = original_bit.split("=", 1)
                     # Remove quotes if present
-                    if ((orig_value.startswith('"') and orig_value.endswith('"')) or 
-                        (orig_value.startswith("'") and orig_value.endswith("'"))):
+                    if (orig_value.startswith('"') and orig_value.endswith('"')) or (
+                        orig_value.startswith("'") and orig_value.endswith("'")
+                    ):
                         orig_value = orig_value[1:-1]
                     # Check if this is a pure variable expression
                     if var_expr := is_pure_variable_expression(orig_value):
@@ -334,9 +352,7 @@ class IncludeContentsNode(template.Node):
             processor_data = self._collect_processor_data(context)
             parent_vars = context.flatten()
             scope_values = (
-                {**processor_data, **prop_values}
-                if processor_data
-                else prop_values
+                {**processor_data, **prop_values} if processor_data else prop_values
             )
             inherit_parent_values = bool(processor_data.get("request"))
             component_scope = ComponentContext.create_isolated(
@@ -420,7 +436,9 @@ class IncludeContentsNode(template.Node):
                     if (
                         manual_csrf is not None
                         and getattr(processor, "__name__", "") == "csrf"
-                        and getattr(processor, "__module__", "").endswith("context_processors")
+                        and getattr(processor, "__module__", "").endswith(
+                            "context_processors"
+                        )
                     ):
                         continue
                     try:
@@ -476,11 +494,17 @@ class IncludeContentsNode(template.Node):
                         if enum_value not in allowed_values:
                             allowed = ", ".join(repr(v) for v in allowed_values)
                             suggestion = suggest_enum_value(enum_value, allowed_values)
-                            suggestion_text = f" Did you mean {suggestion!r}?" if suggestion else ""
+                            suggestion_text = (
+                                f" Did you mean {suggestion!r}?" if suggestion else ""
+                            )
 
                             # Create a helpful example
-                            first_value = allowed_values[0] if allowed_values else "value"
-                            component_name = self.token_name.replace("<", "").replace(">", "")
+                            first_value = (
+                                allowed_values[0] if allowed_values else "value"
+                            )
+                            component_name = self.token_name.replace("<", "").replace(
+                                ">", ""
+                            )
                             example = f'<{component_name} {key}="{first_value}">'
 
                             raise TemplateSyntaxError(
@@ -525,7 +549,9 @@ class IncludeContentsNode(template.Node):
                 return value_expr.resolve(context)
         return None
 
-    def _raise_enhanced_template_error(self, original_error: TemplateDoesNotExist) -> None:
+    def _raise_enhanced_template_error(
+        self, original_error: TemplateDoesNotExist
+    ) -> None:
         """Raise an enhanced TemplateDoesNotExist error with helpful debugging info."""
         template_name = original_error.args[0] if original_error.args else "unknown"
 
@@ -537,16 +563,22 @@ class IncludeContentsNode(template.Node):
 
         # Suggest common naming conventions
         if not template_name.startswith("components/"):
-            suggestions.append(f"Create template: templates/components/{component_name}.html")
+            suggestions.append(
+                f"Create template: templates/components/{component_name}.html"
+            )
         else:
             suggestions.append(f"Create template: templates/{template_name}")
 
         # Suggest checking template directories
-        suggestions.append("Check TEMPLATES['DIRS'] setting includes your template directory")
+        suggestions.append(
+            "Check TEMPLATES['DIRS'] setting includes your template directory"
+        )
 
         # Suggest checking app structure
         if "components/" in template_name:
-            suggestions.append("For app-based components: create template in <app>/templates/components/")
+            suggestions.append(
+                "For app-based components: create template in <app>/templates/components/"
+            )
 
         # Create enhanced error message
         message_parts = [
@@ -559,18 +591,22 @@ class IncludeContentsNode(template.Node):
         for i, suggestion in enumerate(suggestions, 1):
             message_parts.append(f"  {i}. {suggestion}")
 
-        if hasattr(original_error, 'tried') and original_error.tried:
-            message_parts.extend([
-                "",
-                "Template loader tried:",
-            ])
+        if hasattr(original_error, "tried") and original_error.tried:
+            message_parts.extend(
+                [
+                    "",
+                    "Template loader tried:",
+                ]
+            )
             for origin, reason in original_error.tried:
                 message_parts.append(f"  - {origin} ({reason})")
 
         enhanced_message = "\n".join(message_parts)
 
         # Raise new error with enhanced message but preserve original exception chain
-        raise TemplateDoesNotExist(enhanced_message, tried=getattr(original_error, 'tried', [])) from original_error
+        raise TemplateDoesNotExist(
+            enhanced_message, tried=getattr(original_error, "tried", [])
+        ) from original_error
 
     def all_attrs(self):
         for key, value in self.include_node.extra_context.items():
@@ -838,7 +874,7 @@ class WrapIfNode(Node):
         self.contents_nodelists = (
             contents_nodelists  # {'default': nodelist, 'header': nodelist, ...}
         )
-    
+
     def get_nodes_by_type(self, nodetype):
         """Collect nodes of given type from all contents nodelists."""
         nodes = []
@@ -1027,9 +1063,9 @@ def do_wrapif(parser, token):
         condition = TemplateIfParser(parser, bits).parse()
         # We need to parse differently for full syntax
         # Save the current position
-        wrapper_start = parser.tokens[:]
+        parser.tokens[:]
         wrapper_nodelist = parser.parse(("wrapelif", "wrapelse", "endwrapif"))
-        wrapper_end = parser.tokens[:]
+        parser.tokens[:]
 
         # Extract the contents from the wrapper
         contents_info = extract_contents_from_wrapper(wrapper_nodelist)

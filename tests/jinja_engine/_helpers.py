@@ -308,7 +308,10 @@ def _select_components(names: Iterable[str]) -> dict[str, str]:
 
 
 def _normalize_components(components: Mapping[str, str]) -> dict[str, str]:
-    return {f"components/{name}.html": dedent(template).strip() for name, template in components.items()}
+    return {
+        f"components/{name}.html": dedent(template).strip()
+        for name, template in components.items()
+    }
 
 
 def render_component(
@@ -355,7 +358,9 @@ def render_component(
     return rendered, captures
 
 
-def captures_for(captures: Iterable[dict[str, Any]], component: str) -> list[dict[str, Any]]:
+def captures_for(
+    captures: Iterable[dict[str, Any]], component: str
+) -> list[dict[str, Any]]:
     return [entry for entry in captures if entry.get("component") == component]
 
 

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import re
+
 # html.escape no longer needed - escaping moved to Attrs class
 from typing import Iterable, List, Tuple
 
 from jinja2.exceptions import TemplateSyntaxError
-
 
 
 class ComponentPreprocessor:
@@ -55,7 +55,9 @@ class ComponentPreprocessor:
         name = match.group("name")
         raw_attrs = match.group("attrs") or ""
         attrs_chunk = raw_attrs.strip()
-        self_closing = bool(match.group("selfclosing")) or raw_attrs.rstrip().endswith("/")
+        self_closing = bool(match.group("selfclosing")) or raw_attrs.rstrip().endswith(
+            "/"
+        )
         if self_closing and attrs_chunk.endswith("/"):
             attrs_chunk = attrs_chunk[:-1].rstrip()
 
@@ -92,7 +94,10 @@ class ComponentPreprocessor:
                 # Empty content names are kept as plain text, not processed
                 return match.group(0)  # Return the original text unchanged
             if name and name[0].isdigit():
-                raise TemplateSyntaxError(f"Invalid content block name '{name}' - cannot start with a number", lineno=0)
+                raise TemplateSyntaxError(
+                    f"Invalid content block name '{name}' - cannot start with a number",
+                    lineno=0,
+                )
 
         if closing:
             if not name.strip():
@@ -100,7 +105,7 @@ class ComponentPreprocessor:
                 return match.group(0)  # Return the original text unchanged
             return "{% endcontents %}"
         else:
-            return f"{{% contents \"{name}\" %}}"
+            return f'{{% contents "{name}" %}}'
 
     def _parse_attributes(self, chunk: str) -> List[Tuple[str, str]]:
         attributes: List[Tuple[str, str]] = []
@@ -113,7 +118,10 @@ class ComponentPreprocessor:
 
             # Validate attribute name doesn't start with a number
             if name and name[0].isdigit():
-                raise TemplateSyntaxError(f"Invalid attribute name '{name}' - cannot start with a number", lineno=0)
+                raise TemplateSyntaxError(
+                    f"Invalid attribute name '{name}' - cannot start with a number",
+                    lineno=0,
+                )
 
             # Convert special attribute names to valid Jinja2 identifiers
             name = self._normalize_attribute_name(name)
@@ -126,7 +134,7 @@ class ComponentPreprocessor:
                 inner = value
             elif value.startswith("\\"):
                 inner = value
-            elif value.startswith("\"") and value.endswith("\""):
+            elif value.startswith('"') and value.endswith('"'):
                 inner = value[1:-1]
             elif value.startswith("'") and value.endswith("'"):
                 inner = value[1:-1]
@@ -169,7 +177,7 @@ class ComponentPreprocessor:
             else:
                 # Escape quotes for template syntax but don't HTML-escape
                 # HTML escaping is handled by Attrs class based on value source
-                escaped_value = value.replace('\\', '\\\\').replace('"', '\\"')
+                escaped_value = value.replace("\\", "\\\\").replace('"', '\\"')
                 attr_items.append(f'"{key}": "{escaped_value}"')
         return "{" + ", ".join(attr_items) + "}"
 
@@ -201,7 +209,7 @@ class ComponentPreprocessor:
                 else:
                     # Escape quotes for template syntax but don't HTML-escape
                     # HTML escaping is handled by Attrs class based on value source
-                    escaped_value = value.replace('\\', '\\\\').replace('"', '\\"')
+                    escaped_value = value.replace("\\", "\\\\").replace('"', '\\"')
                     parts.append(f' {key}="{escaped_value}"')
             parts.append(" %}")
             return "".join(parts)
@@ -221,8 +229,8 @@ class ComponentPreprocessor:
 
         # Pattern that catches potential component tags including malformed ones
         loose_pattern = re.compile(
-            r'<(?P<closing>/)?(?P<prefix>include|html-component|icon):(?P<name>[\w:./\-]*)',
-            re.IGNORECASE
+            r"<(?P<closing>/)?(?P<prefix>include|html-component|icon):(?P<name>[\w:./\-]*)",
+            re.IGNORECASE,
         )
 
         # Find all potential component starts
@@ -235,13 +243,15 @@ class ComponentPreprocessor:
             if tag_end == -1:
                 continue  # Couldn't find tag end
 
-            full_tag = source[start_pos:tag_end + 1]
+            full_tag = source[start_pos : tag_end + 1]
 
             # Check if this full tag matches the well-formed pattern
             if not self.component_pattern.match(full_tag):
                 # This is malformed - check if it's due to unbalanced quotes
                 if self._has_unbalanced_quotes(full_tag):
-                    raise TemplateSyntaxError("Unclosed quote in attribute value", lineno=0)
+                    raise TemplateSyntaxError(
+                        "Unclosed quote in attribute value", lineno=0
+                    )
 
     def _find_tag_end(self, source: str, start_pos: int) -> int:
         """Find the end position of a tag, respecting quote context."""
@@ -259,17 +269,17 @@ class ComponentPreprocessor:
                 pos += 1
                 continue
 
-            if char == '\\':
+            if char == "\\":
                 escaped = True
             elif char == '"' and not in_single_quote:
                 in_double_quote = not in_double_quote
             elif char == "'" and not in_double_quote:
                 in_single_quote = not in_single_quote
-            elif char == '>':
+            elif char == ">":
                 last_gt_pos = pos  # Remember this position
                 if not in_double_quote and not in_single_quote:
                     return pos  # Found proper tag end
-            elif char == '<' and pos > start_pos:
+            elif char == "<" and pos > start_pos:
                 # If we hit another tag start and we're still in quotes,
                 # the quotes are likely unbalanced - use the last > we saw
                 if (in_double_quote or in_single_quote) and last_gt_pos != -1:
@@ -293,7 +303,7 @@ class ComponentPreprocessor:
             if escaped:
                 escaped = False
                 continue
-            if char == '\\':
+            if char == "\\":
                 escaped = True
                 continue
             if char == '"' and not in_single_quote:
@@ -315,7 +325,9 @@ class ComponentPreprocessor:
             closing = bool(match.group("closing"))
             prefix = match.group("prefix")
             name = match.group("name")
-            self_closing = bool(match.group("selfclosing")) or (match.group("attrs") or "").rstrip().endswith("/")
+            self_closing = bool(match.group("selfclosing")) or (
+                match.group("attrs") or ""
+            ).rstrip().endswith("/")
 
             if prefix == "icon":
                 continue  # Icons don't have closing tags
@@ -338,13 +350,18 @@ class ComponentPreprocessor:
         for pos, closing, tag_type, name in all_matches:
             if closing:
                 if not stack:
-                    raise TemplateSyntaxError(f"Unexpected closing tag </{tag_type}:{name}>", lineno=0)
+                    raise TemplateSyntaxError(
+                        f"Unexpected closing tag </{tag_type}:{name}>", lineno=0
+                    )
 
                 last_type, last_name, _ = stack.pop()
                 if tag_type != last_type or name != last_name:
                     expected = f"</{last_type}:{last_name}>"
                     found = f"</{tag_type}:{name}>"
-                    raise TemplateSyntaxError(f"Mismatched closing tag: expected {expected}, found {found}", lineno=0)
+                    raise TemplateSyntaxError(
+                        f"Mismatched closing tag: expected {expected}, found {found}",
+                        lineno=0,
+                    )
             else:
                 stack.append((tag_type, name, pos))
 

@@ -6,33 +6,34 @@ from includecontents.jinja2.extension import IncludeContentsExtension
 
 def create_jinja_env():
     """Create a Jinja environment with the extension and test templates."""
-    loader = DictLoader({
-        # Basic button component with enum validation
-        "components/button.html": (
-            "{# props variant=primary,secondary,danger #}"
-            '<button class="btn btn-{{ variant }}">{{ contents }}</button>'
-        ),
-        # Optional variant button
-        "components/button-optional.html": (
-            "{# props variant=,primary,secondary,dark-mode #}"
-            '<button class="btn{% if variant %} btn-{{ variant }}{% endif %}">{{ contents }}</button>'
-        ),
-        # Multi-value enum button
-        "components/button-multi.html": (
-            "{# props variant=primary,secondary,icon #}"
-            '<button class="btn">{{ contents }}</button>'
-        ),
-        # Enum with special characters
-        "components/enum-edge-cases.html": (
-            "{# props special=,@,#,$,% #}"
-            '<div>{{ contents }}</div>'
-        ),
-        # Card component requiring title
-        "components/card.html": (
-            "{# props title #}"
-            '<div class="card"><h3>{{ title }}</h3>{{ contents }}</div>'
-        ),
-    })
+    loader = DictLoader(
+        {
+            # Basic button component with enum validation
+            "components/button.html": (
+                "{# props variant=primary,secondary,danger #}"
+                '<button class="btn btn-{{ variant }}">{{ contents }}</button>'
+            ),
+            # Optional variant button
+            "components/button-optional.html": (
+                "{# props variant=,primary,secondary,dark-mode #}"
+                '<button class="btn{% if variant %} btn-{{ variant }}{% endif %}">{{ contents }}</button>'
+            ),
+            # Multi-value enum button
+            "components/button-multi.html": (
+                "{# props variant=primary,secondary,icon #}"
+                '<button class="btn">{{ contents }}</button>'
+            ),
+            # Enum with special characters
+            "components/enum-edge-cases.html": (
+                "{# props special=,@,#,$,% #}<div>{{ contents }}</div>"
+            ),
+            # Card component requiring title
+            "components/card.html": (
+                "{# props title #}"
+                '<div class="card"><h3>{{ title }}</h3>{{ contents }}</div>'
+            ),
+        }
+    )
     return Environment(
         extensions=[IncludeContentsExtension],
         loader=loader,
@@ -48,7 +49,9 @@ class TestEnumErrorMessages:
         env = create_jinja_env()
 
         # Test for a typo that's close to a valid value
-        template_source = '<include:button variant="primari">Close match</include:button>'
+        template_source = (
+            '<include:button variant="primari">Close match</include:button>'
+        )
 
         try:
             template = env.from_string(template_source)
@@ -68,7 +71,9 @@ class TestEnumErrorMessages:
         """Test error message for case-sensitive enum issues."""
         env = create_jinja_env()
 
-        template_source = '<include:button variant="PRIMARY">Case issue</include:button>'
+        template_source = (
+            '<include:button variant="PRIMARY">Case issue</include:button>'
+        )
 
         try:
             template = env.from_string(template_source)
@@ -128,7 +133,9 @@ class TestEnumErrorMessages:
         """Test error message when no close match can be found."""
         env = create_jinja_env()
 
-        template_source = '<include:button variant="xyz123">No close match</include:button>'
+        template_source = (
+            '<include:button variant="xyz123">No close match</include:button>'
+        )
 
         try:
             template = env.from_string(template_source)
@@ -147,7 +154,9 @@ class TestMissingTemplateErrors:
         """Test that missing component templates show enhanced error messages."""
         env = create_jinja_env()
 
-        template_source = '<include:nonexistent-component>Content</include:nonexistent-component>'
+        template_source = (
+            "<include:nonexistent-component>Content</include:nonexistent-component>"
+        )
 
         try:
             template = env.from_string(template_source)
@@ -162,7 +171,7 @@ class TestMissingTemplateErrors:
         """Test enhanced error for namespaced component templates."""
         env = create_jinja_env()
 
-        template_source = '<include:forms:field>Content</include:forms:field>'
+        template_source = "<include:forms:field>Content</include:forms:field>"
 
         try:
             template = env.from_string(template_source)
@@ -178,7 +187,9 @@ class TestMissingTemplateErrors:
         """Test error handling for components with relative paths."""
         env = create_jinja_env()
 
-        template_source = '<include:../outside-component>Content</include:../outside-component>'
+        template_source = (
+            "<include:../outside-component>Content</include:../outside-component>"
+        )
 
         try:
             template = env.from_string(template_source)
@@ -193,10 +204,10 @@ class TestMissingTemplateErrors:
         """Test error handling when component name is missing or empty."""
         env = create_jinja_env()
 
-        template_source = '<include:>Content</include:>'
+        template_source = "<include:>Content</include:>"
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             # This should fail during parsing/compilation
             pytest.fail("Expected syntax error for empty component name")
         except TemplateSyntaxError as e:
@@ -213,7 +224,7 @@ class TestAttributeValidationErrors:
         """Test error message for missing required attributes."""
         env = create_jinja_env()
 
-        template_source = '<include:card>Missing required title</include:card>'
+        template_source = "<include:card>Missing required title</include:card>"
 
         try:
             template = env.from_string(template_source)
@@ -229,10 +240,12 @@ class TestAttributeValidationErrors:
         env = create_jinja_env()
 
         # Test invalid attribute names or syntax
-        template_source = '<include:button 123invalid="value">Invalid attr name</include:button>'
+        template_source = (
+            '<include:button 123invalid="value">Invalid attr name</include:button>'
+        )
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             # This should fail during parsing
             pytest.fail("Expected syntax error for invalid attribute")
         except TemplateSyntaxError as e:
@@ -248,7 +261,7 @@ class TestAttributeValidationErrors:
         template_source = '<include:button class="unclosed>Malformed</include:button>'
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for malformed attribute")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -263,14 +276,14 @@ class TestContentBlockErrors:
         """Test error message for invalid content block names."""
         env = create_jinja_env()
 
-        template_source = '''
+        template_source = """
         <include:card title="Test">
             <content:123invalid>Invalid name</content:123invalid>
         </include:card>
-        '''
+        """
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for invalid content block name")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -281,14 +294,14 @@ class TestContentBlockErrors:
         """Test error message for unclosed content blocks."""
         env = create_jinja_env()
 
-        template_source = '''
+        template_source = """
         <include:card title="Test">
             <content:footer>Unclosed block
         </include:card>
-        '''
+        """
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for unclosed content block")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -299,10 +312,10 @@ class TestContentBlockErrors:
         """Test that content blocks used outside components render as plain text."""
         env = create_jinja_env()
 
-        template_source = '''
+        template_source = """
         <div>Regular HTML</div>
         <content:test>This should render as plain text</content:test>
-        '''
+        """
 
         template = env.from_string(template_source)
         rendered = template.render()
@@ -320,7 +333,7 @@ class TestSyntaxErrors:
         template_source = '<include:card title="Test">Unclosed component'
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for unclosed component")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -333,9 +346,9 @@ class TestSyntaxErrors:
 
         # Test various malformed syntax patterns
         malformed_templates = [
-            '<include:>',  # Empty component name
-            '<include: >',  # Whitespace-only component name
-            '<include:card title=>',  # Empty attribute value
+            "<include:>",  # Empty component name
+            "<include: >",  # Whitespace-only component name
+            "<include:card title=>",  # Empty attribute value
             '<include:card title="test" >Extra space</include:wrong>',  # Mismatched tags
         ]
 
@@ -352,17 +365,17 @@ class TestSyntaxErrors:
         """Test error message for invalid nested component syntax."""
         env = create_jinja_env()
 
-        template_source = '''
+        template_source = """
         <include:outer>
             <include:inner>
                 <include:deep>
                     <!-- Missing closing tag for deep -->
                 </include:inner>
             </include:outer>
-        '''
+        """
 
         try:
-            template = env.from_string(template_source)
+            env.from_string(template_source)
             pytest.fail("Expected syntax error for mismatched nested tags")
         except TemplateSyntaxError as e:
             error_message = str(e)
@@ -377,19 +390,19 @@ class TestErrorMessageQuality:
         """Test that error messages include line numbers when possible."""
         env = create_jinja_env()
 
-        template_source = '''
+        template_source = """
         Line 1
         Line 2
         <include:nonexistent>Error on this line</include:nonexistent>
         Line 4
-        '''
+        """
 
         try:
             template = env.from_string(template_source)
             template.render()
             pytest.fail("Expected template error")
         except (TemplateSyntaxError, TemplateNotFound, ValueError) as e:
-            error_message = str(e)
+            str(e)
             # Error messages should ideally include line information
             # The exact format depends on Jinja's error reporting
             # This test documents the desired behavior
@@ -416,7 +429,7 @@ class TestErrorMessageQuality:
         env = create_jinja_env()
 
         # Test with a template that should produce a helpful error
-        template_source = '<include:missing-component>Should suggest template creation</include:missing-component>'
+        template_source = "<include:missing-component>Should suggest template creation</include:missing-component>"
 
         try:
             template = env.from_string(template_source)
@@ -446,7 +459,7 @@ if __name__ == "__main__":
 
     for test_class in test_classes:
         instance = test_class()
-        methods = [method for method in dir(instance) if method.startswith('test_')]
+        methods = [method for method in dir(instance) if method.startswith("test_")]
 
         for method_name in methods:
             try:

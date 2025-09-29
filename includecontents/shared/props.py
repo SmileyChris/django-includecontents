@@ -17,20 +17,22 @@ def _is_valid_prop_name(name: str) -> bool:
     if "-" in name:
         if name.startswith("data-") or name.startswith("aria-"):
             candidate = name.replace("-", "_")
-            return candidate.isidentifier() and not candidate.startswith('_')
+            return candidate.isidentifier() and not candidate.startswith("_")
         return False
-    return name.isidentifier() and not name.startswith('_')
+    return name.isidentifier() and not name.startswith("_")
 
 
-def _raise_props_parsing_error(message: str, body: str, source: str, token: str = None) -> None:
+def _raise_props_parsing_error(
+    message: str, body: str, source: str, token: str = None
+) -> None:
     """Raise a helpful error for props parsing issues."""
     import re
 
     # Find the line number of the props comment
-    lines = source.split('\n')
+    lines = source.split("\n")
     props_line_num = 1
     for i, line in enumerate(lines, 1):
-        if re.search(r'{#\s*props\s+.*?#}', line):
+        if re.search(r"{#\s*props\s+.*?#}", line):
             props_line_num = i
             break
 
@@ -43,20 +45,23 @@ def _raise_props_parsing_error(message: str, body: str, source: str, token: str 
         error_parts.append(f"  Problem with: '{token}'")
 
     # Add helpful suggestions
-    error_parts.extend([
-        "",
-        "Common issues:",
-        "  - Prop names must be valid Python identifiers (no spaces, special chars)",
-        "  - String values should be quoted: name=\"value\"",
-        "  - Lists should use brackets: items=[1,2,3]",
-        "  - Use commas or spaces to separate props: prop1=value1 prop2=value2",
-        "",
-        "Examples:",
-        "  {# props title required_field=True items=[1,2,3] #}",
-        "  {# props variant=primary,secondary,accent size=\"large\" #}",
-    ])
+    error_parts.extend(
+        [
+            "",
+            "Common issues:",
+            "  - Prop names must be valid Python identifiers (no spaces, special chars)",
+            '  - String values should be quoted: name="value"',
+            "  - Lists should use brackets: items=[1,2,3]",
+            "  - Use commas or spaces to separate props: prop1=value1 prop2=value2",
+            "",
+            "Examples:",
+            "  {# props title required_field=True items=[1,2,3] #}",
+            '  {# props variant=primary,secondary,accent size="large" #}',
+        ]
+    )
 
     from django.template import TemplateSyntaxError
+
     raise TemplateSyntaxError("\n".join(error_parts))
 
 
@@ -103,7 +108,9 @@ def parse_props_comment(source: str) -> Dict[str, PropSpec]:
     try:
         tokens = _tokenize_props_body(body)
     except Exception as e:
-        _raise_props_parsing_error(f"Failed to tokenize props comment: {e}", body, source)
+        _raise_props_parsing_error(
+            f"Failed to tokenize props comment: {e}", body, source
+        )
 
     for token in tokens:
         if not token:
@@ -111,10 +118,14 @@ def parse_props_comment(source: str) -> Dict[str, PropSpec]:
         try:
             name, default = _parse_prop_token(token)
             if name in specs:
-                _raise_props_parsing_error(f"Duplicate prop definition: '{name}'", body, source, token)
+                _raise_props_parsing_error(
+                    f"Duplicate prop definition: '{name}'", body, source, token
+                )
             specs[name] = PropSpec(name=name, default=default)
         except Exception as e:
-            _raise_props_parsing_error(f"Invalid prop definition '{token}': {e}", body, source, token)
+            _raise_props_parsing_error(
+                f"Invalid prop definition '{token}': {e}", body, source, token
+            )
     return specs
 
 
@@ -138,7 +149,9 @@ def _parse_prop_token(token: str) -> tuple[str, Any]:
         if not name:
             raise ValueError("Empty prop name")
         if not _is_valid_prop_name(name):
-            raise ValueError(f"Invalid prop name '{name}'. Prop names must be valid Python identifiers.")
+            raise ValueError(
+                f"Invalid prop name '{name}'. Prop names must be valid Python identifiers."
+            )
         return name, _MISSING
 
     parts = token.split("=", 1)
@@ -152,7 +165,9 @@ def _parse_prop_token(token: str) -> tuple[str, Any]:
     if not name:
         raise ValueError("Empty prop name")
     if not _is_valid_prop_name(name):
-        raise ValueError(f"Invalid prop name '{name}'. Prop names must be valid Python identifiers.")
+        raise ValueError(
+            f"Invalid prop name '{name}'. Prop names must be valid Python identifiers."
+        )
 
     if not raw:
         return name, ""
@@ -161,12 +176,22 @@ def _parse_prop_token(token: str) -> tuple[str, Any]:
         value = ast.literal_eval(raw)
     except (ValueError, SyntaxError) as e:
         # Check if this looks like a comma-separated enum (common pattern)
-        if ',' in raw and ' ' not in raw and not any(c in raw for c in ['(', ')', '[', ']', '{', '}', '"', "'"]):
+        if (
+            "," in raw
+            and " " not in raw
+            and not any(c in raw for c in ["(", ")", "[", "]", "{", "}", '"', "'"])
+        ):
             # This is likely an enum definition like "primary,secondary,accent"
             value = raw
         # For strings that look like they should be quoted, provide helpful hint
-        elif raw and not raw.startswith(('"', "'")) and any(c in raw for c in [' ', '(', ')', '[', ']', '{']):
-            raise ValueError(f"Invalid value '{raw}'. Did you forget quotes around a string value?") from e
+        elif (
+            raw
+            and not raw.startswith(('"', "'"))
+            and any(c in raw for c in [" ", "(", ")", "[", "]", "{"])
+        ):
+            raise ValueError(
+                f"Invalid value '{raw}'. Did you forget quotes around a string value?"
+            ) from e
         else:
             # Otherwise treat as raw string
             value = raw

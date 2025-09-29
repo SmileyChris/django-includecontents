@@ -13,24 +13,26 @@ from includecontents.jinja2.extension import IncludeContentsExtension
 
 def create_jinja_env_with_templates():
     """Create a Jinja environment with basic test templates."""
-    loader = DictLoader({
-        "components/card.html": (
-            "{# props title, variant=primary #}\n"
-            '<div class="card {{ variant }}">{{ title }}: {{ contents }}</div>'
-        ),
-        "components/button.html": (
-            "{# props variant=primary,secondary,accent #}\n"
-            '<button class="btn btn-{{ variant }}{% if attrs.class %} {{ attrs.class }}{% endif %}">{{ contents }}</button>'
-        ),
-        "components/card-with-footer.html": (
-            "{# props title #}\n"
-            '<div class="card">'
-            '<h3>{{ title }}</h3>'
-            '<div class="content">{{ contents }}</div>'
-            '{% if contents.footer %}<footer>{{ contents.footer }}</footer>{% endif %}'
-            '</div>'
-        )
-    })
+    loader = DictLoader(
+        {
+            "components/card.html": (
+                "{# props title, variant=primary #}\n"
+                '<div class="card {{ variant }}">{{ title }}: {{ contents }}</div>'
+            ),
+            "components/button.html": (
+                "{# props variant=primary,secondary,accent #}\n"
+                '<button class="btn btn-{{ variant }}{% if attrs.class %} {{ attrs.class }}{% endif %}">{{ contents }}</button>'
+            ),
+            "components/card-with-footer.html": (
+                "{# props title #}\n"
+                '<div class="card">'
+                "<h3>{{ title }}</h3>"
+                '<div class="content">{{ contents }}</div>'
+                "{% if contents.footer %}<footer>{{ contents.footer }}</footer>{% endif %}"
+                "</div>"
+            ),
+        }
+    )
     return Environment(loader=loader, extensions=[IncludeContentsExtension])
 
 
@@ -42,7 +44,9 @@ class TestBasicSyntaxGaps:
         env = create_jinja_env_with_templates()
 
         # This syntax works in Django, test if it works in Jinja
-        template_source = '<include:card-with-footer title="Test">Content</include:card-with-footer>'
+        template_source = (
+            '<include:card-with-footer title="Test">Content</include:card-with-footer>'
+        )
 
         try:
             template = env.from_string(template_source)
@@ -79,22 +83,27 @@ class TestAdvancedAttributeGaps:
 
         # These attributes work in Django, test if they work in Jinja
         test_cases = [
-            ('<include:button @click="handleClick()">Click</include:button>', '@click'),
-            ('<include:button v-on:submit="onSubmit">Submit</include:button>', 'v-on:'),
-            ('<include:button x-on:click="toggle()">Toggle</include:button>', 'x-on:'),
-            ('<include:button :class="{ active: isActive }">Bind</include:button>', ':class'),
+            ('<include:button @click="handleClick()">Click</include:button>', "@click"),
+            ('<include:button v-on:submit="onSubmit">Submit</include:button>', "v-on:"),
+            ('<include:button x-on:click="toggle()">Toggle</include:button>', "x-on:"),
+            (
+                '<include:button :class="{ active: isActive }">Bind</include:button>',
+                ":class",
+            ),
         ]
 
         gaps_found = []
         for template_source, feature in test_cases:
             try:
-                template = env.from_string(template_source)
+                env.from_string(template_source)
                 print(f"✓ {feature} attributes work in Jinja")
             except TemplateSyntaxError:
                 gaps_found.append(feature)
 
         if gaps_found:
-            raise AssertionError(f"Gap: These JS framework attributes don't work in Jinja: {', '.join(gaps_found)}")
+            raise AssertionError(
+                f"Gap: These JS framework attributes don't work in Jinja: {', '.join(gaps_found)}"
+            )
 
     def test_class_manipulation_attributes_gap(self):
         """Django supports class:not syntax, Jinja should too."""
@@ -106,8 +115,8 @@ class TestAdvancedAttributeGaps:
         # Should successfully parse and render
         template = env.from_string(template_source)
         result = template.render(disabled=False)
-        assert '<button' in result
-        assert 'btn-primary' in result
+        assert "<button" in result
+        assert "btn-primary" in result
 
     def test_nested_attribute_syntax_gap(self):
         """Django supports inner.attribute syntax, Jinja should too."""
@@ -119,8 +128,8 @@ class TestAdvancedAttributeGaps:
         # Should successfully parse and render
         template = env.from_string(template_source)
         result = template.render()
-        assert 'Test' in result
-        assert 'Content' in result
+        assert "Test" in result
+        assert "Content" in result
 
 
 class TestContentBlockGaps:
@@ -131,12 +140,12 @@ class TestContentBlockGaps:
         env = create_jinja_env_with_templates()
 
         # This syntax works in Django but not yet in Jinja
-        template_source = '''
+        template_source = """
         <include:card-with-footer title="Test">
             <p>Main content</p>
             <content:footer>Footer content</content:footer>
         </include:card-with-footer>
-        '''
+        """
 
         # This should work but currently doesn't due to content block parsing
         try:
@@ -164,8 +173,8 @@ class TestTemplateLogicInAttributesGaps:
 
         # Currently template variables in attributes are not fully supported
         # The template should render but variables may not be processed
-        assert 'btn-primary' in result  # Basic functionality works
-        assert '<button' in result      # Component renders
+        assert "btn-primary" in result  # Basic functionality works
+        assert "<button" in result  # Component renders
 
         # TODO: Template variables in attributes need better support
         # This is a known limitation that should be addressed
@@ -184,12 +193,12 @@ class TestTemplateLogicInAttributesGaps:
 
         # Currently template logic in attributes is not fully supported
         # The template should render but conditional logic may not be processed
-        assert 'btn-primary' in result  # Basic functionality works
-        assert '<button' in result      # Component renders
+        assert "btn-primary" in result  # Basic functionality works
+        assert "<button" in result  # Component renders
 
         # TODO: Template logic in attributes needs better support
         # This is a known limitation that should be addressed
-        if 'btn-lg' not in result:
+        if "btn-lg" not in result:
             pytest.skip("Template logic in attributes not yet fully supported")
 
 
@@ -224,7 +233,9 @@ class TestErrorMessagingGaps:
         """Django provides helpful errors for missing templates, Jinja should too."""
         env = create_jinja_env_with_templates()
 
-        template_source = '<include:nonexistent-component>Content</include:nonexistent-component>'
+        template_source = (
+            "<include:nonexistent-component>Content</include:nonexistent-component>"
+        )
 
         try:
             template = env.from_string(template_source)
@@ -248,20 +259,20 @@ class TestPerformanceGaps:
         env = create_jinja_env_with_templates()
 
         # Create a moderately complex template
-        template_source = '''
+        template_source = """
         <include:card title="Test">
             <include:button variant="primary">Button 1</include:button>
             <include:button variant="secondary">Button 2</include:button>
             <include:button variant="accent">Button 3</include:button>
         </include:card>
-        '''
+        """
 
         import time
 
         # Measure compilation time
         start_time = time.perf_counter()
         for _ in range(50):
-            template = env.from_string(template_source)
+            env.from_string(template_source)
         compilation_time = time.perf_counter() - start_time
 
         # Should compile reasonably quickly (less than 150ms for 50 compilations)
@@ -272,7 +283,9 @@ class TestPerformanceGaps:
         """Jinja rendering should be reasonably fast like Django."""
         env = create_jinja_env_with_templates()
 
-        template_source = '<include:card title="Performance Test">Content</include:card>'
+        template_source = (
+            '<include:card title="Performance Test">Content</include:card>'
+        )
         template = env.from_string(template_source)
 
         import time
@@ -280,7 +293,7 @@ class TestPerformanceGaps:
         # Measure rendering time
         start_time = time.perf_counter()
         for _ in range(100):
-            result = template.render()
+            template.render()
         rendering_time = time.perf_counter() - start_time
 
         # Should render reasonably quickly
@@ -317,12 +330,12 @@ class TestCurrentlyWorkingFeatures:
         """Named contents using traditional syntax should work."""
         env = create_jinja_env_with_templates()
 
-        template_source = '''
+        template_source = """
         {% includecontents "card-with-footer" title="Test" %}
             Main content
             {% contents footer %}Footer content{% endcontents %}
         {% endincludecontents %}
-        '''
+        """
         template = env.from_string(template_source)
         result = template.render()
 
@@ -332,7 +345,6 @@ class TestCurrentlyWorkingFeatures:
 
 if __name__ == "__main__":
     # Run tests to identify specific gaps
-    import sys
 
     test_classes = [
         TestBasicSyntaxGaps,
@@ -349,7 +361,7 @@ if __name__ == "__main__":
 
     for test_class in test_classes:
         instance = test_class()
-        methods = [method for method in dir(instance) if method.startswith('test_')]
+        methods = [method for method in dir(instance) if method.startswith("test_")]
 
         for method_name in methods:
             try:
@@ -364,7 +376,11 @@ if __name__ == "__main__":
                 else:
                     print(f"✗ BROKEN: {test_class.__name__}.{method_name}: {e}")
 
-    print(f"\nGap Analysis: {gaps_found} gaps found, {working_features} features working")
+    print(
+        f"\nGap Analysis: {gaps_found} gaps found, {working_features} features working"
+    )
 
     if gaps_found > 0:
-        print(f"\nThe Jinja extension needs {gaps_found} features to achieve parity with Django engine.")
+        print(
+            f"\nThe Jinja extension needs {gaps_found} features to achieve parity with Django engine."
+        )

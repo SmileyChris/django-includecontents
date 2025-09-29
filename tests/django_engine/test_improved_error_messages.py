@@ -112,12 +112,12 @@ def test_special_character_enum_error_message():
 def test_detailed_error_message_format():
     """Test the overall format of the improved error message."""
     with pytest.raises(TemplateSyntaxError) as exc_info:
-        Template(
-            '<include:button variant="invalid">Test</include:button>'
-        ).render(Context())
+        Template('<include:button variant="invalid">Test</include:button>').render(
+            Context()
+        )
 
     error_message = str(exc_info.value)
-    lines = error_message.split('\n')
+    lines = error_message.split("\n")
 
     # Should have exactly 2 lines: error description + example
     assert len(lines) == 2
@@ -139,15 +139,21 @@ def test_suggestion_algorithm_edge_cases():
     assert IncludeContentsNode._suggest_closest_enum_value("test", ()) is None
 
     # Test with very different strings (should return None due to low similarity)
-    result = IncludeContentsNode._suggest_closest_enum_value("xyz", ("primary", "secondary"))
+    result = IncludeContentsNode._suggest_closest_enum_value(
+        "xyz", ("primary", "secondary")
+    )
     assert result is None  # Should be below the 40% cutoff
 
     # Test with close matches
-    result = IncludeContentsNode._suggest_closest_enum_value("primery", ("primary", "secondary"))
+    result = IncludeContentsNode._suggest_closest_enum_value(
+        "primery", ("primary", "secondary")
+    )
     assert result == "primary"
 
     # Test with exact match (shouldn't normally happen in error path, but good to test)
-    result = IncludeContentsNode._suggest_closest_enum_value("primary", ("primary", "secondary"))
+    result = IncludeContentsNode._suggest_closest_enum_value(
+        "primary", ("primary", "secondary")
+    )
     assert result == "primary"
 
 
@@ -170,12 +176,12 @@ def test_error_message_preserves_original_functionality():
     """Test that improved error messages don't break existing error detection."""
     # Invalid enum value should still be caught
     with pytest.raises(TemplateSyntaxError, match='Invalid value "nonexistent"'):
-        Template(
-            '<include:button variant="nonexistent">Test</include:button>'
-        ).render(Context())
+        Template('<include:button variant="nonexistent">Test</include:button>').render(
+            Context()
+        )
 
     # Valid enum value should still work
     template = Template('<include:button variant="primary">Test</include:button>')
     output = template.render(Context())
-    assert 'btn-primary' in output
-    assert 'Test' in output
+    assert "btn-primary" in output
+    assert "Test" in output

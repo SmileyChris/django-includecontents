@@ -36,6 +36,7 @@ class _EscapableValue:
     This matches Django's behavior where literal strings in template syntax are not escaped
     but variable content is escaped via conditional_escape().
     """
+
     def __init__(self, value: Any):
         self.value = value
 
@@ -180,7 +181,6 @@ class IncludeContentsExtension(Extension):
         node.set_lineno(lineno)
         return node
 
-
     # ------------------------------------------------------------------
     # Runtime helpers
     # ------------------------------------------------------------------
@@ -244,11 +244,19 @@ class IncludeContentsExtension(Extension):
                             for enum_value in normalize_enum_values(processed_value):
                                 if enum_value not in allowed_values:
                                     allowed = ", ".join(repr(v) for v in allowed_values)
-                                    suggestion = suggest_enum_value(enum_value, allowed_values)
-                                    suggestion_text = f" Did you mean {suggestion!r}?" if suggestion else ""
+                                    suggestion = suggest_enum_value(
+                                        enum_value, allowed_values
+                                    )
+                                    suggestion_text = (
+                                        f" Did you mean {suggestion!r}?"
+                                        if suggestion
+                                        else ""
+                                    )
 
                                     # Create a helpful example
-                                    first_value = allowed_values[0] if allowed_values else "value"
+                                    first_value = (
+                                        allowed_values[0] if allowed_values else "value"
+                                    )
                                     example = f'<include:{identifier.replace("components/", "").replace(".html", "")} {prop_name}="{first_value}">'
 
                                     raise TemplateRuntimeError(
@@ -274,11 +282,19 @@ class IncludeContentsExtension(Extension):
                         for enum_value in normalize_enum_values(processed_value):
                             if enum_value not in allowed_values:
                                 allowed = ", ".join(repr(v) for v in allowed_values)
-                                suggestion = suggest_enum_value(enum_value, allowed_values)
-                                suggestion_text = f" Did you mean {suggestion!r}?" if suggestion else ""
+                                suggestion = suggest_enum_value(
+                                    enum_value, allowed_values
+                                )
+                                suggestion_text = (
+                                    f" Did you mean {suggestion!r}?"
+                                    if suggestion
+                                    else ""
+                                )
 
                                 # Create a helpful example
-                                first_value = allowed_values[0] if allowed_values else "value"
+                                first_value = (
+                                    allowed_values[0] if allowed_values else "value"
+                                )
                                 example = f'<include:{identifier.replace("components/", "").replace(".html", "")} {key}="{first_value}">'
 
                                 raise TemplateRuntimeError(
@@ -322,14 +338,20 @@ class IncludeContentsExtension(Extension):
             component_name = identifier.replace("components/", "").replace(".html", "")
             if ":" in component_name:
                 namespace, name = component_name.split(":", 1)
-                raise TemplateNotFound(f"Component template not found: {namespace}:{name} (looked for {identifier})") from e
+                raise TemplateNotFound(
+                    f"Component template not found: {namespace}:{name} (looked for {identifier})"
+                ) from e
             else:
-                raise TemplateNotFound(f"Component template not found: {component_name} (looked for {identifier})") from e
+                raise TemplateNotFound(
+                    f"Component template not found: {component_name} (looked for {identifier})"
+                ) from e
 
         # Use flattened context for better Django parity
         parent_vars = self._flatten_jinja_context(context)
         if props and self.use_context_isolation:
-            component_context = ComponentContext.create_isolated(parent_vars, prop_values)
+            component_context = ComponentContext.create_isolated(
+                parent_vars, prop_values
+            )
         else:
             component_context = parent_vars.copy()
             component_context.update(prop_values)
@@ -383,7 +405,7 @@ class IncludeContentsExtension(Extension):
             # Process template variables in attribute values
             processed_attributes = {}
             for key, value in attributes.items():
-                if isinstance(value, str) and ('{{' in value or '{%' in value):
+                if isinstance(value, str) and ("{{" in value or "{%" in value):
                     try:
                         # Create and render mini-template for this attribute value
                         mini_template = self.environment.from_string(value)
@@ -397,6 +419,7 @@ class IncludeContentsExtension(Extension):
 
             # Create an IconNode and render it
             icon_node = IconNode(icon_name, processed_attributes)
+
             # Create minimal context-like object for Django compatibility
             class MinimalContext:
                 def get(self, key, default=None):
@@ -440,7 +463,7 @@ class IncludeContentsExtension(Extension):
             return value
 
         # If the value contains template syntax, render it as a mini-template
-        if '{{' in value or '{%' in value:
+        if "{{" in value or "{%" in value:
             try:
                 # Create a mini-template from the value with autoescape enabled
                 # to ensure variables get escaped like in Django
@@ -465,10 +488,10 @@ class IncludeContentsExtension(Extension):
         with later dictionaries taking precedence. Jinja2's get_all() is similar but
         we want to ensure consistent behavior.
         """
-        if hasattr(context, 'get_all'):
+        if hasattr(context, "get_all"):
             # Standard Jinja2 context - get_all() already provides flattened view
             return dict(context.get_all())
-        elif hasattr(context, 'items'):
+        elif hasattr(context, "items"):
             # Dict-like object
             return dict(context.items())
         else:
@@ -497,7 +520,14 @@ class IncludeContentsExtension(Extension):
         if name.startswith("v_"):
             # v_on_click_stop -> v-on:click.stop
             parts = name.split("_")
-            if len(parts) >= 3 and parts[1] in ("on", "bind", "model", "show", "if", "for"):
+            if len(parts) >= 3 and parts[1] in (
+                "on",
+                "bind",
+                "model",
+                "show",
+                "if",
+                "for",
+            ):
                 directive = f"v-{parts[1]}"
                 if parts[1] in ("on", "bind") and len(parts) >= 3:
                     # v-on:click or v-bind:class
@@ -518,7 +548,15 @@ class IncludeContentsExtension(Extension):
         # Handle x-on:, x-data, etc. (Alpine.js)
         if name.startswith("x_"):
             parts = name.split("_")
-            if len(parts) >= 3 and parts[1] in ("on", "data", "show", "if", "for", "text", "html"):
+            if len(parts) >= 3 and parts[1] in (
+                "on",
+                "data",
+                "show",
+                "if",
+                "for",
+                "text",
+                "html",
+            ):
                 directive = f"x-{parts[1]}"
                 if parts[1] == "on" and len(parts) >= 3:
                     # x-on:click
@@ -541,7 +579,9 @@ class IncludeContentsExtension(Extension):
             return name.replace("_at_", ".@").replace("_", ".")
 
         # Handle nested attributes (inner_class -> inner.class, data_role -> data.role)
-        if "_" in name and not (name.startswith("v_") or name.startswith("x_") or name.startswith("_")):
+        if "_" in name and not (
+            name.startswith("v_") or name.startswith("x_") or name.startswith("_")
+        ):
             # Convert underscores to dots for nested attributes
             return name.replace("_", ".")
 
