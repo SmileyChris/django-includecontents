@@ -5,9 +5,7 @@ This module tests the enhanced error messages with contextual information
 using Exception.add_note() (Python 3.11+) or fallback behavior.
 """
 
-import sys
 from dataclasses import dataclass
-from typing import Optional
 
 import pytest
 from django.template import TemplateSyntaxError
@@ -161,8 +159,8 @@ class TestEnhancedValidationErrors:
         @dataclass
         class OptionalProps:
             title: str
-            subtitle: Optional[str] = None
-            count: Optional[int] = 0
+            subtitle: str | None = None
+            count: int | None = 0
 
         # Should succeed with minimal props
         result = validate_props(OptionalProps, {'title': 'Test'})

@@ -4,7 +4,6 @@ Ensures that {# props #} syntax coerces values the same way as @component decora
 """
 
 from dataclasses import dataclass
-from typing import List
 
 import pytest
 from django.template import Context, Template
@@ -122,8 +121,8 @@ class TestCoercionParity:
             count: int
             active: bool
             rating: float
-            tags: List[str]
-            numbers: List[int]
+            tags: list[str]
+            numbers: list[int]
 
         # Test coercion from strings
         result = validate_props(
@@ -146,8 +145,6 @@ class TestCoercionParity:
 
     def test_coerce_value_function_directly(self):
         """Test the coerce_value function directly."""
-        from typing import Optional
-
         from includecontents.shared.typed_props import coerce_value
 
         # Test int coercion
@@ -165,17 +162,17 @@ class TestCoercionParity:
         assert coerce_value(4.5, float) == 4.5
 
         # Test list[str] coercion
-        assert coerce_value("a, b, c", List[str]) == ["a", "b", "c"]
-        assert coerce_value(["a", "b"], List[str]) == ["a", "b"]
+        assert coerce_value("a, b, c", list[str]) == ["a", "b", "c"]
+        assert coerce_value(["a", "b"], list[str]) == ["a", "b"]
 
         # Test list[int] coercion
-        assert coerce_value("1, 2, 3", List[int]) == [1, 2, 3]
-        assert coerce_value([1, 2], List[int]) == [1, 2]
+        assert coerce_value("1, 2, 3", list[int]) == [1, 2, 3]
+        assert coerce_value([1, 2], list[int]) == [1, 2]
 
         # Test Optional types
-        assert coerce_value(None, Optional[int]) is None
-        assert coerce_value("25", Optional[int]) == 25
+        assert coerce_value(None, int | None) is None
+        assert coerce_value("25", int | None) == 25
 
         # Test that None is preserved
         assert coerce_value(None, int) is None
-        assert coerce_value(None, List[int]) is None
+        assert coerce_value(None, list[int]) is None
