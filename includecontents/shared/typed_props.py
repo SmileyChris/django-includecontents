@@ -5,26 +5,20 @@ This module provides the core typed props functionality that can be used
 by both Django and potentially Jinja2 template engines.
 """
 
-import inspect
 import logging
 import types as _types
-from dataclasses import MISSING, dataclass, is_dataclass
-from dataclasses import fields as dataclass_fields
+from dataclasses import dataclass, is_dataclass
 from typing import (
     Annotated,
     Any,
     Dict,
-    Literal,
     Optional,
     Type,
     Union,
     get_args,
     get_origin,
-    get_type_hints,
 )
 
-from django.core.exceptions import ValidationError
-from django.template import TemplateSyntaxError
 from django.utils.safestring import mark_safe
 
 # Registry for component props classes
@@ -483,7 +477,6 @@ def parse_template_props(props_string: str) -> Dict[str, Any]:
 def _parse_simple_type_spec(type_spec: str) -> Any:
     """Simple type spec parser for template props testing."""
     from typing import Annotated, List
-    from django.utils.safestring import SafeString
 
     # Handle basic types
     if type_spec == "text" or type_spec == "str":

@@ -1,4 +1,3 @@
-import pytest
 from django.template import Context, Template, TemplateSyntaxError
 from django.template.base import VariableNode
 from django.test import SimpleTestCase

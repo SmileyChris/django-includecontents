@@ -1,7 +1,5 @@
 """Test that object attributes are passed as objects, not strings."""
-import pytest
 from django.template import Context
-from django.template.loader import render_to_string
 
 from includecontents.django.base import Template
 

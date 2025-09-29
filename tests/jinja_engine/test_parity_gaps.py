@@ -332,7 +332,6 @@ class TestCurrentlyWorkingFeatures:
 
 if __name__ == "__main__":
     # Run tests to identify specific gaps
-    import sys
 
     test_classes = [
         TestBasicSyntaxGaps,

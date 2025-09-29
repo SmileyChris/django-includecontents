@@ -6,7 +6,6 @@ import pytest
 from dataclasses import dataclass
 from typing import Optional, Literal
 from django.template import TemplateSyntaxError
-from django.template.loader import render_to_string
 from django.core.exceptions import ValidationError
 
 from includecontents.django.prop_types import (
@@ -406,7 +405,7 @@ class TestParseTypeSpec:
     
     def test_list_type_parsing(self):
         """Test parsing list types from template syntax."""
-        from typing import List, get_origin, get_args
+        from typing import get_origin, get_args
         
         # List with type parameter
         list_type = parse_type_spec('list(str)')
@@ -436,13 +435,11 @@ class TestParseTypeSpec:
         from typing import get_origin, get_args
         
         # Test model with square brackets
-        from includecontents.django.prop_types import Model
         model_type = parse_type_spec('model[auth.User]')
         # Should return Model['auth.User']
         assert hasattr(model_type, '__metadata__')
         
         # Test queryset with square brackets
-        from includecontents.django.prop_types import QuerySet
         qs_type = parse_type_spec('queryset[blog.Article]')
         # Should return QuerySet['blog.Article']
         assert hasattr(qs_type, '__metadata__')

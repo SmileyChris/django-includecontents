@@ -8,14 +8,13 @@ potentially other template engines.
 import inspect
 from dataclasses import MISSING, is_dataclass
 from dataclasses import fields as dataclass_fields
-from typing import Any, Dict, Optional, Type, Union, get_args, get_origin, get_type_hints
+from typing import Any, Dict, Type, Union, get_args, get_origin, get_type_hints
 
 from django.core.exceptions import ValidationError
 from django.template import TemplateSyntaxError
 
 from .typed_props import (
     coerce_value,
-    is_html_type,
     is_multichoice_type,
     get_multichoice_values,
     generate_multichoice_flags,
@@ -258,7 +257,7 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
             )
 
             raise exc
-        except TypeError as e:
+        except TypeError:
             # Handle cases where the class can't be instantiated
             # Fall back to calling clean as a class method
             if inspect.ismethod(props_class.clean):

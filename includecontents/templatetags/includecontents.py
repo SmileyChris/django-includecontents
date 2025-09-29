@@ -1,9 +1,7 @@
 import logging
 import re
 from collections import abc
-from collections.abc import MutableMapping
 from contextlib import contextmanager
-from typing import Any
 
 from django import template
 from django.template import TemplateSyntaxError, TemplateDoesNotExist, Variable
@@ -22,17 +20,10 @@ except ImportError:
 
 from includecontents.django.base import Template
 from includecontents.django.attrs import Attrs as DjangoAttrs
-from includecontents.shared.context import CapturedContents, ComponentContext
-from includecontents.shared.enums import (
-    build_enum_flag_key,
-    normalize_enum_values,
-    suggest_enum_value,
-)
 from includecontents.shared.typed_props import (
     coerce_value,
     get_props_class,
     list_registered_components,
-    resolve_props_class_for,
 )
 from includecontents.shared.validation import validate_props
 

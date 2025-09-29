@@ -1,9 +1,8 @@
 import time
 import pytest
-from unittest.mock import patch, call
+from unittest.mock import patch
 from django.template import Context
 from includecontents.django.base import Template
-from includecontents.shared.props import parse_props_comment
 
 
 def test_prop_definitions_cached_on_template_instance():

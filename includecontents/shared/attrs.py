@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, MutableMapping
-from typing import Any, Dict, Iterator, Tuple, Union
+from typing import Any, Dict, Iterator, Tuple
 
 
 _re_camel_case = re.compile(r"(?<=.)([A-Z])")

@@ -1,11 +1,10 @@
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 import django.template.base
 from django.utils.text import smart_split
 
-from includecontents.shared.context import CapturedContents, ComponentContext
 from includecontents.shared.enums import parse_enum_definition
 from includecontents.shared.props import PropSpec, parse_props_comment
 

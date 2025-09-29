@@ -271,7 +271,6 @@ class TestDjangoPropsIntegration:
     @pytest.mark.django_db
     def test_complex_django_props(self):
         """Test a complex props class with Django types."""
-        from django.db.models import Q
         from django.contrib.auth import get_user_model
         UserModel = get_user_model()
         

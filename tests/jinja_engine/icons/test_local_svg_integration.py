@@ -2,7 +2,6 @@
 Test local SVG integration with icons in Jinja templates.
 Tests that local SVG files work alongside Iconify icons.
 """
-import pytest
 from unittest.mock import patch
 from jinja2 import Environment, DictLoader
 

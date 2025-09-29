@@ -29,7 +29,7 @@ from django.core.exceptions import ValidationError
 from django.template import TemplateSyntaxError
 from django.utils.safestring import mark_safe
 
-from .errors import enhance_coercion_error, enhance_validation_error
+from .errors import enhance_validation_error
 
 # Registry for component props classes
 _registry: Dict[str, Type] = {}
@@ -501,7 +501,7 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
             )
 
             raise exc
-        except TypeError as e:
+        except TypeError:
             # Handle cases where the class can't be instantiated
             # Fall back to calling clean as a class method
             if inspect.ismethod(props_class.clean):

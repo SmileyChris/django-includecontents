@@ -1,5 +1,3 @@
-import pytest
-from django.template import Context
 from includecontents.django import DjangoTemplates
 
 

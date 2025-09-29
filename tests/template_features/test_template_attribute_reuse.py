@@ -1,5 +1,4 @@
 """Test that TemplateAttributeExpression works correctly with reuse."""
-import pytest
 from django.template import Template, Context
 
 from includecontents.templatetags.includecontents import TemplateAttributeExpression

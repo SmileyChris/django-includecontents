@@ -2,11 +2,8 @@
 Integration tests for prop validation with actual template rendering.
 """
 
-import pytest
 from dataclasses import dataclass
 from typing import Optional
-from django.template import TemplateSyntaxError
-from django.template.loader import render_to_string
 
 from includecontents.django.prop_types import Email, Text, Integer, Choice
 from includecontents.shared.typed_props import component

@@ -2,7 +2,6 @@
 Test accessibility attributes for icons in Jinja templates.
 Tests that icons properly handle aria-* and role attributes.
 """
-import pytest
 from unittest.mock import patch
 from jinja2 import Environment, DictLoader
 

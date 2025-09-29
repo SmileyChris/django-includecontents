@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ._helpers import captures_for, first_capture, render_component
+from ._helpers import first_capture, render_component
 
 
 class TestAttributeHandling:

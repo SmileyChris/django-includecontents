@@ -1,6 +1,5 @@
 """Test for nested extended attributes merging in __call__ method."""
 
-import pytest
 from includecontents.shared.attrs import BaseAttrs
 
 

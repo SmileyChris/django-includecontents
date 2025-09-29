@@ -176,7 +176,7 @@ def _parse_prop_token(token: str) -> tuple[str, Any]:
 
     try:
         value = ast.literal_eval(raw)
-    except (ValueError, SyntaxError) as e:
+    except (ValueError, SyntaxError):
         # Check if this looks like a comma-separated enum (common pattern)
         if ',' in raw and ' ' not in raw and not any(c in raw for c in ['(', ')', '[', ']', '{', '}', '"', "'"]):
             # This is likely an enum definition like "primary,secondary,accent"

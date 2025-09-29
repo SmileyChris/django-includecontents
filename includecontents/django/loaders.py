@@ -24,13 +24,13 @@ def _enhance_component_template_error(exc, template_name):
         "",
         "Suggestions:",
         f"  1. Create template: templates/{template_name}",
-        f"  2. Check TEMPLATES['DIRS'] setting includes your templates directory",
-        f"  3. Verify component name matches file path",
-        f"  4. Ensure template is in templates/components/ directory",
+        "  2. Check TEMPLATES['DIRS'] setting includes your templates directory",
+        "  3. Verify component name matches file path",
+        "  4. Ensure template is in templates/components/ directory",
         "",
         "For app-based components:",
         f"  5. Create in app: <app>/templates/{template_name}",
-        f"  6. Ensure app is in INSTALLED_APPS"
+        "  6. Ensure app is in INSTALLED_APPS"
     ]
 
     enhanced_message = "\n".join(error_lines)

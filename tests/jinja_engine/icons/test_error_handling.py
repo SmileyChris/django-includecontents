@@ -6,10 +6,7 @@ from unittest.mock import patch
 from jinja2 import Environment, DictLoader
 
 from includecontents.jinja2.extension import IncludeContentsExtension
-from includecontents.icons.builder import get_or_create_sprite
 from includecontents.icons.exceptions import (
-    IconConfigurationError,
-    IconNotFoundError,
     IconBuildError,
     IconAPIError,
 )
@@ -60,7 +57,6 @@ def test_jinja_icon_preprocessing_error_handling():
     source = '<icon: class="test" />'  # Missing icon name
 
     # Should raise TemplateSyntaxError for malformed syntax
-    import pytest
     from jinja2.exceptions import TemplateSyntaxError
 
     with pytest.raises(TemplateSyntaxError, match="Empty component name"):

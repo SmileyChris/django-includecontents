@@ -1,7 +1,6 @@
 """Tests for callable attrs functionality across Django and Jinja2 engines."""
 
-import pytest
-from django.template import Context, Template
+from django.template import Template
 from jinja2 import DictLoader, Environment
 
 from includecontents.jinja2 import IncludeContentsExtension

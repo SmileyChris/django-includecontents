@@ -2,12 +2,10 @@
 High-level tests for the icons system with Jinja2 templates.
 Tests the <icon:name> HTML component syntax in Jinja2 environment.
 """
-import pytest
 from unittest.mock import patch
 from jinja2 import Environment, DictLoader
 
 from includecontents.jinja2.extension import IncludeContentsExtension
-from includecontents.icons import builder
 
 
 def mock_all_iconify_fetches():

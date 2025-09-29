@@ -5,11 +5,9 @@ This module tests the registry helper functions that provide introspection
 and debugging capabilities for the component props system.
 """
 
-import logging
 from dataclasses import dataclass
 from unittest.mock import patch
 
-import pytest
 
 from includecontents.shared.typed_props import (
     component,

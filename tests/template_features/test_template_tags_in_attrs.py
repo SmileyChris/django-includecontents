@@ -1,8 +1,5 @@
 import pytest
-from django.template import Context, TemplateSyntaxError
-from django.template.loader import render_to_string
-from django.test import override_settings
-from django.urls import reverse
+from django.template import Context
 
 from includecontents.django.base import Template
 

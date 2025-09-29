@@ -1,6 +1,5 @@
 import pytest
 from django.template import Context, TemplateSyntaxError
-from django.template.loader import render_to_string
 
 from includecontents.django.base import Template
 

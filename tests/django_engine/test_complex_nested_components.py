@@ -1,8 +1,6 @@
-import pytest
 from django.test import TestCase, override_settings, RequestFactory
 from django.template import Context
 from django.template.loader import render_to_string
-from django.http import HttpRequest
 
 from includecontents.django.base import Template
 

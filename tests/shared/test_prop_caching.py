@@ -1,17 +1,14 @@
 """Test template prop caching behavior."""
 
 import logging
-from dataclasses import dataclass
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import time
 
 import pytest
-from django.template import Context
 from django.template.loader import render_to_string
 
-from includecontents.django.base import Template
-from includecontents.shared.typed_props import component, get_props_class, _registry
+from includecontents.shared.typed_props import _registry
 
 
 @pytest.mark.django_db
