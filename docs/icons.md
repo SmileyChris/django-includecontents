@@ -376,3 +376,9 @@ INCLUDECONTENTS_ICONS = {
 - Use quotes around icon names in template tags
 - Check for typos in icon names
 - Verify custom template engine is configured
+
+## Next Steps
+
+- Style sprites with CSS variables using [Advanced Icon Styling](icons/styling-with-css-variables.md)
+- Configure formatter and tooling support in [Prettier Formatting](tooling-integration/prettier-formatting.md) and [VS Code Setup](tooling-integration/vscode-setup.md)
+- Review icon template helpers in the [API Reference](reference/api-reference.md#icon)

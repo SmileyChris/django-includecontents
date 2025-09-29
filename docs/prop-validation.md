@@ -20,6 +20,8 @@ Define typed props directly in your component template using the enhanced `{# pr
 </div>
 ```
 
+If you are new to component attributes, revisit the [Props & Attrs](using-components/props-and-attrs.md) guide first. For enum helpers, grouped attributes, and additional spreading patterns, keep [Advanced Props](building-components/advanced-props.md) nearby—you will reuse many of those ideas alongside validation.
+
 ### Python-Based Props (Advanced)
 
 For complex components, define props using Python dataclasses with full type hints.
@@ -1161,3 +1163,10 @@ The prop validation system provides:
 - ✅ **Backward compatible** - Existing components continue to work
 - ✅ **IDE support** - Full autocomplete and type checking with Python props
 - ✅ **Component-focused** - Types designed for UI components, not forms/models
+
+## Next Steps
+
+- Deepen everyday attribute usage with [Props & Attrs](using-components/props-and-attrs.md)
+- Combine validation with enum helpers in [Advanced Props](building-components/advanced-props.md)
+- Look up tag and attribute details in the [API Reference](reference/api-reference.md)
+- Diagnose common errors with the [Troubleshooting Guide](reference/troubleshooting.md)

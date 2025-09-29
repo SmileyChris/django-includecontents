@@ -2,6 +2,8 @@
 
 This guide covers advanced techniques for styling icons, particularly using CSS variables to create dynamic, themeable icons that work across the shadow DOM boundary.
 
+If you are just getting started with icon configuration, begin with the [Icons overview](../icons.md) before diving into these advanced styling patterns.
+
 ## CSS Variables in Icon Sprites
 
 When SVG icons are combined into sprites and used via `<use>` elements, normal CSS styling faces limitations due to the shadow DOM boundary. However, CSS variables can cross this boundary, enabling powerful styling capabilities.
@@ -259,3 +261,9 @@ Create a reference for your icon variables:
   }
 </style>
 ```
+
+## Next Steps
+
+- Revisit the base configuration in the [Icons guide](../icons.md)
+- Ensure your formatter and IDE keep icon syntax tidy with [Prettier Formatting](../tooling-integration/prettier-formatting.md) and [VS Code Setup](../tooling-integration/vscode-setup.md)
+- Reference template tag options for icons in the [API Reference](../reference/api-reference.md#icon)

@@ -2,6 +2,8 @@
 
 This guide is for developers who want to contribute to Django IncludeContents or understand its internals.
 
+If you have not installed the project locally yet, follow the [Development Installation steps](../getting-started/installation.md#development-installation). For runtime issues while developing, keep the [Troubleshooting Guide](../reference/troubleshooting.md) close at hand.
+
 ## Quick Start for Contributors
 
 ### Setting Up Development Environment
@@ -435,6 +437,12 @@ If you need to deploy without using the GitHub Actions workflow:
 - [ ] Package available on PyPI
 - [ ] Release announcement (if applicable)
 
+## Next Steps
+
+- Verify runtime behaviour with the [Troubleshooting Guide](../reference/troubleshooting.md)
+- Ensure feature docs stay aligned by updating the [API Reference](../reference/api-reference.md) and topic guides such as [Component Props Validation](../prop-validation.md)
+- Configure your local tooling using [Custom Template Engine](../tooling-integration/custom-engine.md) and related setup guides in `tooling-integration/`
+
 ---
 
 ## Changelog
@@ -446,4 +454,3 @@ The full changelog is maintained in [CHANGES.md](https://github.com/SmileyChris/
 ### Latest Changes
 
 --8<-- "CHANGES.md"
-

@@ -2,6 +2,8 @@
 
 Complete reference for all Django IncludeContents template tags, template engine features, and configuration options.
 
+For step-by-step walkthroughs of individual features, read the [HTML Component Syntax](../using-components/html-syntax.md) and [Template Tag Usage](../using-components/template-tag-syntax.md) guides first. When you need validation specifics or icon setup, pair this reference with [Component Props Validation](../prop-validation.md) and [Icons](../icons.md).
+
 ## Template Tags
 
 ### `{% includecontents %}`
@@ -187,6 +189,12 @@ Negate boolean values, useful for conditional classes.
     Click me
 </include:button>
 ```
+
+## Next Steps
+
+- Apply the syntax in context with [HTML Component Syntax](../using-components/html-syntax.md)
+- Review attribute patterns in [Props & Attrs](../using-components/props-and-attrs.md) and [Component Props Validation](../prop-validation.md)
+- Configure supporting tooling via [Custom Template Engine](../tooling-integration/custom-engine.md) and [Prettier Formatting](../tooling-integration/prettier-formatting.md)
 
 ## HTML Component Syntax
 

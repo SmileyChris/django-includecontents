@@ -763,3 +763,10 @@ If this guide doesn't solve your problem:
    - Minimal reproduction steps
    - Environment details
    - Error messages or unexpected behavior
+
+## Next Steps
+
+- Revisit feature specifics in the [API Reference](api-reference.md)
+- Compare working examples in [Quick Start](../getting-started/quickstart.md) or [HTML Component Syntax](../using-components/html-syntax.md)
+- Validate prop definitions and enums with [Component Props Validation](../prop-validation.md)
+- Confirm icon setup and sprite generation via the [Icons guide](../icons.md)
