@@ -1,12 +1,14 @@
 import re
-from dataclasses import dataclass
-from typing import Any, Dict, Optional, Sequence
+from typing import Dict, Optional
 
 import django.template.base
 from django.utils.text import smart_split
 
-from includecontents.shared.enums import parse_enum_definition
-from includecontents.shared.props import PropSpec, parse_props_comment
+from includecontents.shared.props import (
+    PropDefinition,
+    build_prop_definition,
+    parse_props_comment,
+)
 
 
 def process_component_with_template_tags(token_string, position, lineno):
@@ -104,37 +106,6 @@ def process_icon_tag(token_string, position, lineno):
     )
 
 
-@dataclass(frozen=True)
-class PropDefinition:
-    spec: PropSpec
-    enum_values: Sequence[str] | None = None
-    enum_required: bool = False
-
-    @property
-    def name(self) -> str:
-        return self.spec.name
-
-    @property
-    def required(self) -> bool:
-        if self.enum_values is not None:
-            return self.enum_required
-        return self.spec.required
-
-    def clone_default(self) -> Any:
-        return self.spec.clone_default()
-
-    def is_enum(self) -> bool:
-        return self.enum_values is not None
-
-
-def _build_prop_definition(spec: PropSpec) -> PropDefinition:
-    default = spec.default
-    allowed, required = parse_enum_definition(default)
-    if allowed:
-        return PropDefinition(spec=spec, enum_values=allowed, enum_required=required)
-    return PropDefinition(spec=spec)
-
-
 class Template(django.template.base.Template):
     first_comment: str | None
 
@@ -184,7 +155,7 @@ class Template(django.template.base.Template):
         if self._component_prop_defs is None:
             specs = getattr(self, "_component_prop_specs", None) or {}
             self._component_prop_defs = {
-                name: _build_prop_definition(spec) for name, spec in specs.items()
+                name: build_prop_definition(spec) for name, spec in specs.items()
             }
         return self._component_prop_defs
 

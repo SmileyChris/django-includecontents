@@ -17,9 +17,9 @@ from .props import create_props_registry
 from includecontents.shared.enums import (
     build_enum_flag_key,
     normalize_enum_values,
-    parse_enum_definition,
     suggest_enum_value,
 )
+from includecontents.shared.props import PropDefinition, build_prop_definition
 
 
 class _EscapableValue:
@@ -215,14 +215,11 @@ class IncludeContentsExtension(Extension):
         attrs_obj = Attrs()
         prop_values: Dict[str, Any] = {}
 
-        enum_specs: Dict[str, tuple[tuple[str, ...], bool]] = {}
+        # Build prop definitions with enum validation info
+        prop_definitions: Dict[str, PropDefinition] = {}
         if props:
             for name, spec in props.items():
-                allowed_values, enum_required = parse_enum_definition(
-                    getattr(spec, "default", None)
-                )
-                if allowed_values:
-                    enum_specs[name] = (allowed_values, enum_required)
+                prop_definitions[name] = build_prop_definition(spec)
 
         if props:
             for key, value in attributes.items():
@@ -238,9 +235,9 @@ class IncludeContentsExtension(Extension):
                             attrs_obj[prop_name] = True
 
                         # Validate enum values
-                        enum_info = enum_specs.get(prop_name)
-                        if enum_info:
-                            allowed_values, _ = enum_info
+                        prop_def = prop_definitions.get(prop_name)
+                        if prop_def and prop_def.is_enum():
+                            allowed_values = prop_def.enum_values or ()
                             for enum_value in normalize_enum_values(processed_value):
                                 if enum_value not in allowed_values:
                                     allowed = ", ".join(repr(v) for v in allowed_values)
@@ -276,9 +273,9 @@ class IncludeContentsExtension(Extension):
                         attrs_obj[key] = True
 
                     # Validate enum values
-                    enum_info = enum_specs.get(key)
-                    if enum_info:
-                        allowed_values, _ = enum_info
+                    prop_def = prop_definitions.get(key)
+                    if prop_def and prop_def.is_enum():
+                        allowed_values = prop_def.enum_values or ()
                         for enum_value in normalize_enum_values(processed_value):
                             if enum_value not in allowed_values:
                                 allowed = ", ".join(repr(v) for v in allowed_values)
@@ -308,21 +305,17 @@ class IncludeContentsExtension(Extension):
                 else:
                     attrs_obj[key] = processed_value
 
-            for name, spec in props.items():
+            for name, prop_def in prop_definitions.items():
                 if name not in prop_values:
-                    enum_info = enum_specs.get(name)
-                    if enum_info:
-                        _, enum_required = enum_info
-                        if enum_required:
-                            raise TemplateRuntimeError(
-                                f"Component '{identifier}' missing required prop '{name}'"
-                            )
-                        continue
-                    if spec.required:
+                    # PropDefinition.required already accounts for enum_required
+                    if prop_def.required:
                         raise TemplateRuntimeError(
                             f"Component '{identifier}' missing required prop '{name}'"
                         )
-                    prop_values[name] = spec.clone_default()
+                    # Skip enums with defaults - they don't set a value, just allow certain values
+                    if prop_def.is_enum():
+                        continue
+                    prop_values[name] = prop_def.clone_default()
         else:
             # No props defined, use attributes as-is
             prop_values = {}

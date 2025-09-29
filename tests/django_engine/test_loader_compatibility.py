@@ -6,7 +6,6 @@ with includecontents custom loaders, even when wrapped by third-party packages
 like django-template-partials.
 """
 
-
 from includecontents.django.engine import Engine, _replace_django_loaders
 from includecontents.django.base import Template
 

@@ -1,14 +1,14 @@
 import re
 from collections import abc
-from typing import Any, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, NoReturn, Optional, cast
 
 from django import template
 from django.conf import settings
-from django.template import TemplateSyntaxError, TemplateDoesNotExist
+from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.base import FilterExpression, Node, NodeList, Parser, TokenType
 from django.template.context import Context
 from django.template.defaulttags import TemplateIfParser
-from django.template.loader_tags import construct_relative_path, do_include
+from django.template.loader_tags import IncludeNode, construct_relative_path, do_include
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
@@ -21,8 +21,16 @@ from includecontents.shared.enums import (
     normalize_enum_values,
     suggest_enum_value,
 )
+from includecontents.shared.props import PropDefinition
 
 register = template.Library()
+
+
+if TYPE_CHECKING:
+
+    class ContextWithProcessors(Context):
+        _processor_data: Dict[str, Any]
+        _processors_index: int
 
 
 class TemplateAttributeExpression:
@@ -317,7 +325,7 @@ class IncludeContentsNode(template.Node):
     ) -> None:
         self.token_name = token_name
         self.advanced_attrs = advanced_attrs
-        self.include_node = include_node
+        self.include_node: IncludeNode = include_node
         self.nodelist = nodelist
         self.named_nodelists = named_nodelists
 
@@ -366,6 +374,7 @@ class IncludeContentsNode(template.Node):
                 if component_scope is not None:
                     new_context.update(component_scope)
                     if processor_data:
+                        new_context = cast("ContextWithProcessors", new_context)
                         new_context._processor_data = processor_data
                 else:
                     new_context.update(prop_values)
@@ -404,7 +413,9 @@ class IncludeContentsNode(template.Node):
         if processors_index is not None and hasattr(context, "dicts"):
             processor_data = context.dicts[processors_index].copy()
         elif hasattr(context, "_processor_data"):
-            processor_data = context._processor_data.copy()
+            processor_data = cast(
+                "ContextWithProcessors", context
+            )._processor_data.copy()
 
         request = context.get("request")
         if request is None:
@@ -447,6 +458,7 @@ class IncludeContentsNode(template.Node):
                         continue
 
         if processor_data and not hasattr(context, "_processor_data"):
+            context = cast("ContextWithProcessors", context)
             context._processor_data = processor_data.copy()
 
         csrf_token = context.get("csrf_token")
@@ -473,7 +485,7 @@ class IncludeContentsNode(template.Node):
                         f"Advanced attribute {key!r} only allowed if component template"
                         " defines props"
                     )
-                prop_values[key] = value_expr.resolve(context)
+                prop_values[key] = value_expr.resolve(context)  # type: ignore
             return prop_values, None
 
         prop_values = {}
@@ -483,7 +495,7 @@ class IncludeContentsNode(template.Node):
         for key, value_expr in attrs_sequence:
             if key == "...":
                 continue
-            resolved_value = value_expr.resolve(context)
+            resolved_value = value_expr.resolve(context)  # type: ignore
             prop_def = component_props.get(key)
             if prop_def is not None:
                 provided_props.add(key)
@@ -551,7 +563,7 @@ class IncludeContentsNode(template.Node):
 
     def _raise_enhanced_template_error(
         self, original_error: TemplateDoesNotExist
-    ) -> None:
+    ) -> NoReturn:
         """Raise an enhanced TemplateDoesNotExist error with helpful debugging info."""
         template_name = original_error.args[0] if original_error.args else "unknown"
 
@@ -614,10 +626,12 @@ class IncludeContentsNode(template.Node):
         for key, value in self.advanced_attrs.items():
             yield key, value
 
-    def get_component_props(self, template: Template):
+    def get_component_props(
+        self, template: Template
+    ) -> Dict[str, PropDefinition] | None:
         resolver = getattr(template, "get_component_prop_definitions", None)
         if callable(resolver):
-            return resolver()
+            return cast(Dict[str, PropDefinition] | None, resolver())
         return None
 
     def get_component_template(self, context) -> Template:
@@ -814,18 +828,18 @@ class AttrsNode(template.Node):
 
     def render(self, context):
         context_attrs = context.get("attrs")
+        if self.sub_key:
+            context_attrs = getattr(context_attrs, self.sub_key, None)
         if not isinstance(context_attrs, Attrs):
             raise TemplateSyntaxError(
                 "The attrs tag requires an attrs variable in the context"
             )
-        if self.sub_key:
-            context_attrs = getattr(context_attrs, self.sub_key, None)
 
         # Build kwargs dict from resolved fallbacks
         kwargs = {}
         for key, value in self.fallbacks.items():
             if isinstance(value, FilterExpression):
-                kwargs[key] = value.resolve(context)
+                kwargs[key] = value.resolve(context)  # type: ignore
             elif value is NO_VALUE:  # Boolean attribute
                 kwargs[key] = True
             else:
