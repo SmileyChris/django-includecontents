@@ -2453,7 +2453,7 @@
 <p>Instead of migrating from Jinja2, consider:
 1. <strong>Dual template setup</strong>: Use Django templates for components, Jinja2 for main templates
 2. <strong>Macro-based approach</strong>: Implement component-like functionality with Jinja2 macros
-3. <strong>Custom Jinja2 extension</strong>: See <a href="../future/jinja2-support.md">Jinja2 Support Analysis</a> for implementation details</p>
+3. <strong>Custom Jinja2 extension</strong>: See the <a href="../../getting-started/jinja2-setup/">Jinja2 Setup Guide</a> for implementation details</p>
 <h3 id="considerations-for-mixed-environments">Considerations for Mixed Environments<a class="headerlink" href="#considerations-for-mixed-environments" title="Permanent link">&para;</a></h3>
 <p><strong>Option 1: Dual template engines</strong>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># settings.py</span>
@@ -2475,14 +2475,14 @@ Use Django's <code>render_to_string()</code> from within Jinja2 templates to ren
 <div class="language-text highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>{# Jinja2 template #}
 </span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>{{ django_component(&#39;components/card.html&#39;, title=&#39;Hello&#39;, content=content_var) }}
 </span></code></pre></div>
-<p>For detailed implementation, see <a href="../future/jinja2-support.md">Jinja2 Support Analysis</a>.</p>
+<p>For detailed implementation, see the <a href="../../getting-started/jinja2-setup/">Jinja2 Setup Guide</a>.</p>
 <h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
 <p>If you encounter issues during migration:</p>
 <ol>
 <li><strong>Check the <a href="../troubleshooting/">Troubleshooting Guide</a></strong></li>
 <li><strong>Review component examples in the documentation</strong></li>
 <li><strong>Test with minimal examples first</strong></li>
-<li><strong>For Jinja2 questions, see <a href="../future/jinja2-support.md">Jinja2 Support Analysis</a></strong></li>
+<li><strong>For Jinja2 questions, see the <a href="../../getting-started/jinja2-setup/">Jinja2 Setup Guide</a></strong></li>
 <li><strong>Ask for help on GitHub Issues</strong></li>
 </ol>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
