@@ -1,0 +1,8 @@
+{# props title= #}
+<div class="level1">
+    <h1>{{ title }}</h1>
+    <p>Level 1 - user_type: {{ user_type }}</p>
+    <include:complex-nested/level2>
+        {{ contents }}
+    </include:complex-nested/level2>
+</div>

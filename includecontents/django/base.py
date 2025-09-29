@@ -1,7 +1,13 @@
 import re
+from dataclasses import dataclass
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence
 
 import django.template.base
 from django.utils.text import smart_split
+
+from includecontents.shared.context import CapturedContents, ComponentContext
+from includecontents.shared.enums import parse_enum_definition
+from includecontents.shared.props import PropSpec, parse_props_comment
 
 
 def process_component_with_template_tags(token_string, position, lineno):
@@ -101,6 +107,37 @@ def process_icon_tag(token_string, position, lineno):
     )
 
 
+@dataclass(frozen=True)
+class PropDefinition:
+    spec: PropSpec
+    enum_values: Sequence[str] | None = None
+    enum_required: bool = False
+
+    @property
+    def name(self) -> str:
+        return self.spec.name
+
+    @property
+    def required(self) -> bool:
+        if self.enum_values is not None:
+            return self.enum_required
+        return self.spec.required
+
+    def clone_default(self) -> Any:
+        return self.spec.clone_default()
+
+    def is_enum(self) -> bool:
+        return self.enum_values is not None
+
+
+def _build_prop_definition(spec: PropSpec) -> PropDefinition:
+    default = spec.default
+    allowed, required = parse_enum_definition(default)
+    if allowed:
+        return PropDefinition(spec=spec, enum_values=allowed, enum_required=required)
+    return PropDefinition(spec=spec)
+
+
 class Template(django.template.base.Template):
     first_comment: str | None
 
@@ -127,12 +164,33 @@ class Template(django.template.base.Template):
         try:
             nodelist = parser.parse()
             self.first_comment = parser.first_comment
+            self._has_props_comment = self._detect_props_comment(self.first_comment)
+            self._component_prop_specs = parse_props_comment(self.source)
+            self._component_prop_defs: Optional[Dict[str, PropDefinition]] = None
             self.extra_data = getattr(parser, "extra_data", None)  # Django 5.1+
             return nodelist
         except Exception as e:
             if self.engine.debug:
                 e.template_debug = self.get_exception_info(e, e.token)  # type: ignore
             raise
+
+    @staticmethod
+    def _detect_props_comment(first_comment: Optional[str]) -> bool:
+        if not first_comment:
+            return False
+        normalized = first_comment.strip().lower()
+        return normalized.startswith("props") or normalized.startswith("def")
+
+    def get_component_prop_definitions(self) -> Optional[Dict[str, PropDefinition]]:
+        if not getattr(self, "_has_props_comment", False):
+            return None
+        if self._component_prop_defs is None:
+            specs = getattr(self, "_component_prop_specs", None) or {}
+            self._component_prop_defs = {
+                name: _build_prop_definition(spec)
+                for name, spec in specs.items()
+            }
+        return self._component_prop_defs
 
 
 tag_re = re.compile(

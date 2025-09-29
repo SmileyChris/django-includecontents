@@ -2,6 +2,14 @@
 
 Get up and running with Django IncludeContents in 5 minutes! This guide assumes you have Django IncludeContents [installed](installation.md) with the custom template engine.
 
+!!! note "Template Engine Support"
+    This guide uses HTML component syntax (`<include:component>`). This syntax works with:
+
+    - **Django**: Custom template engine required
+    - **Jinja2**: Works automatically with the extension
+
+    For template tag syntax (`{% includecontents %}`), see [template tag examples](../using-components/template-tag-syntax.md).
+
 ## Create Your First Component
 
 ### 1. Create a Component Template

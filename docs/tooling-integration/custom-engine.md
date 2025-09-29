@@ -291,9 +291,21 @@ Component: components/card.html
 
 - ✅ Django 3.2 LTS
 - ✅ Django 4.0
-- ✅ Django 4.1  
+- ✅ Django 4.1
 - ✅ Django 4.2 LTS
 - ✅ Django 5.0
+
+### Template Engine Compatibility
+
+!!! note "Django Template Engine Specific"
+    This custom template engine is designed specifically for Django templates. For Jinja2 users, similar functionality is provided through the [IncludeContentsExtension](../getting-started/jinja2-setup.md) which offers:
+
+    - HTML component syntax via preprocessing
+    - Multi-line tag support (native in Jinja2)
+    - Context isolation and props system
+    - Template tag functionality
+
+    Both engines provide equivalent features with different implementation approaches.
 
 ### Third-party Packages
 

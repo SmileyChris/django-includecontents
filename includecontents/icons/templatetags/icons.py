@@ -10,11 +10,11 @@ from django.utils.safestring import mark_safe
 from ..builder import get_or_create_sprite, get_sprite_hash, get_sprite_settings, get_sprite_filename
 from ..utils import parse_icon_definitions, format_attributes
 
-# Import Attrs from the main templatetags module
+# Import Attrs from the Django module
 try:
-    from ...templatetags.includecontents import Attrs
+    from ...django.attrs import Attrs
 except ImportError:
-    # Fallback if the main module is not available
+    # Fallback if the Django module is not available
     Attrs = None
 
 register = template.Library()

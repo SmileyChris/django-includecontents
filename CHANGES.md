@@ -4,6 +4,13 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 3.1.2 (2025-08-14)
+
+### Bugfixes
+
+- Fix WrapIfNode to properly handle node traversal for Django's template debugging tools. The node now correctly implements get_nodes_by_type() to traverse all dynamic content blocks within wrapif tags.
+
+
 # Version 3.1.1 (2025-08-06)
 
 ### Features

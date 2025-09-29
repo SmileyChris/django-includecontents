@@ -35,6 +35,7 @@ docs = [
     "pymdown-extensions>=9.0.0",
     "mike>=2.0.0",
 ]
+jinja = ["jinja2>=3.1"]
 
 [build-system]
 requires = ["pdm-backend"]
@@ -61,3 +62,6 @@ name = "django-includecontents"
 package = "includecontents"
 filename = "CHANGES.md"
 issue_format = "[{issue}]: https://github.com/SmileyChris/django-includecontents/issues/{issue}"
+
+[dependency-groups]
+jinja = ["jinja2>=3.1"]

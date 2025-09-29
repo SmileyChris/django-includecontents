@@ -2,6 +2,12 @@
 
 The `{% includecontents %}` tag is the foundation of Django IncludeContents. It works similarly to Django's built-in `{% include %}` tag, but allows you to pass content blocks to the included template.
 
+!!! tip "Template Engine Compatibility"
+    Template tag syntax (`{% includecontents %}`) works with both template engines:
+
+    - **Django**: Works with standard template engine (no custom backend needed)
+    - **Jinja2**: Full support via the IncludeContentsExtension (see [Jinja2 Setup](../getting-started/jinja2-setup.md))
+
 ## Basic Syntax
 
 ```django

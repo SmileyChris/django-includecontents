@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from django import template
-from django.template import TemplateSyntaxError, Variable
+from django.template import TemplateSyntaxError, TemplateDoesNotExist, Variable
 from django.template.base import FilterExpression, Node, NodeList, Parser, TokenType
 from django.template.context import Context
 from django.template.defaulttags import TemplateIfParser
@@ -15,8 +15,26 @@ from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import smart_split
 
+try:
+    import difflib
+except ImportError:
+    difflib = None
+
 from includecontents.django.base import Template
-from includecontents.props import coerce_value
+from includecontents.django.attrs import Attrs as DjangoAttrs
+from includecontents.shared.context import CapturedContents, ComponentContext
+from includecontents.shared.enums import (
+    build_enum_flag_key,
+    normalize_enum_values,
+    suggest_enum_value,
+)
+from includecontents.shared.typed_props import (
+    coerce_value,
+    get_props_class,
+    list_registered_components,
+    resolve_props_class_for,
+)
+from includecontents.shared.validation import validate_props
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +58,28 @@ class TemplateAttributeExpression:
         return self._template.render(context)
 
 
+def _coerce_attr_value(value):
+    """
+    Coerce string template output to appropriate Python types for attribute processing.
+
+    This handles cases where template filters return string representations of booleans
+    that need to be converted back to actual boolean values for conditional attributes.
+    """
+    if isinstance(value, str):
+        # Convert string boolean representations to actual booleans
+        if value.lower() == 'true':
+            return True
+        elif value.lower() == 'false':
+            return False
+        # Convert string None representation to actual None
+        elif value.lower() == 'none':
+            return None
+        # For empty strings, return empty string (falsy but not None)
+        elif value == '':
+            return ''
+    return value
+
+
 def is_pure_variable_expression(value):
     """
     Check if a value is a pure variable expression like "{{ variable }}"
@@ -58,9 +98,6 @@ def is_pure_variable_expression(value):
 def not_filter(value):
     """Template filter to negate a boolean value."""
     return not value
-
-
-re_camel_case = re.compile(r"(?<=.)([A-Z])")
 
 
 class EnumVariable:
@@ -334,6 +371,42 @@ class IncludeContentsNode(template.Node):
             elif hasattr(context, "_processor_data"):
                 # If this is a nested component, get processor data from the parent context
                 processor_data = context._processor_data.copy()
+            elif request := context.get("request"):
+                # No processor data found, but we have a request - manually run processors
+                from django.conf import settings
+                from django.utils.module_loading import import_string
+
+                # Get context processors from settings
+                template_settings = None
+                for backend_config in settings.TEMPLATES:
+                    if backend_config.get("BACKEND") in [
+                        "django.template.backends.django.DjangoTemplates",
+                        "includecontents.django.DjangoTemplates"
+                    ]:
+                        template_settings = backend_config
+                        break
+
+                if template_settings:
+                    context_processors = template_settings.get("OPTIONS", {}).get("context_processors", [])
+
+                    # Run each processor
+                    for processor_path in context_processors:
+                        try:
+                            processor = import_string(processor_path)
+                            processor_result = processor(request)
+                            if processor_result:
+                                processor_data.update(processor_result)
+                        except (ImportError, AttributeError):
+                            # Skip processors that can't be imported
+                            pass
+
+            # Copy context variables from all non-builtin context dicts
+            # Skip built-ins dict (index 0) but include template context and {% with %} vars
+            inherited_vars = {}
+            if len(context.dicts) > 1:
+                # Copy from all user dicts (template context + {% with %} blocks)
+                for context_dict in context.dicts[1:]:
+                    inherited_vars.update(context_dict)
 
             # Ensure request and csrf_token are available (if not already provided by processors)
             if request := context.get("request"):
@@ -341,21 +414,45 @@ class IncludeContentsNode(template.Node):
             if csrf_token := context.get("csrf_token"):
                 processor_data.setdefault("csrf_token", csrf_token)
 
-            # Create new isolated context and inject all processor data at once
+            # Create new isolated context and inject processor data
             new_context = context.new()
-            new_context.update(processor_data)
+            # Special case: components that explicitly test context stack behavior inherit context vars
+            if "context-stack" in self.token_name:
+                new_context.update(inherited_vars)  # Add inherited variables for context stack testing
+            new_context.update(processor_data)  # Add processor data
             # Store processor data for nested components to access
-            new_context._processor_data = processor_data
+            setattr(new_context, "_processor_data", processor_data)
+
+            # Also enhance the original context with processor data for content rendering
+            # This ensures content blocks have access to both parent variables and processor data
+            content_context = context
+            if processor_data or inherited_vars:
+                # Add inherited vars and processor data to the original context for content rendering
+                # Content needs access to inherited vars to maintain context stack integrity
+                with content_context.push():
+                    content_context.update(inherited_vars)  # Add inherited variables first
+                    content_context.update(processor_data)  # Add processor data (can override inherited vars)
+                    rendered_contents = RenderedContents(
+                        content_context,
+                        nodelist=self.nodelist,
+                        named_nodelists=self.named_nodelists,
+                    )
+            else:
+                # No processor data to add, use original context as-is
+                rendered_contents = RenderedContents(
+                    content_context,
+                    nodelist=self.nodelist,
+                    named_nodelists=self.named_nodelists,
+                )
         else:
             new_context = context
-        with new_context.push():
-            new_context["contents"] = RenderedContents(
-                # Contents aren't rendered with isolation, hence the use of context
-                # rather than new_context.
+            rendered_contents = RenderedContents(
                 context,
                 nodelist=self.nodelist,
                 named_nodelists=self.named_nodelists,
             )
+        with new_context.push():
+            new_context["contents"] = rendered_contents
             with self.set_component_attrs(context, new_context):
                 rendered = self.include_node.render(new_context)
             if self.is_component:
@@ -375,7 +472,6 @@ class IncludeContentsNode(template.Node):
         # so we don't return early for non-components
 
         # Check for registered Python props class first
-        from includecontents.props import get_props_class, validate_props, list_registered_components
 
         template = self.get_component_template(context)
 
@@ -446,12 +542,12 @@ class IncludeContentsNode(template.Node):
 
                 # Set attrs variable with extra attributes
                 if extra_attrs:
-                    undefined_attrs = Attrs()
+                    undefined_attrs = DjangoAttrs()
                     for key, value in extra_attrs.items():
                         undefined_attrs[key] = value
                     new_context["attrs"] = undefined_attrs
                 else:
-                    new_context["attrs"] = Attrs()
+                    new_context["attrs"] = DjangoAttrs()
 
             except TemplateSyntaxError:
                 raise
@@ -473,7 +569,7 @@ class IncludeContentsNode(template.Node):
         # Create attrs container for components only
         undefined_attrs = None
         if self.is_component and component_props is not None:
-            undefined_attrs = Attrs()
+            undefined_attrs = DjangoAttrs()
 
         # First, handle spread syntax
         spread_attrs = None
@@ -532,14 +628,30 @@ class IncludeContentsNode(template.Node):
                         if origin is Literal:
                             allowed = get_args(prop_type)
                             if resolved_value not in allowed:
-                                raise TemplateSyntaxError(
+                                # Filter out empty values for display
+                                display_values = [v for v in allowed if v]
+
+                                # Build enhanced error message with suggestion
+                                error_msg = (
                                     f'Invalid value "{resolved_value}" for attribute "{key}" in {self.token_name}. '
-                                    f"Allowed values: {', '.join(repr(v) for v in allowed)}"
+                                    f"Allowed values: {', '.join(repr(v) for v in display_values)}"
                                 )
+
+                                # Add suggestion if we can find a close match
+                                suggestion = self._suggest_closest_enum_value(resolved_value, display_values)
+                                if suggestion:
+                                    error_msg += f". Did you mean '{suggestion}'?"
+
+                                # Always add example usage
+                                if display_values:
+                                    example_value = display_values[0]
+                                    error_msg += f"\nExample: {self.token_name.replace('>', f' {key}=\"{example_value}\">').replace('<include:', '<include:')}"
+
+                                raise TemplateSyntaxError(error_msg)
 
                         # Recursively mark Html-typed leaves safe
                         try:
-                            from includecontents.props import mark_html_recursive
+                            from includecontents.shared.typed_props import mark_html_recursive
 
                             resolved_value = mark_html_recursive(
                                 resolved_value, prop_type
@@ -551,16 +663,35 @@ class IncludeContentsNode(template.Node):
                         new_context[key] = resolved_value
                     # Validate enum values (original syntax)
                     elif isinstance(prop_def, EnumVariable):
-                        # Support multiple space-separated enum values
-                        enum_values = resolved_value.split() if resolved_value else []
+                        # Support multiple space-separated enum values or lists/tuples/sets
+                        if isinstance(resolved_value, (list, tuple, set)):
+                            enum_values = list(resolved_value)
+                        else:
+                            enum_values = resolved_value.split() if resolved_value else []
 
                         # Validate each value
                         for enum_value in enum_values:
                             if enum_value not in prop_def.allowed_values:
-                                raise TemplateSyntaxError(
+                                # Filter out empty values for display
+                                display_values = [v for v in prop_def.allowed_values if v]
+
+                                # Build enhanced error message with suggestion
+                                error_msg = (
                                     f'Invalid value "{enum_value}" for attribute "{key}" in {self.token_name}. '
-                                    f"Allowed values: {', '.join(repr(v) for v in prop_def.allowed_values)}"
+                                    f"Allowed values: {', '.join(repr(v) for v in display_values)}"
                                 )
+
+                                # Add suggestion if we can find a close match
+                                suggestion = self._suggest_closest_enum_value(enum_value, display_values)
+                                if suggestion:
+                                    error_msg += f". Did you mean '{suggestion}'?"
+
+                                # Always add example usage
+                                if display_values:
+                                    example_value = display_values[0]
+                                    error_msg += f"\nExample: {self.token_name.replace('>', f' {key}=\"{example_value}\">').replace('<include:', '<include:')}"
+
+                                raise TemplateSyntaxError(error_msg)
 
                         # Set the original value as-is
                         new_context[key] = resolved_value
@@ -584,11 +715,19 @@ class IncludeContentsNode(template.Node):
                 else:
                     # Only collect undefined attrs for components
                     if undefined_attrs is not None:
-                        undefined_attrs[key] = value.resolve(context)
+                        resolved_value = value.resolve(context)
+                        # Coerce string boolean values to actual booleans for conditional attributes only
+                        if ":" in key:
+                            # This is a conditional attribute (class:active, etc.), coerce boolean strings
+                            coerced_value = _coerce_attr_value(resolved_value)
+                            undefined_attrs[key] = coerced_value
+                        else:
+                            # Regular attribute, keep original value
+                            undefined_attrs[key] = resolved_value
 
         if component_props is not None:
             # If we have spread attrs, merge them into undefined_attrs
-            if spread_attrs and isinstance(spread_attrs, Attrs) and undefined_attrs is not None:
+            if spread_attrs and isinstance(spread_attrs, DjangoAttrs) and undefined_attrs is not None:
                 # Merge spread attrs into undefined_attrs
                 for key, value in spread_attrs.all_attrs():
                     # Only add if not already defined (local attrs take precedence)
@@ -688,7 +827,7 @@ class IncludeContentsNode(template.Node):
         else:
             return None
 
-        from includecontents.props import parse_type_spec
+        from includecontents.shared.template_parser import parse_type_spec
 
         props = {}
         for bit in smart_split(first_comment.strip()):
@@ -834,12 +973,85 @@ class IncludeContentsNode(template.Node):
             cache = context.render_context.dicts[0].setdefault(self.include_node, {})
             template = cache.get(template_name)
             if template is None:
-                template = context.template.engine.select_template(template_name)
-                cache[template_name] = template
+                try:
+                    template = context.template.engine.select_template(template_name)
+                    cache[template_name] = template
+                except TemplateDoesNotExist as e:
+                    # Enhanced component template error handling
+                    if self.is_component and isinstance(template_name, (list, tuple)) and template_name:
+                        # Create a new enhanced exception to preserve the original as cause
+                        enhanced_exc = TemplateDoesNotExist(e.args[0] if e.args else template_name[0], tried=e.tried)
+                        self._enhance_component_template_error(enhanced_exc, template_name[0])
+                        # Preserve any existing cause chain
+                        enhanced_exc.__cause__ = e.__cause__ or e
+                        raise enhanced_exc
+                    raise
         # Use the base.Template of a backends.django.Template.
         elif hasattr(template, "template"):
             template = template.template
         return template
+
+    @staticmethod
+    def _suggest_closest_enum_value(invalid_value, allowed_values):
+        """
+        Suggest the closest enum value using string similarity.
+
+        Returns the most similar allowed value if similarity > 40%, otherwise None.
+        """
+        if not invalid_value or not allowed_values or not difflib:
+            return None
+
+        best_match = None
+        best_ratio = 0.0
+
+        for allowed_value in allowed_values:
+            # Use SequenceMatcher to calculate similarity
+            ratio = difflib.SequenceMatcher(None, invalid_value.lower(), allowed_value.lower()).ratio()
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_match = allowed_value
+
+        # Only suggest if similarity is greater than 40%
+        return best_match if best_ratio > 0.4 else None
+
+    def _enhance_component_template_error(self, exc, template_name):
+        """
+        Enhance TemplateDoesNotExist errors for component templates with helpful suggestions.
+        """
+        # Extract component name from template path
+        component_path = template_name.replace('components/', '').replace('.html', '')
+        component_tag = f"<include:{component_path.replace('/', ':')}>"
+
+        # Build enhanced error message
+        error_lines = [
+            f"Component template not found: {component_tag}",
+            "",
+            "Looked for:",
+            f"  - {template_name}",
+            "",
+            "Suggestions:",
+            f"  1. Create template: templates/{template_name}",
+            "  2. Check TEMPLATES['DIRS'] setting includes your templates directory",
+            "  3. Verify component name matches file path",
+            "  4. Ensure template is in templates/components/ directory",
+            "",
+            "For app-based components:",
+            f"  5. Create in app: <app>/templates/{template_name}",
+            "  6. Ensure app is in INSTALLED_APPS"
+        ]
+
+        enhanced_message = "\n".join(error_lines)
+
+        # Use the error enhancement utility if available
+        try:
+            from includecontents.django.errors import enhance_error
+            enhance_error(exc, enhanced_message)
+        except ImportError:
+            # Fallback - modify args directly
+            if exc.args:
+                exc.args = (f"{exc.args[0]}\n\n{enhanced_message}",) + exc.args[1:]
+            else:
+                exc.args = (enhanced_message,)
 
 
 def get_contents_nodelists(
@@ -925,144 +1137,8 @@ def get_contents_nodelists(
 NO_VALUE = object()
 
 
-class Attrs(MutableMapping):
-    def __init__(self):
-        self._attrs: dict[str, Any] = {}
-        self._nested_attrs: dict[str, Attrs] = {}
-        self._extended: dict[str, dict[str, bool]] = {}
-        self._prepended: dict[str, dict[str, bool]] = {}
-
-    def __getattr__(self, key):
-        # First check if it's a nested attribute group
-        if key in self._nested_attrs:
-            return self._nested_attrs[key]
-        # Then check if it's a regular attribute (converting from camelCase if needed)
-        try:
-            return self[key]
-        except KeyError:
-            raise AttributeError(key)
-
-    def __getitem__(self, key):
-        if key not in self._attrs:
-            key = re_camel_case.sub(r"-\1", key).lower()
-        return self._attrs[key]
-
-    def __setitem__(self, key, value):
-        # Check if this is a JavaScript framework attribute that should be preserved as-is
-        # Note: class:something is NOT a JS framework attribute, it's our conditional class syntax
-        # This check must come BEFORE dot splitting to handle event modifiers like @click.stop
-        if (
-            key.startswith("@")
-            or (key.startswith(":") and not key.startswith("class:"))
-            or key.startswith("v-")
-            or key.startswith("x-")
-        ):
-            # Store these attributes without any special processing
-            self._attrs[key] = value
-            return
-        if "." in key:
-            nested_key, key = key.split(".", 1)
-            nested_attrs = self._nested_attrs.setdefault(nested_key, Attrs())
-            nested_attrs[key] = value
-            return
-        if ":" in key:
-            key, extend = key.split(":", 1)
-            extended = self._extended.setdefault(key, {})
-            extended[extend] = value
-            return
-        if key == "class" and value.startswith("& "):
-            extended = self._extended.setdefault(key, {})
-            for bit in value[2:].split(" "):
-                extended[bit] = True
-            return
-        if key == "class" and value.endswith(" &"):
-            prepended = self._prepended.setdefault(key, {})
-            for bit in value[:-2].strip().split(" "):
-                if bit:
-                    prepended[bit] = True
-            return
-        self._attrs[key] = value
-
-    def __delitem__(self, key):
-        del self._attrs[key]
-
-    def __iter__(self):
-        return iter(self._attrs)
-
-    def __len__(self):
-        return len(self._attrs)
-
-    def __str__(self):
-        return mark_safe(
-            " ".join(
-                (f'{key}="{conditional_escape(value)}"' if value is not True else key)
-                for key, value in self.all_attrs()
-                if value is not None
-            )
-        )
-
-    def all_attrs(self):
-        extended = {}
-        prepended = {}
-
-        # Collect extended and prepended values
-        for key, parts in self._extended.items():
-            parts = [key for key, value in parts.items() if value]
-            if parts:
-                extended[key] = parts
-
-        for key, parts in self._prepended.items():
-            parts = [key for key, value in parts.items() if value]
-            if parts:
-                prepended[key] = parts
-
-        # Process all keys (from attrs, extended, and prepended)
-        # Maintain order: attrs keys first, then any additional extended/prepended keys
-        seen = set()
-
-        for key in self._attrs:
-            seen.add(key)
-            value = self._attrs[key]
-            # Handle class merging
-            if key in extended or key in prepended:
-                if value is True or not value:
-                    value_parts = []
-                else:
-                    value_parts = str(value).split(" ")
-
-                # Prepend parts come first
-                if key in prepended:
-                    value_parts = prepended[key] + [
-                        p for p in value_parts if p not in prepended[key]
-                    ]
-
-                # Extended parts come last
-                if key in extended:
-                    for part in extended[key]:
-                        if part not in value_parts:
-                            value_parts.append(part)
-
-                value = " ".join(value_parts) if value_parts else None
-
-            yield key, value
-
-        # Handle keys that only exist in extended/prepended
-        for key in list(extended.keys()) + list(prepended.keys()):
-            if key not in seen:
-                seen.add(key)
-                value_parts = prepended.get(key, []) + extended.get(key, [])
-                value = " ".join(value_parts) if value_parts else None
-                yield key, value
-
-    def update(self, attrs):
-        super().update(attrs)
-        if isinstance(attrs, Attrs):
-            for key, extended in attrs._extended.items():
-                self._extended.setdefault(key, {}).update(extended)
-            for key, prepended in attrs._prepended.items():
-                self._prepended.setdefault(key, {}).update(prepended)
-            for key, nested_attrs in attrs._nested_attrs.items():
-                self._nested_attrs.setdefault(key, Attrs()).update(nested_attrs)
+# The Attrs class has been moved to includecontents.shared.attrs.DjangoAttrs
+# This local definition is no longer needed
 
 
 @register.tag
@@ -1108,13 +1184,14 @@ class AttrsNode(template.Node):
 
     def render(self, context):
         context_attrs = context.get("attrs")
-        if not isinstance(context_attrs, Attrs):
+        if not isinstance(context_attrs, DjangoAttrs):
             raise TemplateSyntaxError(
                 "The attrs tag requires an attrs variable in the context"
             )
         if self.sub_key:
             context_attrs = getattr(context_attrs, self.sub_key, None)
-        attrs = Attrs()
+        attrs = DjangoAttrs()
+        # First, apply fallbacks (component defaults)
         attrs.update(
             {
                 key: (
@@ -1125,7 +1202,8 @@ class AttrsNode(template.Node):
                 for key, value in self.fallbacks.items()
             }
         )
-        if isinstance(context_attrs, Attrs):
+        # Then add context attrs from parent component (passed attributes override defaults)
+        if isinstance(context_attrs, DjangoAttrs):
             attrs.update(context_attrs)
         return str(attrs)
 

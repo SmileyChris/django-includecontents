@@ -7,6 +7,46 @@ from django.template import TemplateDoesNotExist
 from .base import Template
 
 
+def _enhance_component_template_error(exc, template_name):
+    """
+    Enhance TemplateDoesNotExist errors for component templates with helpful suggestions.
+    """
+    # Extract component name from template path
+    component_path = template_name.replace('components/', '').replace('.html', '')
+    component_tag = f"<include:{component_path.replace('/', ':')}>"
+
+    # Build enhanced error message
+    error_lines = [
+        f"Component template not found: {component_tag}",
+        "",
+        "Looked for:",
+        f"  - {template_name}",
+        "",
+        "Suggestions:",
+        f"  1. Create template: templates/{template_name}",
+        f"  2. Check TEMPLATES['DIRS'] setting includes your templates directory",
+        f"  3. Verify component name matches file path",
+        f"  4. Ensure template is in templates/components/ directory",
+        "",
+        "For app-based components:",
+        f"  5. Create in app: <app>/templates/{template_name}",
+        f"  6. Ensure app is in INSTALLED_APPS"
+    ]
+
+    enhanced_message = "\n".join(error_lines)
+
+    # Use the error enhancement utility if available
+    try:
+        from .errors import enhance_error
+        enhance_error(exc, enhanced_message)
+    except ImportError:
+        # Fallback - modify args directly
+        if exc.args:
+            exc.args = (f"{exc.args[0]}\n\n{enhanced_message}",) + exc.args[1:]
+        else:
+            exc.args = (enhanced_message,)
+
+
 class CustomTemplateMixin(django.template.loaders.base.Loader):
     def get_template(self, template_name, skip=None):
         """
@@ -35,7 +75,16 @@ class CustomTemplateMixin(django.template.loaders.base.Loader):
                     self.engine,
                 )
 
-        raise TemplateDoesNotExist(template_name, tried=tried)
+        # Check if this is a component template and enhance error message
+        original_exc = TemplateDoesNotExist(template_name, tried=tried)
+        if isinstance(template_name, str) and template_name.startswith('components/'):
+            # Create enhanced exception with original as cause
+            enhanced_exc = TemplateDoesNotExist(template_name, tried=tried)
+            _enhance_component_template_error(enhanced_exc, template_name)
+            enhanced_exc.__cause__ = original_exc
+            raise enhanced_exc
+        else:
+            raise original_exc
 
 
 class FilesystemLoader(

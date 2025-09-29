@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head><title>CSRF Nested Test</title></head>
+<body>
+<include:csrf>
+    <include:csrf>
+        CSRF Token: {{ csrf_token }}
+    </include:csrf>
+</include:csrf>
+</body>
+</html>
