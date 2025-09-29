@@ -174,8 +174,15 @@ class Choice(Generic[T]):
 
     def __class_getitem__(cls, items):
         if isinstance(items, str):
-            items = (items,)
-        return Literal[items]
+            # Single item: Choice['admin']
+            return Literal[items]
+        elif isinstance(items, tuple):
+            # Multiple items: Choice['admin', 'user', 'guest']
+            # Unpack the tuple to create Literal['admin', 'user', 'guest']
+            return Literal[items]
+        else:
+            # Single non-string item: Choice[123]
+            return Literal[items]
 
 
 # Unique marker for MultiChoice values to enable camelCase boolean flag generation

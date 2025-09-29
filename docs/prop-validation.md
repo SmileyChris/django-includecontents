@@ -88,45 +88,344 @@ class UserProfileProps:
 
 The `includecontents.prop_types` module provides component-focused types that leverage Django validators:
 
+### Quick Reference
+
+| Type | Template Syntax | Python Syntax | Description |
+|------|----------------|---------------|-------------|
+| **Basic Types** |
+| `str`/`text` | `name:text` | `name: str` | Basic string values |
+| `int` | `age:int` | `age: int` | Integer values |
+| `bool` | `active:bool` | `active: bool` | Boolean values |
+| `decimal`/`float` | `price:decimal` | `price: Decimal` | Decimal numbers |
+| **Parameterized Basic Types** |
+| `Text` | `name:text[max_length=100]` | `name: Text[max_length=100]` | String with validation |
+| `Integer` | `age:int[min=18,max=120]` | `age: Integer[min=18, max=120]` | Integer with bounds |
+| `Decimal` | `price:decimal[min=0,max=999.99]` | `price: Decimal[min=0, max=999.99]` | Decimal with bounds/precision |
+| **Validated String Types** |
+| `Email` | `email:email` | `email: Email` | Email address validation |
+| `Url` | `website:url` | `website: Url` | URL validation |
+| `Slug` | `permalink:slug` | `permalink: Slug` | URL slug validation |
+| `UnicodeSlug` | `name:unicode_slug` | `name: UnicodeSlug` | Unicode slug validation |
+| `IPAddress` | `server:ip` | `server: IPAddress` | IPv4 address validation |
+| `IPv6Address` | `server:ipv6` | `server: IPv6Address` | IPv6 address validation |
+| **Component-Specific Types** |
+| `CssClass` | `css:css_class` | `css: CssClass` | CSS class name validation |
+| `Color` | `color:color` | `color: Color` | CSS color validation |
+| `IconName` | `icon:icon` | `icon: IconName` | Icon name validation |
+| `Html` | `content:html` | `content: Html` | HTML content (marked safe) |
+| `Json` | `data:json` | `data: Json` | JSON string validation |
+| **Choice Types** |
+| `Choice` | `role:choice[admin,user,guest]` | `role: Choice['admin', 'user', 'guest']` | Restricted choices |
+| `MultiChoice` | `variant:multichoice[primary,large]` | `variant: MultiChoice['primary', 'large']` | Multiple choices with flags |
+| **Django-Specific Types** |
+| `Model` | `author:model[auth.User]` | `author: Model['auth.User']` | Django model instance |
+| `QuerySet` | `posts:queryset[blog.Post]` | `posts: QuerySet['blog.Post']` | Django QuerySet |
+| `User` | `owner:user` | `owner: User` | Project user model |
+
 ### Basic Types
 
-- `Text[{'max_length': 100, 'min_length': 2, 'pattern': r'^[A-Z]'}]` - String with optional validation
-- `Integer[{'min': 18, 'max': 120}]` - Integer with optional bounds  
-- `Decimal[{'max_digits': 10, 'decimal_places': 2, 'min': 0, 'max': 999.99}]` - Precise decimal numbers
-- `bool` - Boolean values (automatically converts string inputs)
+#### `Text` - String with Validation
+```python
+# Python usage
+name: Text                              # Basic string
+title: Text[max_length=100]            # With max length
+username: Text[min_length=3, max_length=20]  # Min and max length
+code: Text[pattern=r'^[A-Z]{3}-\d{3}$'] # With regex pattern
+```
 
-### Pre-configured Types
+```django
+{# Template usage #}
+{# props name:text title:text[max_length=100] username:text[min_length=3,max_length=20] #}
+```
 
-- `Email` - Validates email addresses
-- `Url` - Validates URLs
-- `Slug` - Validates slug strings
-- `IPAddress` - Validates IPv4 addresses
-- `IPv6Address` - Validates IPv6 addresses
+#### `Integer` - Integer with Bounds
+```python
+# Python usage
+age: Integer                    # Any integer
+year: Integer[min=1900]        # Minimum value
+score: Integer[min=0, max=100] # Min and max bounds
+```
 
-### Django-Specific Types
+```django
+{# Template usage #}
+{# props age:int year:int[min=1900] score:int[min=0,max=100] #}
+```
 
-- `Model['app.ModelName']` - Validates specific Django model instances
-- `Model[ModelClass]` - Validates instances of a model class
-- `Model` - Validates any Django model instance
-- `QuerySet['app.ModelName']` - Validates QuerySets of a specific model
-- `QuerySet[ModelClass]` - Validates QuerySets of a model class
-- `QuerySet` - Validates any Django QuerySet
-- `User` - Validates instances of the project's user model (AUTH_USER_MODEL)
+#### `Decimal` - Precise Decimal Numbers
+```python
+# Python usage
+price: Decimal                                      # Any decimal
+amount: Decimal[min=0, max=999.99]                 # With bounds
+precise: Decimal[max_digits=10, decimal_places=2]  # With precision
+```
+
+```django
+{# Template usage #}
+{# props price:decimal amount:decimal[min=0,max=999.99] #}
+```
+
+### Validated String Types
+
+All of these are pre-configured `Annotated` types with specific Django validators:
+
+```python
+# Python usage
+email: Email        # EmailValidator
+website: Url        # URLValidator
+permalink: Slug     # Slug validator (lowercase, hyphens)
+name: UnicodeSlug   # Unicode-aware slug
+server: IPAddress   # IPv4 address validator
+server_v6: IPv6Address  # IPv6 address validator
+```
+
+```django
+{# Template usage #}
+{# props email:email website:url permalink:slug server:ip #}
+```
 
 ### Component-Specific Types
 
-- `Choice['option1', 'option2', ...]` - Restricted string choices (like Literal)
-- `MultiChoice['option1', 'option2', ...]` - Multiple space-separated choices with camelCase boolean flags
-- `CssClass[{'pattern': r'^custom-pattern$'}]` - Validates CSS class names (with optional custom pattern)
-- `Color['hex']` or `Color['rgb']` or `Color['rgba']` - Validates CSS colors with specific format
-- `IconName()` - Validates icon names
-- `Html` - Marker for HTML content (will be marked safe)
-- `Json` - Validates JSON strings
+#### `CssClass` - CSS Class Validation
+```python
+# Python usage
+css: CssClass                                    # Default pattern: ^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$
+custom: CssClass[pattern=r'^btn-\w+$']          # Custom pattern
+```
+
+```django
+{# Template usage #}
+{# props css:css_class #}
+```
+
+#### `Color` - CSS Color Validation
+```python
+# Python usage
+background: Color           # Any color format
+primary: Color['hex']       # Hex colors only (#ff0000)
+accent: Color['rgb']        # RGB format only (rgb(255,0,0))
+overlay: Color['rgba']      # RGBA format only (rgba(255,0,0,0.5))
+```
+
+```django
+{# Template usage #}
+{# props background:color primary:color[hex] accent:color[rgb] #}
+```
+
+#### `IconName` - Icon Name Validation
+```python
+# Python usage
+icon: IconName     # Validates icon name format (^[a-zA-Z0-9][\w:-]*$)
+```
+
+```django
+{# Template usage #}
+{# props icon:icon #}
+```
+
+#### `Html` - HTML Content Marker
+```python
+# Python usage
+content: Html      # String that will be marked safe in templates
+```
+
+```django
+{# Template usage #}
+{# props content:html #}
+```
+
+#### `Json` - JSON String Validation
+```python
+# Python usage
+config: Json       # Validates JSON format
+```
+
+```django
+{# Template usage #}
+{# props config:json #}
+```
+
+### Choice Types
+
+#### `Choice` - Restricted String Choices
+```python
+# Python usage (equivalent to Literal)
+role: Choice['admin', 'user', 'guest']
+size: Choice['sm', 'md', 'lg'] = 'md'
+```
+
+```django
+{# Template usage #}
+{# props role:choice[admin,user,guest] size:choice[sm,md,lg]=md #}
+```
+
+#### `MultiChoice` - Multiple Choices with Boolean Flags
+```python
+# Python usage
+variant: MultiChoice['primary', 'secondary', 'large', 'small']
+features: MultiChoice['shadow', 'border', 'hover'] = 'shadow border'
+```
+
+```django
+{# Template usage #}
+{# props variant:multichoice[primary,secondary,large,small] #}
+
+{# Usage generates camelCase boolean flags #}
+<include:component variant="primary large">
+{# Creates: variantPrimary=True, variantLarge=True, variantSecondary=False, variantSmall=False #}
+```
+
+### Django-Specific Types
+
+#### `Model` - Django Model Instance Validation
+```python
+# Python usage
+author: Model                    # Any Django model instance
+user: Model['auth.User']        # Specific model by string
+article: Model[Article]         # Specific model by class
+```
+
+```django
+{# Template usage #}
+{# props author:model user:model[auth.User] #}
+```
+
+#### `QuerySet` - Django QuerySet Validation
+```python
+# Python usage
+items: QuerySet                     # Any QuerySet
+posts: QuerySet['blog.Post']       # QuerySet of specific model
+articles: QuerySet[Article]        # QuerySet of model class
+```
+
+```django
+{# Template usage #}
+{# props items:queryset posts:queryset[blog.Post] #}
+```
+
+#### `User` - Project User Model
+```python
+# Python usage
+owner: User        # Validates against AUTH_USER_MODEL
+```
+
+```django
+{# Template usage #}
+{# props owner:user #}
+```
 
 ### Helper Functions
 
-- `MinMax(min, max)` - Integer with min/max bounds
-- `Pattern(regex, message)` - String with regex validation
+#### `Pattern(regex, message)` - Custom Regex Validation
+```python
+# Python usage
+ProductCode = Pattern(r'^[A-Z]{3}-\d{3}$', 'Invalid product code format')
+product_code: ProductCode
+```
+
+#### `MinMax(min_val, max_val)` - Integer Bounds
+```python
+# Python usage
+Age18Plus = MinMax(18, 120)
+age: Age18Plus
+```
+
+#### `MinMaxDecimal(min_val, max_val, max_digits=10, decimal_places=2)` - Decimal Bounds
+```python
+# Python usage
+Price = MinMaxDecimal(0, 999.99, max_digits=6, decimal_places=2)
+price: Price
+```
+
+### Type Coercion
+
+The system automatically converts string inputs to appropriate types:
+
+| Input | Type | Result | Notes |
+|-------|------|--------|-------|
+| `"25"` | `int` | `25` | String to integer |
+| `"true"` | `bool` | `True` | String to boolean |
+| `"false"` | `bool` | `False` | Recognizes false, 0, no, off, empty |
+| `"4.5"` | `Decimal` | `Decimal('4.5')` | String to decimal |
+| `"red,blue,green"` | `list[str]` | `['red', 'blue', 'green']` | Comma-separated to list |
+| `"primary large"` | `MultiChoice` | `"primary large"` + flags | Space-separated choices |
+
+### Optional Props Syntax
+
+There are several ways to make props optional:
+
+#### Template Props Syntax
+
+```django
+{# 1. Use ? marker #}
+{# props name?:text email?:email age?:int #}
+
+{# 2. Provide default values #}
+{# props name:text="Anonymous" active:bool=true count:int=0 #}
+
+{# 3. Legacy enum with empty first value #}
+{# props size=,small,medium,large theme=,light,dark #}
+```
+
+#### Python Props Syntax
+
+```python
+@dataclass
+class Props:
+    # Using | None (Python 3.10+)
+    name: str | None = None
+    email: str | None = None
+
+    # Using Optional (older Python)
+    from typing import Optional
+    bio: Optional[str] = None
+
+    # Default values (makes them optional)
+    active: bool = True
+    count: int = 0
+    theme: Choice['light', 'dark'] = 'light'
+```
+
+**Important:** The `| None` syntax is **only supported in Python dataclasses**, not in template `{# props #}` syntax. Use `?` marker or defaults in templates.
+
+### Legacy Enum Optional Syntax
+
+The original enum syntax supports optional values by starting with an empty choice:
+
+```django
+{# Legacy syntax - still supported #}
+{# props size=,small,medium,large #}          {# Leading comma = optional #}
+{# props validation_state=,valid,invalid #}   {# Empty first = optional #}
+
+{# Modern equivalent #}
+{# props size?:choice[small,medium,large] #}  {# ? marker = optional #}
+{# props size:choice[small,medium,large]="" #}  {# Empty default = optional #}
+```
+
+### Template Parser Type Mapping
+
+These type names are available in template `{# props #}` syntax:
+
+| Template Name | Maps To | Description |
+|--------------|---------|-------------|
+| `text`, `str`, `string` | `Text()` | String type |
+| `int`, `integer` | `Integer()` | Integer type |
+| `decimal`, `float` | `Decimal()` | Decimal type |
+| `bool`, `boolean` | `bool` | Boolean type |
+| `email` | `Email` | Email validation |
+| `url` | `Url` | URL validation |
+| `slug` | `Slug` | Slug validation |
+| `unicode_slug` | `UnicodeSlug` | Unicode slug validation |
+| `ip`, `ipv4` | `IPAddress` | IPv4 validation |
+| `ipv6` | `IPv6Address` | IPv6 validation |
+| `css_class` | `CssClass()` | CSS class validation |
+| `color` | `Color()` | Color validation |
+| `icon` | `IconName()` | Icon name validation |
+| `html` | `Html()` | HTML content marker |
+| `json` | `Json()` | JSON validation |
+| `model` | `Model()` | Any model instance |
+| `queryset` | `QuerySet()` | Any QuerySet |
+| `user` | `User` | Project user model |
+| `multichoice` | `MultiChoice` | Multiple choice type |
 
 ## Template Props Syntax
 
