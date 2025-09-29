@@ -110,7 +110,9 @@ class BaseAttrs(MutableMapping[str, Any]):
         if key in self._conditional_modifiers:
             try:
                 base_value = self[key]
-                return ConditionalAttribute(base_value, self._conditional_modifiers[key])
+                return ConditionalAttribute(
+                    base_value, self._conditional_modifiers[key]
+                )
             except KeyError:
                 # No base value, just return conditional attrs with empty base
                 return ConditionalAttribute("", self._conditional_modifiers[key])
@@ -137,10 +139,12 @@ class BaseAttrs(MutableMapping[str, Any]):
         - :disabled="isLoading" (Vue/Alpine binding, except class:)
         """
         return (
-            key.startswith("@") or  # Alpine/Vue events
-            (key.startswith(":") and not key.startswith("class:")) or  # Bindings except class:
-            key.startswith("v-") or  # Vue directives
-            key.startswith("x-")  # Alpine directives
+            key.startswith("@")  # Alpine/Vue events
+            or (
+                key.startswith(":") and not key.startswith("class:")
+            )  # Bindings except class:
+            or key.startswith("v-")  # Vue directives
+            or key.startswith("x-")  # Alpine directives
         )
 
     @staticmethod
@@ -163,9 +167,9 @@ class BaseAttrs(MutableMapping[str, Any]):
     def _is_class_merge_syntax(key: str, value: Any) -> bool:
         """Check if this is class merge syntax (& append/prepend)."""
         return (
-            key == "class" and
-            isinstance(value, str) and
-            (value.startswith("& ") or value.endswith(" &"))
+            key == "class"
+            and isinstance(value, str)
+            and (value.startswith("& ") or value.endswith(" &"))
         )
 
     def _store_js_framework_attr(self, key: str, value: Any) -> None:
@@ -295,7 +299,7 @@ class BaseAttrs(MutableMapping[str, Any]):
         # First apply the fallbacks
         for key, value in kwargs.items():
             # Strip trailing underscore from keyword arguments (e.g. class_ -> class)
-            if key.endswith('_') and key != '_':  # Don't strip standalone underscore
+            if key.endswith("_") and key != "_":  # Don't strip standalone underscore
                 key = key[:-1]
 
             # Use __setitem__ to trigger all the special handling logic
@@ -323,12 +327,19 @@ class BaseAttrs(MutableMapping[str, Any]):
             new_attrs._nested_attrs[nested_key].update(nested_attrs)
 
             # Also merge the internal structures (conditional_modifiers, prepended) for nested attrs
-            for base_key, conditional_dict in nested_attrs._conditional_modifiers.items():
-                new_conditional = new_attrs._nested_attrs[nested_key]._conditional_modifiers.setdefault(base_key, {})
+            for (
+                base_key,
+                conditional_dict,
+            ) in nested_attrs._conditional_modifiers.items():
+                new_conditional = new_attrs._nested_attrs[
+                    nested_key
+                ]._conditional_modifiers.setdefault(base_key, {})
                 new_conditional.update(conditional_dict)
 
             for base_key, prepended_dict in nested_attrs._prepended_classes.items():
-                new_prepended = new_attrs._nested_attrs[nested_key]._prepended_classes.setdefault(base_key, {})
+                new_prepended = new_attrs._nested_attrs[
+                    nested_key
+                ]._prepended_classes.setdefault(base_key, {})
                 new_prepended.update(prepended_dict)
 
         return new_attrs
@@ -373,7 +384,9 @@ class BaseAttrs(MutableMapping[str, Any]):
             value = self._attrs[key]
 
             if key in extended or key in prepended:
-                value_parts = [] if value is True or not value else str(value).split(" ")
+                value_parts = (
+                    [] if value is True or not value else str(value).split(" ")
+                )
 
                 if key in prepended:
                     prepend_parts = prepended[key]

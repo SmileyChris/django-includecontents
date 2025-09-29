@@ -10,9 +10,7 @@ def test_enum_required():
         TemplateSyntaxError,
         match='Missing required attribute "variant" in <include:button>',
     ):
-        Template(
-            '<include:button>Click me</include:button>'
-        ).render(Context())
+        Template("<include:button>Click me</include:button>").render(Context())
 
 
 def test_enum_invalid_value():
@@ -21,9 +19,9 @@ def test_enum_invalid_value():
         TemplateSyntaxError,
         match=r'Invalid value "invalid" for attribute "variant" in <include:button>\. Allowed values: \'primary\', \'secondary\', \'accent\'',
     ):
-        Template(
-            '<include:button variant="invalid">Click me</include:button>'
-        ).render(Context())
+        Template('<include:button variant="invalid">Click me</include:button>').render(
+            Context()
+        )
 
 
 def test_enum_valid_value():
@@ -32,16 +30,16 @@ def test_enum_valid_value():
         '<include:button variant="primary">Click me</include:button>'
     ).render(Context())
     assert 'class="btn btn-primary"' in output
-    assert '>Click me<' in output
+    assert ">Click me<" in output
 
 
 def test_enum_optional():
     """Test that optional enum props work when not provided."""
     output = Template(
-        '<include:button-optional>Click me</include:button-optional>'
+        "<include:button-optional>Click me</include:button-optional>"
     ).render(Context())
     assert 'class="btn"' in output
-    assert '>Click me<' in output
+    assert ">Click me<" in output
 
 
 def test_enum_optional_with_value():
@@ -74,7 +72,7 @@ def test_enum_multiple_values():
         '<include:button-multi variant="primary icon">Click me</include:button-multi>'
     ).render(Context())
     assert 'class="btn btn-primary btn-icon"' in output
-    assert '>Click me<' in output
+    assert ">Click me<" in output
 
 
 def test_enum_multiple_values_validation():
@@ -181,7 +179,7 @@ def test_enum_case_sensitivity():
 def test_enum_null_and_false_values():
     """Test enum handling of null and false values."""
     # Test with Django template variables that resolve to None/False
-    context = Context({'none_value': None, 'false_value': False, 'empty_string': ''})
+    context = Context({"none_value": None, "false_value": False, "empty_string": ""})
 
     # None should be treated as empty and allowed if enum is optional
     output = Template(
@@ -204,11 +202,13 @@ def test_enum_null_and_false_values():
 
 def test_enum_list_values():
     """Test enum handling with list/tuple values from context."""
-    context = Context({
-        'variant_list': ['primary', 'icon'],
-        'variant_tuple': ('secondary', 'large'),
-        'variant_set': {'accent'}
-    })
+    context = Context(
+        {
+            "variant_list": ["primary", "icon"],
+            "variant_tuple": ("secondary", "large"),
+            "variant_set": {"accent"},
+        }
+    )
 
     # List of enum values
     output = Template(
@@ -231,7 +231,7 @@ def test_enum_list_values():
 
 def test_enum_mixed_list_with_invalid():
     """Test that invalid values in lists are caught."""
-    context = Context({'invalid_list': ['primary', 'invalid', 'secondary']})
+    context = Context({"invalid_list": ["primary", "invalid", "secondary"]})
 
     with pytest.raises(
         TemplateSyntaxError,

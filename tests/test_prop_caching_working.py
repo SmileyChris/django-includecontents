@@ -10,11 +10,11 @@ from django.template import Context, Template
 
 # Component template paths for testing
 CACHE_TEST_TEMPLATES = [
-    'cached_test_1.html',
-    'cached_test_2.html',
-    'cache_complex.html',
-    'cache_debug.html',
-    'cache_performance.html'
+    "cached_test_1.html",
+    "cached_test_2.html",
+    "cache_complex.html",
+    "cache_debug.html",
+    "cache_performance.html",
 ]
 
 
@@ -25,7 +25,7 @@ class TestPropCachingWorking:
     def setup_method(self):
         """Create test templates."""
         # Create template directory
-        template_dir = Path('tests/templates/test_caching_working')
+        template_dir = Path("tests/templates/test_caching_working")
         template_dir.mkdir(parents=True, exist_ok=True)
 
         # Template 1 - Simple props with defaults
@@ -35,7 +35,7 @@ class TestPropCachingWorking:
     <p>Count: {{ count }}, Active: {{ active }}</p>
 </div>"""
 
-        template1_file = template_dir / 'cached_test_1.html'
+        template1_file = template_dir / "cached_test_1.html"
         template1_file.write_text(template1_content)
 
         # Template 2 - Different props to test separate caches
@@ -44,7 +44,7 @@ class TestPropCachingWorking:
     <span>{{ message }}: {{ value }}</span>
 </div>"""
 
-        template2_file = template_dir / 'cached_test_2.html'
+        template2_file = template_dir / "cached_test_2.html"
         template2_file.write_text(template2_content)
 
         # Template 3 - Complex props with variables and expressions
@@ -59,21 +59,21 @@ class TestPropCachingWorking:
     </ul>
 </div>"""
 
-        template3_file = template_dir / 'cache_complex.html'
+        template3_file = template_dir / "cache_complex.html"
         template3_file.write_text(template3_content)
 
         # Template 4 - For debug logging tests
         template4_content = """{# props debug_prop:str="Debug Value" #}
 <p>Debug: {{ debug_prop }}</p>"""
 
-        template4_file = template_dir / 'cache_debug.html'
+        template4_file = template_dir / "cache_debug.html"
         template4_file.write_text(template4_content)
 
         # Template 5 - For performance testing (many props)
         template5_content = """{# props prop1:str="value1" prop2:int=1 prop3:bool=true prop4:list[str]=[a,b,c] prop5:str="username" prop6:str="{{ title|default:'Performance' }}" prop7:int=999 prop8:bool=false prop9:list[int]=[1,2,3] prop10:str="final" #}
 <div>Performance test with {{ prop1 }}, {{ prop2 }}, {{ prop7 }}</div>"""
 
-        template5_file = template_dir / 'cache_performance.html'
+        template5_file = template_dir / "cache_performance.html"
         template5_file.write_text(template5_content)
 
     def test_props_cached_after_first_parse(self):
@@ -156,7 +156,9 @@ class TestPropCachingWorking:
         context = Context({})
 
         # Enable debug logging for our module
-        with caplog.at_level(logging.DEBUG, logger='includecontents.templatetags.includecontents'):
+        with caplog.at_level(
+            logging.DEBUG, logger="includecontents.templatetags.includecontents"
+        ):
             # First render should cache
             output1 = template.render(context)
             assert "Debug Value" in output1
@@ -167,17 +169,21 @@ class TestPropCachingWorking:
 
         # Check for cache-related log messages
         log_messages = [record.message for record in caplog.records]
-        cache_messages = [msg for msg in log_messages if 'cache' in msg.lower()]
+        cache_messages = [msg for msg in log_messages if "cache" in msg.lower()]
 
         # We should have at least one cache storage message and one cache hit message
         assert len(cache_messages) >= 2
 
         # Check for specific cache operations
-        cache_storage_messages = [msg for msg in cache_messages if 'cached' in msg]
-        cache_hit_messages = [msg for msg in cache_messages if 'hit' in msg]
+        cache_storage_messages = [msg for msg in cache_messages if "cached" in msg]
+        cache_hit_messages = [msg for msg in cache_messages if "hit" in msg]
 
-        assert len(cache_storage_messages) >= 1, f"Expected cache storage messages, got: {cache_messages}"
-        assert len(cache_hit_messages) >= 1, f"Expected cache hit messages, got: {cache_messages}"
+        assert len(cache_storage_messages) >= 1, (
+            f"Expected cache storage messages, got: {cache_messages}"
+        )
+        assert len(cache_hit_messages) >= 1, (
+            f"Expected cache hit messages, got: {cache_messages}"
+        )
 
     def test_cache_fallback_on_error(self):
         """Test that parsing continues if cache operations fail."""
@@ -194,11 +200,11 @@ class TestPropCachingWorking:
         original_hasattr = hasattr
 
         def mock_hasattr(obj, name):
-            if name == '_includecontents_props_cache':
+            if name == "_includecontents_props_cache":
                 return False  # Pretend the cache doesn't exist
             return original_hasattr(obj, name)
 
-        with patch('builtins.hasattr', side_effect=mock_hasattr):
+        with patch("builtins.hasattr", side_effect=mock_hasattr):
             # Should still work despite cache being "missing"
             output = template.render(context)
             assert "Debug Value" in output
@@ -231,24 +237,28 @@ class TestPropCachingWorking:
 
         # Verify the content rendered correctly
         assert "Performance" in output1  # From the default
-        assert "value1" in output1       # From literal string default
-        assert "999" in output1          # From int default
+        assert "value1" in output1  # From literal string default
+        assert "999" in output1  # From int default
 
         # While we can't guarantee caching makes rendering faster (template rendering has many factors),
         # we can verify that caching doesn't break anything and provides consistent results
-        print(f"First render: {first_render_time:.4f}s, Avg cached: {avg_cached_time:.4f}s")
+        print(
+            f"First render: {first_render_time:.4f}s, Avg cached: {avg_cached_time:.4f}s"
+        )
 
         # The main benefit should be consistent props parsing, not necessarily faster total render time
         # As long as all renders produce identical output, caching is working correctly
         for cached_time in cached_times:
             # No cached render should take significantly longer than the first (which includes parsing)
-            assert cached_time <= first_render_time * 2, "Cached renders should not be much slower than first render"
+            assert cached_time <= first_render_time * 2, (
+                "Cached renders should not be much slower than first render"
+            )
 
     def teardown_method(self):
         """Clean up test templates."""
         import shutil
 
-        test_dir = Path('tests/templates/test_caching_working')
+        test_dir = Path("tests/templates/test_caching_working")
         try:
             if test_dir.exists():
                 shutil.rmtree(test_dir)

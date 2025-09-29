@@ -14,9 +14,10 @@ IconDefinition = Union[str, Tuple[str, str]]
 @dataclass(frozen=True)
 class Icon:
     """Internal representation of an icon definition."""
+
     component_name: str  # The name used in templates (e.g., "home")
-    icon_source: str     # The icon source (e.g., "mdi:home" or "icons/home.svg")
-    
+    icon_source: str  # The icon source (e.g., "mdi:home" or "icons/home.svg")
+
     @classmethod
     def from_definition(cls, definition: IconDefinition) -> "Icon":
         """Create an Icon from various definition formats."""
@@ -133,7 +134,9 @@ def parse_icon_definitions_to_icons(icon_defs: List[IconDefinition]) -> List[Ico
             # Check for duplicate component names
             if icon.component_name in seen_names:
                 # Find the existing icon with this name for better error message
-                existing = next(i for i in icons if i.component_name == icon.component_name)
+                existing = next(
+                    i for i in icons if i.component_name == icon.component_name
+                )
                 raise ValueError(
                     f"Duplicate component name '{icon.component_name}': "
                     f"'{existing.icon_source}' and '{icon.icon_source}'"

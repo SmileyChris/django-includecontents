@@ -26,7 +26,7 @@ class TestBasicPropTypes:
         # String with parameters creates annotated type
         type_result = parse_type_spec("text[min=2,max=50]")
         # Should return an annotated type with validators
-        assert hasattr(type_result, '__metadata__') or type_result is str
+        assert hasattr(type_result, "__metadata__") or type_result is str
 
     def test_integer_type_parsing(self):
         """Test integer type with bounds."""
@@ -37,7 +37,7 @@ class TestBasicPropTypes:
         # Integer with bounds
         type_result = parse_type_spec("integer[min=18,max=120]")
         # Should return an annotated type with validators
-        assert hasattr(type_result, '__metadata__') or type_result is int
+        assert hasattr(type_result, "__metadata__") or type_result is int
 
     def test_boolean_type_parsing(self):
         """Test boolean type parsing."""
@@ -48,7 +48,9 @@ class TestBasicPropTypes:
         """Test choice type with enum values."""
         type_result = parse_type_spec("choice(primary,secondary,danger)")
         # Should return a Literal type or Choice type
-        assert get_origin(type_result) is not None or hasattr(type_result, '__metadata__')
+        assert get_origin(type_result) is not None or hasattr(
+            type_result, "__metadata__"
+        )
 
     def test_multichoice_type_parsing(self):
         """Test multichoice type for multiple selections."""
@@ -63,28 +65,30 @@ class TestPropValidation:
 
     def test_simple_dataclass_validation(self):
         """Test validation with simple dataclass."""
+
         @dataclass
         class SimpleProps:
             name: str
             age: int = 25
 
         # Valid data
-        result = validate_props(SimpleProps, {'name': 'John', 'age': 30})
-        assert result['name'] == 'John'
-        assert result['age'] == 30
+        result = validate_props(SimpleProps, {"name": "John", "age": 30})
+        assert result["name"] == "John"
+        assert result["age"] == 30
 
         # Using default
-        result = validate_props(SimpleProps, {'name': 'Jane'})
-        assert result['name'] == 'Jane'
-        assert result['age'] == 25
+        result = validate_props(SimpleProps, {"name": "Jane"})
+        assert result["name"] == "Jane"
+        assert result["age"] == 25
 
         # Missing required field
         with pytest.raises(TemplateSyntaxError) as exc_info:
-            validate_props(SimpleProps, {'age': 30})
-        assert 'Missing required prop: name' in str(exc_info.value)
+            validate_props(SimpleProps, {"age": 30})
+        assert "Missing required prop: name" in str(exc_info.value)
 
     def test_optional_props(self):
         """Test optional props with None defaults."""
+
         @dataclass
         class OptionalProps:
             title: str
@@ -92,23 +96,22 @@ class TestPropValidation:
             count: int | None = 0
 
         # With minimal props
-        result = validate_props(OptionalProps, {'title': 'Test'})
-        assert result['title'] == 'Test'
-        assert result['subtitle'] is None
-        assert result['count'] == 0
+        result = validate_props(OptionalProps, {"title": "Test"})
+        assert result["title"] == "Test"
+        assert result["subtitle"] is None
+        assert result["count"] == 0
 
         # With all props
-        result = validate_props(OptionalProps, {
-            'title': 'Test',
-            'subtitle': 'Sub',
-            'count': 5
-        })
-        assert result['title'] == 'Test'
-        assert result['subtitle'] == 'Sub'
-        assert result['count'] == 5
+        result = validate_props(
+            OptionalProps, {"title": "Test", "subtitle": "Sub", "count": 5}
+        )
+        assert result["title"] == "Test"
+        assert result["subtitle"] == "Sub"
+        assert result["count"] == 5
 
     def test_custom_clean_method(self):
         """Test custom validation via clean() method."""
+
         @dataclass
         class CustomCleanProps:
             start_date: str
@@ -116,24 +119,23 @@ class TestPropValidation:
 
             def clean(self):
                 from django.core.exceptions import ValidationError
+
                 if self.start_date >= self.end_date:
                     raise ValidationError("Start date must be before end date")
 
         # Valid dates
-        result = validate_props(CustomCleanProps, {
-            'start_date': '2023-01-01',
-            'end_date': '2023-12-31'
-        })
-        assert result['start_date'] == '2023-01-01'
-        assert result['end_date'] == '2023-12-31'
+        result = validate_props(
+            CustomCleanProps, {"start_date": "2023-01-01", "end_date": "2023-12-31"}
+        )
+        assert result["start_date"] == "2023-01-01"
+        assert result["end_date"] == "2023-12-31"
 
         # Invalid dates
         with pytest.raises(TemplateSyntaxError) as exc_info:
-            validate_props(CustomCleanProps, {
-                'start_date': '2023-12-31',
-                'end_date': '2023-01-01'
-            })
-        assert 'Start date must be before end date' in str(exc_info.value)
+            validate_props(
+                CustomCleanProps, {"start_date": "2023-12-31", "end_date": "2023-01-01"}
+            )
+        assert "Start date must be before end date" in str(exc_info.value)
 
 
 class TestAdvancedTypes:
@@ -171,6 +173,7 @@ class TestErrorHandling:
 
     def test_missing_required_with_context(self):
         """Test that missing required props include helpful context."""
+
         @dataclass
         class RequiredProps:
             required_field: str
@@ -179,5 +182,5 @@ class TestErrorHandling:
             validate_props(RequiredProps, {})
 
         error_str = str(exc_info.value)
-        assert 'Missing required prop: required_field' in error_str
-        assert 'Props validation failed' in error_str
+        assert "Missing required prop: required_field" in error_str
+        assert "Props validation failed" in error_str

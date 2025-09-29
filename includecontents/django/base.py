@@ -186,8 +186,7 @@ class Template(django.template.base.Template):
         if self._component_prop_defs is None:
             specs = getattr(self, "_component_prop_specs", None) or {}
             self._component_prop_defs = {
-                name: _build_prop_definition(spec)
-                for name, spec in specs.items()
+                name: _build_prop_definition(spec) for name, spec in specs.items()
             }
         return self._component_prop_defs
 

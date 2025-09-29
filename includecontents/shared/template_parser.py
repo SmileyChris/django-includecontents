@@ -24,17 +24,20 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
     """
     # Import Django-specific types here to avoid circular imports
     try:
-        from includecontents.django.prop_types import TYPE_CLASSES, TYPE_MAP as DEFAULT_TYPE_MAP
+        from includecontents.django.prop_types import (
+            TYPE_CLASSES,
+            TYPE_MAP as DEFAULT_TYPE_MAP,
+        )
     except ImportError:
         # If Django types aren't available, provide basic fallback
         DEFAULT_TYPE_MAP = {
-            'text': str,
-            'str': str,
-            'string': str,
-            'int': int,
-            'integer': int,
-            'bool': bool,
-            'boolean': bool,
+            "text": str,
+            "str": str,
+            "string": str,
+            "int": int,
+            "integer": int,
+            "bool": bool,
+            "boolean": bool,
         }
         TYPE_CLASSES = {}
 
@@ -53,6 +56,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
             choices = [c.strip().strip("\"'") for c in params_str.split(",")]
             try:
                 from includecontents.django.prop_types import Choice
+
                 return Choice[tuple(choices)]
             except ImportError:
                 return Literal[tuple(choices)]
@@ -70,6 +74,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         if type_name == "model":
             try:
                 from includecontents.django.prop_types import Model
+
                 if params_str:
                     model_path = params_str.strip().strip("\"'")
                     return Model[model_path]
@@ -82,6 +87,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         if type_name == "queryset":
             try:
                 from includecontents.django.prop_types import QuerySet
+
                 if params_str:
                     model_path = params_str.strip().strip("\"'")
                     return QuerySet[model_path]
@@ -119,6 +125,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         if type_name == "color":
             try:
                 from includecontents.django.prop_types import Color
+
                 # params_str could be a format like 'hex', 'rgb', 'rgba'
                 return Color[params_str.strip().strip("\"'")]
             except ImportError:
@@ -134,6 +141,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
             choices = [c.strip().strip("\"'") for c in params_str.split(",")]
             try:
                 from includecontents.django.prop_types import Choice
+
                 return Choice[tuple(choices)]
             except ImportError:
                 return Literal[tuple(choices)]
@@ -158,6 +166,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
             if type_name == "model":
                 try:
                     from includecontents.django.prop_types import Model
+
                     if model_path:
                         return Model[model_path]
                     else:
@@ -168,6 +177,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
             else:  # queryset
                 try:
                     from includecontents.django.prop_types import QuerySet
+
                     if model_path:
                         return QuerySet[model_path]
                     else:

@@ -12,7 +12,7 @@ def _enhance_component_template_error(exc, template_name):
     Enhance TemplateDoesNotExist errors for component templates with helpful suggestions.
     """
     # Extract component name from template path
-    component_path = template_name.replace('components/', '').replace('.html', '')
+    component_path = template_name.replace("components/", "").replace(".html", "")
     component_tag = f"<include:{component_path.replace('/', ':')}>"
 
     # Build enhanced error message
@@ -30,7 +30,7 @@ def _enhance_component_template_error(exc, template_name):
         "",
         "For app-based components:",
         f"  5. Create in app: <app>/templates/{template_name}",
-        "  6. Ensure app is in INSTALLED_APPS"
+        "  6. Ensure app is in INSTALLED_APPS",
     ]
 
     enhanced_message = "\n".join(error_lines)
@@ -38,6 +38,7 @@ def _enhance_component_template_error(exc, template_name):
     # Use the error enhancement utility if available
     try:
         from .errors import enhance_error
+
         enhance_error(exc, enhanced_message)
     except ImportError:
         # Fallback - modify args directly
@@ -77,7 +78,7 @@ class CustomTemplateMixin(django.template.loaders.base.Loader):
 
         # Check if this is a component template and enhance error message
         original_exc = TemplateDoesNotExist(template_name, tried=tried)
-        if isinstance(template_name, str) and template_name.startswith('components/'):
+        if isinstance(template_name, str) and template_name.startswith("components/"):
             # Create enhanced exception with original as cause
             enhanced_exc = TemplateDoesNotExist(template_name, tried=tried)
             _enhance_component_template_error(enhanced_exc, template_name)

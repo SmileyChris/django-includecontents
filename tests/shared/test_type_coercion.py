@@ -78,6 +78,7 @@ class TestChoiceCoercion:
 
     def test_choice_validation(self):
         """Test choice validation against allowed values."""
+
         @dataclass
         class ChoiceProps:
             variant: str  # Will be validated as choice in actual usage
@@ -103,6 +104,7 @@ class TestIntegratedCoercion:
 
     def test_coercion_in_dataclass_validation(self):
         """Test type coercion works with dataclass validation."""
+
         @dataclass
         class CoercionProps:
             name: str
@@ -111,20 +113,24 @@ class TestIntegratedCoercion:
             tags: list[str]
 
         # All string inputs that need coercion
-        result = validate_props(CoercionProps, {
-            'name': 'John',
-            'age': '30',  # String to int
-            'active': 'true',  # String to bool
-            'tags': 'red,blue,green'  # String to list
-        })
+        result = validate_props(
+            CoercionProps,
+            {
+                "name": "John",
+                "age": "30",  # String to int
+                "active": "true",  # String to bool
+                "tags": "red,blue,green",  # String to list
+            },
+        )
 
-        assert result['name'] == 'John'
-        assert result['age'] == 30
-        assert result['active'] is True
-        assert result['tags'] == ['red', 'blue', 'green']
+        assert result["name"] == "John"
+        assert result["age"] == 30
+        assert result["active"] is True
+        assert result["tags"] == ["red", "blue", "green"]
 
     def test_coercion_with_defaults(self):
         """Test coercion works with default values."""
+
         @dataclass
         class DefaultProps:
             count: int = 5
@@ -132,16 +138,13 @@ class TestIntegratedCoercion:
 
         # No coercion needed for defaults
         result = validate_props(DefaultProps, {})
-        assert result['count'] == 5
-        assert result['enabled'] is True
+        assert result["count"] == 5
+        assert result["enabled"] is True
 
         # Coercion needed for provided values
-        result = validate_props(DefaultProps, {
-            'count': '10',
-            'enabled': 'false'
-        })
-        assert result['count'] == 10
-        assert result['enabled'] is False
+        result = validate_props(DefaultProps, {"count": "10", "enabled": "false"})
+        assert result["count"] == 10
+        assert result["enabled"] is False
 
 
 class TestCoercionErrors:
@@ -149,41 +152,44 @@ class TestCoercionErrors:
 
     def test_invalid_integer_coercion_error(self):
         """Test error messages for failed integer coercion."""
+
         @dataclass
         class IntProps:
             age: int
 
         with pytest.raises(TemplateSyntaxError) as exc_info:
-            validate_props(IntProps, {'age': 'not-a-number'})
+            validate_props(IntProps, {"age": "not-a-number"})
 
         error_str = str(exc_info.value)
-        assert 'Cannot convert' in error_str
-        assert 'not-a-number' in error_str
-        assert 'integer' in error_str.lower()
+        assert "Cannot convert" in error_str
+        assert "not-a-number" in error_str
+        assert "integer" in error_str.lower()
 
     def test_invalid_boolean_coercion_behavior(self):
         """Test behavior for ambiguous boolean values."""
+
         @dataclass
         class BoolProps:
             active: bool
 
         # Invalid boolean strings return False (strict behavior)
-        result = validate_props(BoolProps, {'active': 'maybe'})
-        assert result['active'] is False
+        result = validate_props(BoolProps, {"active": "maybe"})
+        assert result["active"] is False
 
     def test_coercion_error_includes_field_context(self):
         """Test that coercion errors include field name context."""
+
         @dataclass
         class ContextProps:
             user_age: int
 
         with pytest.raises(TemplateSyntaxError) as exc_info:
-            validate_props(ContextProps, {'user_age': 'invalid'})
+            validate_props(ContextProps, {"user_age": "invalid"})
 
         error_str = str(exc_info.value)
-        assert 'user_age' in error_str
+        assert "user_age" in error_str
         # Check that field name is included in error context
-        assert 'field' in error_str.lower() or 'user_age' in error_str
+        assert "field" in error_str.lower() or "user_age" in error_str
 
 
 class TestEdgeCases:
@@ -198,7 +204,7 @@ class TestEdgeCases:
         """Test that values of the correct type pass through unchanged."""
         assert coerce_value(25, int) == 25
         assert coerce_value(True, bool) is True
-        assert coerce_value(['a', 'b'], list) == ['a', 'b']
+        assert coerce_value(["a", "b"], list) == ["a", "b"]
 
     def test_empty_string_coercion(self):
         """Test coercion of empty strings."""

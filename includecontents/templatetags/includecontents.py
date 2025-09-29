@@ -58,16 +58,16 @@ def _coerce_attr_value(value):
     """
     if isinstance(value, str):
         # Convert string boolean representations to actual booleans
-        if value.lower() == 'true':
+        if value.lower() == "true":
             return True
-        elif value.lower() == 'false':
+        elif value.lower() == "false":
             return False
         # Convert string None representation to actual None
-        elif value.lower() == 'none':
+        elif value.lower() == "none":
             return None
         # For empty strings, return empty string (falsy but not None)
-        elif value == '':
-            return ''
+        elif value == "":
+            return ""
     return value
 
 
@@ -372,13 +372,15 @@ class IncludeContentsNode(template.Node):
                 for backend_config in settings.TEMPLATES:
                     if backend_config.get("BACKEND") in [
                         "django.template.backends.django.DjangoTemplates",
-                        "includecontents.django.DjangoTemplates"
+                        "includecontents.django.DjangoTemplates",
                     ]:
                         template_settings = backend_config
                         break
 
                 if template_settings:
-                    context_processors = template_settings.get("OPTIONS", {}).get("context_processors", [])
+                    context_processors = template_settings.get("OPTIONS", {}).get(
+                        "context_processors", []
+                    )
 
                     # Run each processor
                     for processor_path in context_processors:
@@ -409,7 +411,9 @@ class IncludeContentsNode(template.Node):
             new_context = context.new()
             # Special case: components that explicitly test context stack behavior inherit context vars
             if "context-stack" in self.token_name:
-                new_context.update(inherited_vars)  # Add inherited variables for context stack testing
+                new_context.update(
+                    inherited_vars
+                )  # Add inherited variables for context stack testing
             new_context.update(processor_data)  # Add processor data
             # Store processor data for nested components to access
             setattr(new_context, "_processor_data", processor_data)
@@ -421,8 +425,12 @@ class IncludeContentsNode(template.Node):
                 # Add inherited vars and processor data to the original context for content rendering
                 # Content needs access to inherited vars to maintain context stack integrity
                 with content_context.push():
-                    content_context.update(inherited_vars)  # Add inherited variables first
-                    content_context.update(processor_data)  # Add processor data (can override inherited vars)
+                    content_context.update(
+                        inherited_vars
+                    )  # Add inherited variables first
+                    content_context.update(
+                        processor_data
+                    )  # Add processor data (can override inherited vars)
                     rendered_contents = RenderedContents(
                         content_context,
                         nodelist=self.nodelist,
@@ -471,37 +479,43 @@ class IncludeContentsNode(template.Node):
         props_class = None
 
         # Candidate 1: template.origin.template_name (relative path)
-        if (hasattr(template, "origin") and
-            hasattr(template.origin, "template_name") and
-            template.origin.template_name):
+        if (
+            hasattr(template, "origin")
+            and hasattr(template.origin, "template_name")
+            and template.origin.template_name
+        ):
             template_name = str(template.origin.template_name)
             props_class = get_props_class(template_name)
 
         # Candidate 2: template.origin.name (absolute path - current behavior)
-        if (not props_class and
-            hasattr(template, "origin") and
-            hasattr(template.origin, "name") and
-            template.origin.name):
+        if (
+            not props_class
+            and hasattr(template, "origin")
+            and hasattr(template.origin, "name")
+            and template.origin.name
+        ):
             origin_name = str(template.origin.name)
             props_class = get_props_class(origin_name)
 
         # Candidate 3: template.name (fallback)
-        if (not props_class and
-            hasattr(template, "name") and
-            template.name):
+        if not props_class and hasattr(template, "name") and template.name:
             template_name = str(template.name)
             props_class = get_props_class(template_name)
 
         # Debug logging for registry misses
         if not props_class:
             candidates = []
-            if (hasattr(template, "origin") and
-                hasattr(template.origin, "template_name") and
-                template.origin.template_name):
+            if (
+                hasattr(template, "origin")
+                and hasattr(template.origin, "template_name")
+                and template.origin.template_name
+            ):
                 candidates.append(str(template.origin.template_name))
-            if (hasattr(template, "origin") and
-                hasattr(template.origin, "name") and
-                template.origin.name):
+            if (
+                hasattr(template, "origin")
+                and hasattr(template.origin, "name")
+                and template.origin.name
+            ):
                 candidates.append(str(template.origin.name))
             if hasattr(template, "name") and template.name:
                 candidates.append(str(template.name))
@@ -513,7 +527,7 @@ class IncludeContentsNode(template.Node):
                 "Registered components (first 5): %s",
                 self.token_name,
                 candidates,
-                registered_keys[:5] if registered_keys else []
+                registered_keys[:5] if registered_keys else [],
             )
 
         if props_class:
@@ -556,7 +570,7 @@ class IncludeContentsNode(template.Node):
 
         # Fall back to template-defined props
         component_props = self.get_component_props(template)
-        
+
         # Create attrs container for components only
         undefined_attrs = None
         if self.is_component and component_props is not None:
@@ -629,20 +643,24 @@ class IncludeContentsNode(template.Node):
                                 )
 
                                 # Add suggestion if we can find a close match
-                                suggestion = self._suggest_closest_enum_value(resolved_value, display_values)
+                                suggestion = self._suggest_closest_enum_value(
+                                    resolved_value, display_values
+                                )
                                 if suggestion:
                                     error_msg += f". Did you mean '{suggestion}'?"
 
                                 # Always add example usage
                                 if display_values:
                                     example_value = display_values[0]
-                                    error_msg += f"\nExample: {self.token_name.replace('>', f' {key}=\"{example_value}\">').replace('<include:', '<include:')}"
+                                    error_msg += f"\nExample: {self.token_name.replace('>', f' {key}="{example_value}">').replace('<include:', '<include:')}"
 
                                 raise TemplateSyntaxError(error_msg)
 
                         # Recursively mark Html-typed leaves safe
                         try:
-                            from includecontents.shared.typed_props import mark_html_recursive
+                            from includecontents.shared.typed_props import (
+                                mark_html_recursive,
+                            )
 
                             resolved_value = mark_html_recursive(
                                 resolved_value, prop_type
@@ -658,13 +676,17 @@ class IncludeContentsNode(template.Node):
                         if isinstance(resolved_value, (list, tuple, set)):
                             enum_values = list(resolved_value)
                         else:
-                            enum_values = resolved_value.split() if resolved_value else []
+                            enum_values = (
+                                resolved_value.split() if resolved_value else []
+                            )
 
                         # Validate each value
                         for enum_value in enum_values:
                             if enum_value not in prop_def.allowed_values:
                                 # Filter out empty values for display
-                                display_values = [v for v in prop_def.allowed_values if v]
+                                display_values = [
+                                    v for v in prop_def.allowed_values if v
+                                ]
 
                                 # Build enhanced error message with suggestion
                                 error_msg = (
@@ -673,14 +695,16 @@ class IncludeContentsNode(template.Node):
                                 )
 
                                 # Add suggestion if we can find a close match
-                                suggestion = self._suggest_closest_enum_value(enum_value, display_values)
+                                suggestion = self._suggest_closest_enum_value(
+                                    enum_value, display_values
+                                )
                                 if suggestion:
                                     error_msg += f". Did you mean '{suggestion}'?"
 
                                 # Always add example usage
                                 if display_values:
                                     example_value = display_values[0]
-                                    error_msg += f"\nExample: {self.token_name.replace('>', f' {key}=\"{example_value}\">').replace('<include:', '<include:')}"
+                                    error_msg += f"\nExample: {self.token_name.replace('>', f' {key}="{example_value}">').replace('<include:', '<include:')}"
 
                                 raise TemplateSyntaxError(error_msg)
 
@@ -718,7 +742,11 @@ class IncludeContentsNode(template.Node):
 
         if component_props is not None:
             # If we have spread attrs, merge them into undefined_attrs
-            if spread_attrs and isinstance(spread_attrs, DjangoAttrs) and undefined_attrs is not None:
+            if (
+                spread_attrs
+                and isinstance(spread_attrs, DjangoAttrs)
+                and undefined_attrs is not None
+            ):
                 # Merge spread attrs into undefined_attrs
                 for key, value in spread_attrs.all_attrs():
                     # Only add if not already defined (local attrs take precedence)
@@ -733,7 +761,7 @@ class IncludeContentsNode(template.Node):
             for key, value in component_props.items():
                 if key in new_context:
                     continue
-                    
+
                 # Handle typed props with defaults
                 if isinstance(value, dict) and "type" in value and "default" in value:
                     if value["default"] is not None:
@@ -777,13 +805,13 @@ class IncludeContentsNode(template.Node):
 
         # Check cache first
         try:
-            if hasattr(django_template, '_includecontents_props_cache'):
+            if hasattr(django_template, "_includecontents_props_cache"):
                 cache_key = django_template.first_comment
                 if cache_key in django_template._includecontents_props_cache:
                     logger.debug(
                         "Props cache hit for template %s (key: %s...)",
-                        getattr(django_template, 'name', '<unknown>'),
-                        cache_key[:50]
+                        getattr(django_template, "name", "<unknown>"),
+                        cache_key[:50],
                     )
                     return django_template._includecontents_props_cache[cache_key]
         except Exception:
@@ -837,10 +865,11 @@ class IncludeContentsNode(template.Node):
                     type_spec, default_str = type_spec.split("=", 1)
                     type_spec = type_spec.strip()
                     default_str = default_str.strip()
-                    
+
                     # Handle quoted strings (strip quotes and use as template expression)
-                    if ((default_str.startswith('"') and default_str.endswith('"')) or 
-                        (default_str.startswith("'") and default_str.endswith("'"))):
+                    if (default_str.startswith('"') and default_str.endswith('"')) or (
+                        default_str.startswith("'") and default_str.endswith("'")
+                    ):
                         # Remove quotes and treat as template expression
                         unquoted = default_str[1:-1]
                         # Use TemplateAttributeExpression for complex template syntax
@@ -864,10 +893,16 @@ class IncludeContentsNode(template.Node):
                     else:
                         # For unquoted non-literal values, distinguish between literal strings and variables
                         # Variable expressions contain dots, brackets, or other Django template syntax
-                        if '.' in default_str or '[' in default_str or '|' in default_str:
+                        if (
+                            "." in default_str
+                            or "[" in default_str
+                            or "|" in default_str
+                        ):
                             # This looks like a variable expression (e.g., user.name, items.0, value|default:"x")
                             default_value = Variable(default_str)
-                        elif default_str.isalnum() or (default_str.replace('_', '').replace('-', '').isalnum()):
+                        elif default_str.isalnum() or (
+                            default_str.replace("_", "").replace("-", "").isalnum()
+                        ):
                             # This looks like a simple literal string value (e.g., admin, user, guest)
                             default_value = default_str
                         else:
@@ -929,14 +964,14 @@ class IncludeContentsNode(template.Node):
         # Store in cache for future use
         try:
             cache_key = django_template.first_comment
-            if not hasattr(django_template, '_includecontents_props_cache'):
+            if not hasattr(django_template, "_includecontents_props_cache"):
                 django_template._includecontents_props_cache = {}
             django_template._includecontents_props_cache[cache_key] = props
             logger.debug(
                 "Props cached for template %s (key: %s..., %d props)",
-                getattr(django_template, 'name', '<unknown>'),
+                getattr(django_template, "name", "<unknown>"),
                 cache_key[:50],
-                len(props)
+                len(props),
             )
         except Exception:
             # If caching fails, that's OK - just continue
@@ -969,10 +1004,18 @@ class IncludeContentsNode(template.Node):
                     cache[template_name] = template
                 except TemplateDoesNotExist as e:
                     # Enhanced component template error handling
-                    if self.is_component and isinstance(template_name, (list, tuple)) and template_name:
+                    if (
+                        self.is_component
+                        and isinstance(template_name, (list, tuple))
+                        and template_name
+                    ):
                         # Create a new enhanced exception to preserve the original as cause
-                        enhanced_exc = TemplateDoesNotExist(e.args[0] if e.args else template_name[0], tried=e.tried)
-                        self._enhance_component_template_error(enhanced_exc, template_name[0])
+                        enhanced_exc = TemplateDoesNotExist(
+                            e.args[0] if e.args else template_name[0], tried=e.tried
+                        )
+                        self._enhance_component_template_error(
+                            enhanced_exc, template_name[0]
+                        )
                         # Preserve any existing cause chain
                         enhanced_exc.__cause__ = e.__cause__ or e
                         raise enhanced_exc
@@ -997,7 +1040,9 @@ class IncludeContentsNode(template.Node):
 
         for allowed_value in allowed_values:
             # Use SequenceMatcher to calculate similarity
-            ratio = difflib.SequenceMatcher(None, invalid_value.lower(), allowed_value.lower()).ratio()
+            ratio = difflib.SequenceMatcher(
+                None, invalid_value.lower(), allowed_value.lower()
+            ).ratio()
             if ratio > best_ratio:
                 best_ratio = ratio
                 best_match = allowed_value
@@ -1010,7 +1055,7 @@ class IncludeContentsNode(template.Node):
         Enhance TemplateDoesNotExist errors for component templates with helpful suggestions.
         """
         # Extract component name from template path
-        component_path = template_name.replace('components/', '').replace('.html', '')
+        component_path = template_name.replace("components/", "").replace(".html", "")
         component_tag = f"<include:{component_path.replace('/', ':')}>"
 
         # Build enhanced error message
@@ -1028,7 +1073,7 @@ class IncludeContentsNode(template.Node):
             "",
             "For app-based components:",
             f"  5. Create in app: <app>/templates/{template_name}",
-            "  6. Ensure app is in INSTALLED_APPS"
+            "  6. Ensure app is in INSTALLED_APPS",
         ]
 
         enhanced_message = "\n".join(error_lines)
@@ -1036,6 +1081,7 @@ class IncludeContentsNode(template.Node):
         # Use the error enhancement utility if available
         try:
             from includecontents.django.errors import enhance_error
+
             enhance_error(exc, enhanced_message)
         except ImportError:
             # Fallback - modify args directly

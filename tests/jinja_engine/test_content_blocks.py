@@ -90,7 +90,12 @@ class TestHTMLContentBehaviour:
             {% endfor %}
             """,
             use=["card"],
-            context={"items": [{"title": "One", "body": "Body one"}, {"title": "Two", "body": "Body two"}]},
+            context={
+                "items": [
+                    {"title": "One", "body": "Body one"},
+                    {"title": "Two", "body": "Body two"},
+                ]
+            },
         )
 
         cards = captures_for(captures, "card")
@@ -192,7 +197,9 @@ class TestContentBlockEdgeCases:
         assert data["newstyle"] == "Last"
 
     def test_content_block_outside_component_renders_plainly(self) -> None:
-        rendered, captures = render_component("<content:note>Loose content</content:note>")
+        rendered, captures = render_component(
+            "<content:note>Loose content</content:note>"
+        )
         assert rendered.strip() == "Loose content"
         assert captures == []
 
@@ -202,5 +209,5 @@ class TestContentBlockEdgeCases:
             use=["card"],
         )
         data = first_capture(captures, "card")
-        assert data["default"] == '<content:>Empty</content:>'
-        assert '<content:>Empty</content:>' in rendered
+        assert data["default"] == "<content:>Empty</content:>"
+        assert "<content:>Empty</content:>" in rendered

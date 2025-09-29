@@ -164,7 +164,9 @@ class TestTypedDefaults:
         )
 
         context = Context({})
-        with pytest.raises(TemplateSyntaxError, match='Missing required attribute "title"'):
+        with pytest.raises(
+            TemplateSyntaxError, match='Missing required attribute "title"'
+        ):
             template.render(context)
 
     def test_multiple_defaults(self):
@@ -191,9 +193,9 @@ class TestTypedDefaults:
         context = Context({})
         output = template.render(context)
         assert "Title: Welcome" in output  # Default used
-        assert "Count: 15" in output       # Provided value used
-        assert "Active: False" in output   # Provided value used
-        assert "Role: guest" in output     # Default used
+        assert "Count: 15" in output  # Provided value used
+        assert "Active: False" in output  # Provided value used
+        assert "Role: guest" in output  # Default used
 
 
 class TestDefaultTypes:
@@ -230,10 +232,7 @@ class TestDefaultTypes:
             '{% includecontents "typed_defaults/test_complex_variable_defaults.html" %}{% endincludecontents %}'
         )
 
-        context = Context({
-            "user": {"name": "Alice"},
-            "settings": {"theme": "dark"}
-        })
+        context = Context({"user": {"name": "Alice"}, "settings": {"theme": "dark"}})
         output = template.render(context)
         assert "User: Alice" in output
         assert "Theme: dark" in output

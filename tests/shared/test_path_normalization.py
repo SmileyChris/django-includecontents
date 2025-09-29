@@ -22,14 +22,14 @@ class TestPathNormalization:
         """Test that components registered with relative paths are found when looked up with absolute paths."""
 
         # Register a component with relative path (typical usage)
-        @component('components/test-normalize.html')
+        @component("components/test-normalize.html")
         @dataclass
         class TestNormalizeProps:
             title: str
             description: str = "Default description"
 
         # Verify the registration worked
-        assert get_props_class('components/test-normalize.html') is TestNormalizeProps
+        assert get_props_class("components/test-normalize.html") is TestNormalizeProps
 
         # Create the component template
         component_content = """
@@ -47,18 +47,18 @@ description:str=Template default
         test_content = """<include:test-normalize title="Test Title" />"""
 
         # Write the template files
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
 
-        test_dir = Path('tests/templates/test_path_norm')
+        test_dir = Path("tests/templates/test_path_norm")
         test_dir.mkdir(parents=True, exist_ok=True)
 
         # Component template
-        component_file = template_dir / 'test-normalize.html'
+        component_file = template_dir / "test-normalize.html"
         component_file.write_text(component_content)
 
         # Test template
-        test_file = test_dir / 'test.html'
+        test_file = test_dir / "test.html"
         test_file.write_text(test_content)
 
         # Test that the component syntax finds the Python props class
@@ -67,13 +67,15 @@ description:str=Template default
         # Should use Python props default, not template default
         assert "Test Title" in output
         assert "Default description" in output  # Python props default
-        assert "Template default" not in output  # Should not use template-defined default
+        assert (
+            "Template default" not in output
+        )  # Should not use template-defined default
 
     def test_path_lookup_candidates_order(self):
         """Test that the path lookup tries candidates in the correct order."""
 
         # Register with relative path
-        @component('components/priority-test.html')
+        @component("components/priority-test.html")
         @dataclass
         class PriorityTestProps:
             message: str = "Python props used"
@@ -86,9 +88,9 @@ message:str=Template props used
 <div>{{ message }}</div>
 """
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'priority-test.html'
+        template_file = template_dir / "priority-test.html"
         template_file.write_text(template_content)
 
         # Test that Python props take precedence
@@ -116,9 +118,9 @@ fallback_message:str="Fallback working"
 <div>{{ fallback_message }}</div>
 """
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'fallback-test.html'
+        template_file = template_dir / "fallback-test.html"
         template_file.write_text(template_content)
 
         # Test that template-defined props are used when no Python props exist
@@ -138,10 +140,10 @@ fallback_message:str="Fallback working"
         import shutil
 
         test_paths = [
-            'tests/templates/components/test-normalize.html',
-            'tests/templates/components/priority-test.html',
-            'tests/templates/components/fallback-test.html',
-            'tests/templates/test_path_norm'
+            "tests/templates/components/test-normalize.html",
+            "tests/templates/components/priority-test.html",
+            "tests/templates/components/fallback-test.html",
+            "tests/templates/test_path_norm",
         ]
 
         for test_path in test_paths:

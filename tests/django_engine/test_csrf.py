@@ -1,4 +1,5 @@
 """Test CSRF token handling in components."""
+
 from django.middleware.csrf import get_token
 from django.template.loader import render_to_string
 import pytest

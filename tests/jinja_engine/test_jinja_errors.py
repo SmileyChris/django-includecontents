@@ -21,12 +21,12 @@ class TestJinja2ErrorTypes:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:button variant="invalid">Click</include:button>',
-                use=["button"]
+                use=["button"],
             )
 
         # Should be TemplateRuntimeError, not Django's TemplateSyntaxError
         assert isinstance(exc.value, TemplateRuntimeError)
-        assert 'invalid' in str(exc.value).lower()
+        assert "invalid" in str(exc.value).lower()
 
     def test_undefined_error_handling(self) -> None:
         """Test handling of undefined variables in prop values."""
@@ -35,7 +35,7 @@ class TestJinja2ErrorTypes:
         try:
             _, captures = render_component(
                 '<include:test-undefined title="{{ undefined_variable }}">Content</include:test-undefined>',
-                use=["test-undefined"]
+                use=["test-undefined"],
             )
             # If it doesn't raise, check the result
             # The undefined variable should be handled somehow
@@ -48,26 +48,26 @@ class TestJinja2ErrorTypes:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:validation-error email="invalid-email">Content</include:validation-error>',
-                use=["validation-error"]
+                use=["validation-error"],
             )
 
         error_msg = str(exc.value)
         # Should include context about which component and prop failed
-        assert 'email' in error_msg.lower()
+        assert "email" in error_msg.lower()
 
     def test_nested_component_error_context(self) -> None:
         """Test error context in nested components."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
-                '<include:parent>'
+                "<include:parent>"
                 '<include:child-error prop="invalid">Nested</include:child-error>'
-                '</include:parent>',
-                use=["parent", "child-error"]
+                "</include:parent>",
+                use=["parent", "child-error"],
             )
 
         # Error should indicate which nested component failed
         error_msg = str(exc.value)
-        assert 'invalid' in error_msg.lower()
+        assert "invalid" in error_msg.lower()
 
 
 class TestJinja2ErrorMessages:
@@ -78,49 +78,49 @@ class TestJinja2ErrorMessages:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:email-component email="not-an-email">Content</include:email-component>',
-                use=["email-component"]
+                use=["email-component"],
             )
 
         error_msg = str(exc.value)
         # Should be informative for developers
         assert len(error_msg) > 10  # Not just a generic error
-        assert 'email' in error_msg.lower()
+        assert "email" in error_msg.lower()
 
     def test_missing_required_prop_message(self) -> None:
         """Test message format for missing required props."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
-                '<include:required-component>Content</include:required-component>',
-                use=["required-component"]
+                "<include:required-component>Content</include:required-component>",
+                use=["required-component"],
             )
 
         error_msg = str(exc.value)
-        assert 'required' in error_msg.lower() or 'missing' in error_msg.lower()
+        assert "required" in error_msg.lower() or "missing" in error_msg.lower()
 
     def test_type_coercion_error_message(self) -> None:
         """Test message format for type coercion errors."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:number-component count="not-a-number">Content</include:number-component>',
-                use=["number-component"]
+                use=["number-component"],
             )
 
         error_msg = str(exc.value)
         # Should mention the conversion failure
-        assert 'convert' in error_msg.lower() or 'invalid' in error_msg.lower()
-        assert 'not-a-number' in error_msg
+        assert "convert" in error_msg.lower() or "invalid" in error_msg.lower()
+        assert "not-a-number" in error_msg
 
     def test_enum_suggestion_error_message(self) -> None:
         """Test that enum errors include suggestions."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:button variant="primari">Click</include:button>',  # typo: primari
-                use=["button"]
+                use=["button"],
             )
 
         error_msg = str(exc.value)
         # Should suggest the correct value
-        assert 'primary' in error_msg or 'allowed' in error_msg.lower()
+        assert "primary" in error_msg or "allowed" in error_msg.lower()
 
 
 class TestJinja2SpecificBehaviors:
@@ -132,7 +132,7 @@ class TestJinja2SpecificBehaviors:
         with pytest.raises(TemplateRuntimeError):
             render_component(
                 '<include:button variant="invalid">Click</include:button>',
-                use=["button"]
+                use=["button"],
             )
 
         # Template syntax issues would be caught earlier in Jinja2
@@ -143,7 +143,7 @@ class TestJinja2SpecificBehaviors:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:filter-error value="{{ invalid_var | invalid_filter }}">Content</include:filter-error>',
-                use=["filter-error"]
+                use=["filter-error"],
             )
         # Should handle the error appropriately
 
@@ -152,8 +152,8 @@ class TestJinja2SpecificBehaviors:
         # This tests Jinja2-specific template features
         try:
             _, captures = render_component(
-                '<include:macro-component>Content</include:macro-component>',
-                use=["macro-component"]
+                "<include:macro-component>Content</include:macro-component>",
+                use=["macro-component"],
             )
         except TemplateRuntimeError:
             # Acceptable for this test case
@@ -164,7 +164,7 @@ class TestJinja2SpecificBehaviors:
         # Test that HTML props work correctly with autoescape
         _, captures = render_component(
             '<include:html-escape content="<script>alert(1)</script>">Content</include:html-escape>',
-            use=["html-escape"]
+            use=["html-escape"],
         )
         # Should handle HTML content according to autoescape settings
 
@@ -173,8 +173,8 @@ class TestJinja2SpecificBehaviors:
         # This tests Jinja2 block inheritance with components
         try:
             _, captures = render_component(
-                '{% block content %}<include:block-error>Content</include:block-error>{% endblock %}',
-                use=["block-error"]
+                "{% block content %}<include:block-error>Content</include:block-error>{% endblock %}",
+                use=["block-error"],
             )
         except TemplateRuntimeError as exc:
             # Error should include useful context
@@ -191,7 +191,7 @@ class TestJinja2UndefinedHandling:
         try:
             _, captures = render_component(
                 '<include:undefined-prop title="{{ undefined_var }}">Content</include:undefined-prop>',
-                use=["undefined-prop"]
+                use=["undefined-prop"],
             )
             # May succeed with empty/default value
         except (UndefinedError, TemplateRuntimeError):
@@ -202,8 +202,8 @@ class TestJinja2UndefinedHandling:
         """Test undefined variables in default value expressions."""
         try:
             _, captures = render_component(
-                '<include:undefined-default>Content</include:undefined-default>',
-                use=["undefined-default"]
+                "<include:undefined-default>Content</include:undefined-default>",
+                use=["undefined-default"],
             )
             # Should handle undefined in defaults gracefully
         except (UndefinedError, TemplateRuntimeError):
@@ -232,7 +232,7 @@ class TestJinja2ErrorRecovery:
         with pytest.raises(TemplateRuntimeError):
             render_component(
                 '<include:mixed-validation good="valid" bad="invalid">Content</include:mixed-validation>',
-                use=["mixed-validation"]
+                use=["mixed-validation"],
             )
 
     def test_optional_prop_error_recovery(self) -> None:
@@ -241,7 +241,7 @@ class TestJinja2ErrorRecovery:
         with pytest.raises(TemplateRuntimeError):
             render_component(
                 '<include:optional-validation optional_email="invalid">Content</include:optional-validation>',
-                use=["optional-validation"]
+                use=["optional-validation"],
             )
 
     def test_default_value_error_recovery(self) -> None:
@@ -249,8 +249,8 @@ class TestJinja2ErrorRecovery:
         # If a default value expression fails, how is it handled?
         try:
             _, captures = render_component(
-                '<include:error-default>Content</include:error-default>',
-                use=["error-default"]
+                "<include:error-default>Content</include:error-default>",
+                use=["error-default"],
             )
             # May succeed with fallback behavior
         except TemplateRuntimeError:
@@ -266,8 +266,8 @@ class TestJinja2PerformanceErrors:
         # Components that include themselves should be handled
         try:
             _, captures = render_component(
-                '<include:recursive-component>Content</include:recursive-component>',
-                use=["recursive-component"]
+                "<include:recursive-component>Content</include:recursive-component>",
+                use=["recursive-component"],
             )
         except (RecursionError, TemplateRuntimeError):
             # Should prevent infinite recursion
@@ -275,12 +275,9 @@ class TestJinja2PerformanceErrors:
 
     def test_deep_nesting_error_handling(self) -> None:
         """Test error handling with deeply nested components."""
-        deep_nesting = '<include:level1>' * 10 + 'Content' + '</include:level1>' * 10
+        deep_nesting = "<include:level1>" * 10 + "Content" + "</include:level1>" * 10
         try:
-            _, captures = render_component(
-                deep_nesting,
-                use=["level1"]
-            )
+            _, captures = render_component(deep_nesting, use=["level1"])
         except TemplateRuntimeError:
             # Deep nesting may cause errors - should be handled gracefully
             pass
@@ -291,7 +288,7 @@ class TestJinja2PerformanceErrors:
         try:
             _, captures = render_component(
                 f'<include:large-prop value="{large_value}">Content</include:large-prop>',
-                use=["large-prop"]
+                use=["large-prop"],
             )
             # Should handle large values gracefully
         except TemplateRuntimeError:

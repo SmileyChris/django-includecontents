@@ -7,13 +7,15 @@ def test_missing_component_template_enhanced_error():
     """Test that missing component templates show enhanced error messages."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
         Template(
-            '<include:nonexistent-component>Content</include:nonexistent-component>'
+            "<include:nonexistent-component>Content</include:nonexistent-component>"
         ).render(Context())
 
     error_message = str(exc_info.value)
 
     # Should include the component name in the error
-    assert "Component template not found: <include:nonexistent-component>" in error_message
+    assert (
+        "Component template not found: <include:nonexistent-component>" in error_message
+    )
 
     # Should show what template was looked for
     assert "Looked for:" in error_message
@@ -30,9 +32,7 @@ def test_missing_component_template_enhanced_error():
 def test_missing_namespaced_component_template_enhanced_error():
     """Test enhanced error for namespaced component templates."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
-        Template(
-            '<include:forms:field>Content</include:forms:field>'
-        ).render(Context())
+        Template("<include:forms:field>Content</include:forms:field>").render(Context())
 
     error_message = str(exc_info.value)
 
@@ -47,13 +47,13 @@ def test_enhanced_error_preserves_original_tried_list():
     """Test that enhanced errors preserve the original tried list from Django."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
         Template(
-            '<include:missing-component>Content</include:missing-component>'
+            "<include:missing-component>Content</include:missing-component>"
         ).render(Context())
 
     error_message = str(exc_info.value)
 
     # The exception should have the tried attribute
-    assert hasattr(exc_info.value, 'tried')
+    assert hasattr(exc_info.value, "tried")
 
     # If there are tries, they should be included in the message
     if exc_info.value.tried:
@@ -63,9 +63,9 @@ def test_enhanced_error_preserves_original_tried_list():
 def test_enhanced_error_with_app_structure_suggestion():
     """Test enhanced error includes app-based template suggestions."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
-        Template(
-            '<include:user-profile>Content</include:user-profile>'
-        ).render(Context())
+        Template("<include:user-profile>Content</include:user-profile>").render(
+            Context()
+        )
 
     error_message = str(exc_info.value)
 
@@ -77,9 +77,7 @@ def test_enhanced_error_with_app_structure_suggestion():
 def test_enhanced_error_chaining_preserves_original():
     """Test that error chaining preserves the original exception."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
-        Template(
-            '<include:missing>Content</include:missing>'
-        ).render(Context())
+        Template("<include:missing>Content</include:missing>").render(Context())
 
     # Should have the original exception as the cause
     assert exc_info.value.__cause__ is not None
@@ -99,12 +97,12 @@ def test_error_enhancement_only_for_components():
 def test_enhanced_error_message_formatting():
     """Test the formatting and structure of enhanced error messages."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
-        Template(
-            '<include:test-component>Content</include:test-component>'
-        ).render(Context())
+        Template("<include:test-component>Content</include:test-component>").render(
+            Context()
+        )
 
     error_message = str(exc_info.value)
-    lines = error_message.split('\n')
+    lines = error_message.split("\n")
 
     # Should have structured sections
     component_line = None
@@ -132,7 +130,7 @@ def test_enhanced_error_with_relative_path_components():
     """Test enhanced error handling for components with relative paths."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
         Template(
-            '<include:../outside-component>Content</include:../outside-component>'
+            "<include:../outside-component>Content</include:../outside-component>"
         ).render(Context())
 
     error_message = str(exc_info.value)
@@ -145,9 +143,7 @@ def test_enhanced_error_with_relative_path_components():
 def test_enhanced_error_suggestions_are_actionable():
     """Test that error suggestions provide actionable guidance."""
     with pytest.raises(TemplateDoesNotExist) as exc_info:
-        Template(
-            '<include:my-widget>Content</include:my-widget>'
-        ).render(Context())
+        Template("<include:my-widget>Content</include:my-widget>").render(Context())
 
     error_message = str(exc_info.value)
 
@@ -166,6 +162,4 @@ def test_enhanced_error_handles_empty_template_name():
     # The test ensures our enhancement doesn't break in this scenario
     with pytest.raises((TemplateDoesNotExist, TemplateSyntaxError)):
         # Create a scenario that might result in empty template name
-        Template(
-            '<include:>Content</include:>'
-        ).render(Context())
+        Template("<include:>Content</include:>").render(Context())

@@ -2,6 +2,7 @@
 High-level tests for the icons system with Jinja2 templates.
 Tests the <icon:name> HTML component syntax in Jinja2 environment.
 """
+
 from unittest.mock import patch
 from jinja2 import Environment, DictLoader
 
@@ -13,12 +14,21 @@ def mock_all_iconify_fetches():
     Create a mock function that handles all iconify fetches for tests.
     This prevents errors with our strict approach that builds all icons at once.
     """
-    def mock_fetch_fn(prefix, icon_names, api_base, cache_root=None, cache_static_path=None):
-        if prefix == 'mdi':
-            return {'home': {'body': '<path d="M10 10"/>', 'viewBox': '0 0 24 24'}}
-        elif prefix == 'tabler':
-            return {'user': {'body': '<circle cx="12" cy="12" r="3"/>', 'viewBox': '0 0 24 24'}}
+
+    def mock_fetch_fn(
+        prefix, icon_names, api_base, cache_root=None, cache_static_path=None
+    ):
+        if prefix == "mdi":
+            return {"home": {"body": '<path d="M10 10"/>', "viewBox": "0 0 24 24"}}
+        elif prefix == "tabler":
+            return {
+                "user": {
+                    "body": '<circle cx="12" cy="12" r="3"/>',
+                    "viewBox": "0 0 24 24",
+                }
+            }
         return {}
+
     return mock_fetch_fn
 
 
@@ -28,7 +38,7 @@ def create_jinja_env():
     return Environment(loader=loader, extensions=[IncludeContentsExtension])
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_html_syntax_basic(mock_fetch):
     """Test basic <icon:name> HTML syntax works in Jinja."""
     mock_fetch.side_effect = mock_all_iconify_fetches()
@@ -42,10 +52,10 @@ def test_jinja_icon_html_syntax_basic(mock_fetch):
     assert '<svg class="w-6 h-6">' in result
     assert 'href="/static/icons/sprite-' in result  # Static file URL
     assert '#home">' in result  # Symbol ID based on component name
-    assert '</svg>' in result
+    assert "</svg>" in result
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_with_attributes(mock_fetch):
     """Test <icon:name> with multiple attributes in Jinja."""
     mock_fetch.side_effect = mock_all_iconify_fetches()
@@ -60,7 +70,7 @@ def test_jinja_icon_with_attributes(mock_fetch):
     assert '#user">' in result
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_with_template_variables(mock_fetch):
     """Test <icon:name> with template variables in attributes."""
     mock_fetch.side_effect = mock_all_iconify_fetches()
@@ -68,29 +78,29 @@ def test_jinja_icon_with_template_variables(mock_fetch):
     env = create_jinja_env()
     template_source = '<icon:home class="icon {{ size_class }}" />'
     template = env.from_string(template_source)
-    result = template.render(size_class='large')
+    result = template.render(size_class="large")
 
     # Template variables should be processed in attributes
     assert 'class="icon large"' in result
     assert '#home">' in result
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_mixed_with_components(mock_fetch):
     """Test that icons work alongside components in Jinja."""
     mock_fetch.side_effect = mock_all_iconify_fetches()
 
     env = create_jinja_env()
-    env.loader.mapping.update({
-        'components/card.html': '<div class="card">{{ contents }}</div>'
-    })
+    env.loader.mapping.update(
+        {"components/card.html": '<div class="card">{{ contents }}</div>'}
+    )
 
-    template_source = '''
+    template_source = """
     <include:card>
         <icon:home class="card-icon" />
         Card content
     </include:card>
-    '''
+    """
     template = env.from_string(template_source)
     result = template.render()
 
@@ -98,10 +108,10 @@ def test_jinja_icon_mixed_with_components(mock_fetch):
     assert '<div class="card">' in result
     assert '<svg class="card-icon">' in result
     assert '#home">' in result
-    assert 'Card content' in result
+    assert "Card content" in result
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_preprocessing(mock_fetch):
     """Test that <icon:name> syntax is preprocessed correctly in Jinja."""
     mock_fetch.side_effect = mock_all_iconify_fetches()
@@ -123,7 +133,7 @@ def test_jinja_icon_preprocessing(mock_fetch):
     assert '<svg class="nav-icon">' in result
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_no_closing_tags(mock_fetch):
     """Test that icon closing tags are ignored in Jinja."""
     mock_fetch.side_effect = mock_all_iconify_fetches()
@@ -137,10 +147,10 @@ def test_jinja_icon_no_closing_tags(mock_fetch):
 
     # Should have one icon function call and ignore closing tag
     assert processed.count('icon("home"') == 1
-    assert '</icon:home>' not in processed
+    assert "</icon:home>" not in processed
 
 
-@patch('includecontents.icons.builder.fetch_iconify_icons')
+@patch("includecontents.icons.builder.fetch_iconify_icons")
 def test_jinja_icon_error_handling(mock_fetch):
     """Test icon error handling in Jinja."""
     # Mock fetch to return empty (simulating API failure)

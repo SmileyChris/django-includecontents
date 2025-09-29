@@ -54,7 +54,7 @@ def component(template_path: str):
                 "Previous: %s, New: %s (keeping first)",
                 template_path,
                 existing_class.__name__,
-                props_class.__name__
+                props_class.__name__,
             )
             # Keep the first registration (don't overwrite)
         else:
@@ -110,36 +110,36 @@ def resolve_props_class_for(path: str) -> Optional[Type]:
     from pathlib import Path
 
     # Try without leading slash
-    if path.startswith('/'):
-        relative = path.lstrip('/')
+    if path.startswith("/"):
+        relative = path.lstrip("/")
         if relative in _registry:
             return _registry[relative]
 
     # Try with 'templates/' prefix removed (handle both Unix and Windows paths)
-    if 'templates/' in path or 'templates\\' in path:
+    if "templates/" in path or "templates\\" in path:
         # Normalize path separators to forward slashes for consistency
-        normalized_path = path.replace('\\', '/')
-        if 'templates/' in normalized_path:
-            parts = normalized_path.split('templates/', 1)
+        normalized_path = path.replace("\\", "/")
+        if "templates/" in normalized_path:
+            parts = normalized_path.split("templates/", 1)
             if len(parts) == 2 and parts[1] in _registry:
                 return _registry[parts[1]]
 
     # Try normalized path variations
     try:
         # Normalize path separators for cross-platform compatibility
-        normalized_path = path.replace('\\', '/')
+        normalized_path = path.replace("\\", "/")
         path_obj = Path(normalized_path)
 
         # Convert to forward slash notation for consistency
-        path_parts = normalized_path.split('/')
+        path_parts = normalized_path.split("/")
 
         # Look for 'templates' in the path and extract relative part
-        if 'templates' in path_parts:
-            templates_index = path_parts.index('templates')
+        if "templates" in path_parts:
+            templates_index = path_parts.index("templates")
             if templates_index < len(path_parts) - 1:
                 # Get everything after 'templates/'
-                relative_parts = path_parts[templates_index + 1:]
-                relative_path = '/'.join(relative_parts)
+                relative_parts = path_parts[templates_index + 1 :]
+                relative_path = "/".join(relative_parts)
                 if relative_path in _registry:
                     return _registry[relative_path]
     except Exception:
@@ -267,6 +267,7 @@ def is_html_type(type_hint: Any) -> bool:
             # Import here to avoid circular imports
             try:
                 from includecontents.django.prop_types import _HTML_MARKER
+
                 if _HTML_MARKER in getattr(type_hint, "__metadata__", ()):
                     return True
             except ImportError:
@@ -274,6 +275,7 @@ def is_html_type(type_hint: Any) -> bool:
         # Bare Html class reference (e.g., nested in containers: list[Html])
         try:
             from includecontents.django.prop_types import Html as HtmlClass
+
             if type_hint is HtmlClass:
                 return True
         except ImportError:
@@ -290,6 +292,7 @@ def is_multichoice_type(type_hint: Any) -> bool:
         if hasattr(type_hint, "__metadata__"):
             try:
                 from includecontents.django.prop_types import _MULTICHOICE_MARKER
+
                 if _MULTICHOICE_MARKER in getattr(type_hint, "__metadata__", ()):
                     return True
             except ImportError:
@@ -313,7 +316,9 @@ def get_multichoice_values(type_hint: Any) -> tuple:
         return ()
 
 
-def generate_multichoice_flags(prop_name: str, value: str, allowed_values: tuple) -> dict:
+def generate_multichoice_flags(
+    prop_name: str, value: str, allowed_values: tuple
+) -> dict:
     """
     Generate camelCase boolean flags for MultiChoice values.
 

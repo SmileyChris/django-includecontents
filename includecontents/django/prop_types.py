@@ -46,12 +46,12 @@ class Text:
         if not kwargs:
             return str
         validators = []
-        if 'max_length' in kwargs:
-            validators.append(MaxLengthValidator(kwargs['max_length']))
-        if 'min_length' in kwargs:
-            validators.append(MinLengthValidator(kwargs['min_length']))
-        if 'pattern' in kwargs:
-            validators.append(RegexValidator(kwargs['pattern']))
+        if "max_length" in kwargs:
+            validators.append(MaxLengthValidator(kwargs["max_length"]))
+        if "min_length" in kwargs:
+            validators.append(MinLengthValidator(kwargs["min_length"]))
+        if "pattern" in kwargs:
+            validators.append(RegexValidator(kwargs["pattern"]))
         return Annotated[str, *validators] if validators else str
 
     def __class_getitem__(cls, params):
@@ -60,12 +60,12 @@ class Text:
 
         # Handle dict-like params: Text[max_length=100, min_length=2]
         if isinstance(params, dict):
-            if 'max_length' in params:
-                validators.append(MaxLengthValidator(params['max_length']))
-            if 'min_length' in params:
-                validators.append(MinLengthValidator(params['min_length']))
-            if 'pattern' in params:
-                validators.append(RegexValidator(params['pattern']))
+            if "max_length" in params:
+                validators.append(MaxLengthValidator(params["max_length"]))
+            if "min_length" in params:
+                validators.append(MinLengthValidator(params["min_length"]))
+            if "pattern" in params:
+                validators.append(RegexValidator(params["pattern"]))
 
         return Annotated[str, *validators] if validators else str
 
@@ -89,10 +89,10 @@ class Integer:
         if not kwargs:
             return int
         validators = []
-        if 'min' in kwargs:
-            validators.append(MinValueValidator(kwargs['min']))
-        if 'max' in kwargs:
-            validators.append(MaxValueValidator(kwargs['max']))
+        if "min" in kwargs:
+            validators.append(MinValueValidator(kwargs["min"]))
+        if "max" in kwargs:
+            validators.append(MaxValueValidator(kwargs["max"]))
         return Annotated[int, *validators] if validators else int
 
     def __class_getitem__(cls, params):
@@ -100,10 +100,10 @@ class Integer:
         validators = []
 
         if isinstance(params, dict):
-            if 'min' in params:
-                validators.append(MinValueValidator(params['min']))
-            if 'max' in params:
-                validators.append(MaxValueValidator(params['max']))
+            if "min" in params:
+                validators.append(MinValueValidator(params["min"]))
+            if "max" in params:
+                validators.append(MaxValueValidator(params["max"]))
 
         return Annotated[int, *validators] if validators else int
 
@@ -127,27 +127,35 @@ class Decimal:
         if not kwargs:
             return decimal.Decimal
         validators = []
-        if 'min' in kwargs:
-            validators.append(MinValueValidator(kwargs['min']))
-        if 'max' in kwargs:
-            validators.append(MaxValueValidator(kwargs['max']))
-        if 'max_digits' in kwargs and 'decimal_places' in kwargs:
-            validators.append(DecimalValidator(kwargs['max_digits'], kwargs['decimal_places']))
-        return Annotated[decimal.Decimal, *validators] if validators else decimal.Decimal
+        if "min" in kwargs:
+            validators.append(MinValueValidator(kwargs["min"]))
+        if "max" in kwargs:
+            validators.append(MaxValueValidator(kwargs["max"]))
+        if "max_digits" in kwargs and "decimal_places" in kwargs:
+            validators.append(
+                DecimalValidator(kwargs["max_digits"], kwargs["decimal_places"])
+            )
+        return (
+            Annotated[decimal.Decimal, *validators] if validators else decimal.Decimal
+        )
 
     def __class_getitem__(cls, params):
         """Handle Decimal[...] syntax for validation parameters."""
         validators = []
 
         if isinstance(params, dict):
-            if 'min' in params:
-                validators.append(MinValueValidator(params['min']))
-            if 'max' in params:
-                validators.append(MaxValueValidator(params['max']))
-            if 'max_digits' in params and 'decimal_places' in params:
-                validators.append(DecimalValidator(params['max_digits'], params['decimal_places']))
+            if "min" in params:
+                validators.append(MinValueValidator(params["min"]))
+            if "max" in params:
+                validators.append(MaxValueValidator(params["max"]))
+            if "max_digits" in params and "decimal_places" in params:
+                validators.append(
+                    DecimalValidator(params["max_digits"], params["decimal_places"])
+                )
 
-        return Annotated[decimal.Decimal, *validators] if validators else decimal.Decimal
+        return (
+            Annotated[decimal.Decimal, *validators] if validators else decimal.Decimal
+        )
 
 
 # Pre-configured common prop types
@@ -160,7 +168,7 @@ IPv6Address = Annotated[str, validate_ipv6_address]
 
 
 # Choice type for restricted values
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Choice(Generic[T]):
@@ -255,6 +263,7 @@ class MultiChoice(Generic[T]):
 
 # Django-specific prop types
 
+
 # Model type that supports both bare usage and square brackets
 class Model:
     """
@@ -268,6 +277,7 @@ class Model:
 
     def __class_getitem__(cls, model_spec):
         """Handle Model[...] syntax for specific models."""
+
         def validate_model(value):
             from django.core.exceptions import ValidationError
             from django.apps import apps
@@ -275,7 +285,7 @@ class Model:
             # Handle string model spec like 'auth.User'
             if isinstance(model_spec, str):
                 try:
-                    app_label, model_name = model_spec.split('.')
+                    app_label, model_name = model_spec.split(".")
                     model_class = apps.get_model(app_label, model_name)
                 except (ValueError, LookupError):
                     raise ValidationError(f"Invalid model: {model_spec}")
@@ -292,6 +302,7 @@ class Model:
 
     def __new__(cls):
         """When used bare (e.g., Model), return an Annotated type for any model."""
+
         def validate_any_model(value):
             from django.core.exceptions import ValidationError
             from django.db.models import Model as DjangoModel
@@ -317,6 +328,7 @@ class QuerySet:
 
     def __class_getitem__(cls, model_spec):
         """Handle QuerySet[...] syntax for specific model querysets."""
+
         def validate_queryset(value):
             from django.core.exceptions import ValidationError
             from django.db.models import QuerySet as DjangoQuerySet
@@ -324,15 +336,13 @@ class QuerySet:
 
             # Check if it's a QuerySet
             if value is not None and not isinstance(value, DjangoQuerySet):
-                raise ValidationError(
-                    f"Expected QuerySet, got {type(value).__name__}"
-                )
+                raise ValidationError(f"Expected QuerySet, got {type(value).__name__}")
 
             # Check the model if specified
             if value is not None:
                 if isinstance(model_spec, str):
                     try:
-                        app_label, model_name = model_spec.split('.')
+                        app_label, model_name = model_spec.split(".")
                         model_class = apps.get_model(app_label, model_name)
                     except (ValueError, LookupError):
                         raise ValidationError(f"Invalid model: {model_spec}")
@@ -350,6 +360,7 @@ class QuerySet:
 
     def __new__(cls):
         """When used bare (e.g., QuerySet), return an Annotated type for any queryset."""
+
         def validate_any_queryset(value):
             from django.core.exceptions import ValidationError
             from django.db.models import QuerySet as DjangoQuerySet
@@ -375,6 +386,7 @@ def _validate_user(value):
             f"Expected instance of {UserModel.__name__}, got {type(value).__name__}"
         )
 
+
 # User is just an annotated type
 User = Annotated[object, _validate_user]
 
@@ -391,17 +403,19 @@ class CssClass:
 
     def __new__(cls):
         """Bare CssClass usage with default pattern."""
-        return Annotated[str, RegexValidator(
-            r'^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$',
-            "Invalid CSS class name"
-        )]
+        return Annotated[
+            str,
+            RegexValidator(
+                r"^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$", "Invalid CSS class name"
+            ),
+        ]
 
     def __class_getitem__(cls, params):
         """Handle CssClass[...] syntax for custom pattern."""
-        if isinstance(params, dict) and 'pattern' in params:
-            pattern = params['pattern']
+        if isinstance(params, dict) and "pattern" in params:
+            pattern = params["pattern"]
         else:
-            pattern = r'^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$'
+            pattern = r"^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$"
 
         return Annotated[str, RegexValidator(pattern, "Invalid CSS class name")]
 
@@ -425,11 +439,11 @@ class Color:
         """
         if not kwargs:
             return str
-        fmt = kwargs.get('format')
+        fmt = kwargs.get("format")
         patterns = {
-            'hex': r'^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$',
-            'rgb': r'^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$',
-            'rgba': r'^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$',
+            "hex": r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$",
+            "rgb": r"^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$",
+            "rgba": r"^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$",
         }
         if fmt in patterns:
             return Annotated[str, RegexValidator(patterns[fmt], f"Invalid {fmt} color")]
@@ -438,14 +452,14 @@ class Color:
     def __class_getitem__(cls, format):
         """Handle Color[...] syntax for specific formats."""
         patterns = {
-            'hex': r'^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$',
-            'rgb': r'^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$',
-            'rgba': r'^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$',
-            'any': r'.*',  # Accept any color format
+            "hex": r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$",
+            "rgb": r"^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$",
+            "rgba": r"^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$",
+            "any": r".*",  # Accept any color format
         }
 
         if isinstance(format, str):
-            pattern = patterns.get(format, patterns['any'])
+            pattern = patterns.get(format, patterns["any"])
             return Annotated[str, RegexValidator(pattern, f"Invalid {format} color")]
 
         return str  # Default to any format
@@ -462,10 +476,9 @@ class IconName:
     def __new__(cls):
         # This will be enhanced to check against registered icons
         # For now, just validate the format
-        return Annotated[str, RegexValidator(
-            r'^[a-zA-Z0-9][\w:-]*$',
-            "Invalid icon name"
-        )]
+        return Annotated[
+            str, RegexValidator(r"^[a-zA-Z0-9][\w:-]*$", "Invalid icon name")
+        ]
 
 
 # Unique marker object to tag Html-typed values in Annotated metadata
@@ -495,6 +508,7 @@ class Json:
     def __new__(cls):
         def validate_json(value):
             import json
+
             try:
                 json.loads(value) if isinstance(value, str) else value
             except (json.JSONDecodeError, TypeError) as e:
@@ -520,51 +534,51 @@ def MinMaxDecimal(min_val, max_val, max_digits=10, decimal_places=2):
         decimal.Decimal,
         MinValueValidator(min_val),
         MaxValueValidator(max_val),
-        DecimalValidator(max_digits, decimal_places)
+        DecimalValidator(max_digits, decimal_places),
     ]
 
 
 # Type mapping for template parser
 TYPE_MAP = {
-    'text': Text(),
-    'str': Text(),
-    'string': Text(),
-    'int': Integer(),
-    'integer': Integer(),
-    'decimal': Decimal(),
-    'float': Decimal(),
-    'email': Email,
-    'url': Url,
-    'slug': Slug,
-    'unicode_slug': UnicodeSlug,
-    'ip': IPAddress,
-    'ipv4': IPAddress,
-    'ipv6': IPv6Address,
-    'css_class': CssClass(),
-    'color': Color(),
-    'icon': IconName(),
-    'html': Html(),
-    'json': Json(),
-    'bool': bool,
-    'boolean': bool,
-    'model': Model(),  # Model instance returns Annotated type for any model
-    'queryset': QuerySet(),  # QuerySet instance returns Annotated type for any queryset
-    'user': User,  # Special user type
-    'multichoice': MultiChoice,  # MultiChoice type with camelCase boolean flags
+    "text": Text(),
+    "str": Text(),
+    "string": Text(),
+    "int": Integer(),
+    "integer": Integer(),
+    "decimal": Decimal(),
+    "float": Decimal(),
+    "email": Email,
+    "url": Url,
+    "slug": Slug,
+    "unicode_slug": UnicodeSlug,
+    "ip": IPAddress,
+    "ipv4": IPAddress,
+    "ipv6": IPv6Address,
+    "css_class": CssClass(),
+    "color": Color(),
+    "icon": IconName(),
+    "html": Html(),
+    "json": Json(),
+    "bool": bool,
+    "boolean": bool,
+    "model": Model(),  # Model instance returns Annotated type for any model
+    "queryset": QuerySet(),  # QuerySet instance returns Annotated type for any queryset
+    "user": User,  # Special user type
+    "multichoice": MultiChoice,  # MultiChoice type with camelCase boolean flags
 }
 
 # Mapping of type names to their classes (for parameterized types)
 TYPE_CLASSES = {
-    'text': Text,
-    'str': Text,
-    'string': Text,
-    'int': Integer,
-    'integer': Integer,
-    'decimal': Decimal,
-    'float': Decimal,
-    'css_class': CssClass,
-    'color': Color,
-    'model': Model,
-    'queryset': QuerySet,
-    'multichoice': MultiChoice,
+    "text": Text,
+    "str": Text,
+    "string": Text,
+    "int": Integer,
+    "integer": Integer,
+    "decimal": Decimal,
+    "float": Decimal,
+    "css_class": CssClass,
+    "color": Color,
+    "model": Model,
+    "queryset": QuerySet,
+    "multichoice": MultiChoice,
 }

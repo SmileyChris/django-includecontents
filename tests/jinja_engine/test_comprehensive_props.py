@@ -21,7 +21,7 @@ class TestBasicPropTypes:
         # Valid string
         _, captures = render_component(
             '<include:text-component title="Hello World">Content</include:text-component>',
-            use=["text-component"]
+            use=["text-component"],
         )
         data = first_capture(captures, "text-component")
         assert data["title"] == "Hello World"
@@ -31,7 +31,7 @@ class TestBasicPropTypes:
         # String that converts to integer
         _, captures = render_component(
             '<include:number-component count="25">Content</include:number-component>',
-            use=["number-component"]
+            use=["number-component"],
         )
         data = first_capture(captures, "number-component")
         assert data["count"] == 25
@@ -40,9 +40,9 @@ class TestBasicPropTypes:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:number-component count="not-a-number">Content</include:number-component>',
-                use=["number-component"]
+                use=["number-component"],
             )
-        assert 'Cannot convert' in str(exc.value) or 'Invalid' in str(exc.value)
+        assert "Cannot convert" in str(exc.value) or "Invalid" in str(exc.value)
 
     def test_boolean_prop_validation(self) -> None:
         """Test boolean prop validation and coercion."""
@@ -50,7 +50,7 @@ class TestBasicPropTypes:
         for true_val in ["true", "True", "1", "yes"]:
             _, captures = render_component(
                 f'<include:boolean-component active="{true_val}">Content</include:boolean-component>',
-                use=["boolean-component"]
+                use=["boolean-component"],
             )
             data = first_capture(captures, "boolean-component")
             assert data["active"] is True
@@ -59,7 +59,7 @@ class TestBasicPropTypes:
         for false_val in ["false", "False", "0", "no"]:
             _, captures = render_component(
                 f'<include:boolean-component active="{false_val}">Content</include:boolean-component>',
-                use=["boolean-component"]
+                use=["boolean-component"],
             )
             data = first_capture(captures, "boolean-component")
             assert data["active"] is False
@@ -69,7 +69,7 @@ class TestBasicPropTypes:
         # Valid email
         _, captures = render_component(
             '<include:email-component email="user@example.com">Content</include:email-component>',
-            use=["email-component"]
+            use=["email-component"],
         )
         data = first_capture(captures, "email-component")
         assert data["email"] == "user@example.com"
@@ -78,16 +78,16 @@ class TestBasicPropTypes:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:email-component email="invalid-email">Content</include:email-component>',
-                use=["email-component"]
+                use=["email-component"],
             )
-        assert 'email' in str(exc.value).lower() or 'invalid' in str(exc.value).lower()
+        assert "email" in str(exc.value).lower() or "invalid" in str(exc.value).lower()
 
     def test_url_prop_validation(self) -> None:
         """Test URL prop validation."""
         # Valid URL
         _, captures = render_component(
             '<include:url-component website="https://example.com">Content</include:url-component>',
-            use=["url-component"]
+            use=["url-component"],
         )
         data = first_capture(captures, "url-component")
         assert data["website"] == "https://example.com"
@@ -96,9 +96,9 @@ class TestBasicPropTypes:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:url-component website="not-a-url">Content</include:url-component>',
-                use=["url-component"]
+                use=["url-component"],
             )
-        assert 'url' in str(exc.value).lower() or 'invalid' in str(exc.value).lower()
+        assert "url" in str(exc.value).lower() or "invalid" in str(exc.value).lower()
 
 
 class TestAdvancedPropTypes:
@@ -109,7 +109,7 @@ class TestAdvancedPropTypes:
         # Valid length
         _, captures = render_component(
             '<include:length-text title="Valid">Content</include:length-text>',
-            use=["length-text"]
+            use=["length-text"],
         )
         data = first_capture(captures, "length-text")
         assert data["title"] == "Valid"
@@ -118,7 +118,7 @@ class TestAdvancedPropTypes:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:length-text title="x">Content</include:length-text>',
-                use=["length-text"]
+                use=["length-text"],
             )
         # Error message may vary, just ensure it fails
 
@@ -127,7 +127,7 @@ class TestAdvancedPropTypes:
         # Valid value within bounds
         _, captures = render_component(
             '<include:bounded-number age="25">Content</include:bounded-number>',
-            use=["bounded-number"]
+            use=["bounded-number"],
         )
         data = first_capture(captures, "bounded-number")
         assert data["age"] == 25
@@ -136,7 +136,7 @@ class TestAdvancedPropTypes:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:bounded-number age="150">Content</include:bounded-number>',
-                use=["bounded-number"]
+                use=["bounded-number"],
             )
         # Should mention bounds or validation failure
 
@@ -144,7 +144,7 @@ class TestAdvancedPropTypes:
         """Test HTML prop type that marks content as safe."""
         _, captures = render_component(
             '<include:html-component content="<strong>Bold</strong>">Content</include:html-component>',
-            use=["html-component"]
+            use=["html-component"],
         )
         data = first_capture(captures, "html-component")
         # HTML content should be preserved
@@ -158,8 +158,8 @@ class TestDefaultValues:
         """Test props with literal default values."""
         # Component with defaults, no props provided
         _, captures = render_component(
-            '<include:default-component>Content</include:default-component>',
-            use=["default-component"]
+            "<include:default-component>Content</include:default-component>",
+            use=["default-component"],
         )
         data = first_capture(captures, "default-component")
         # Should have default values
@@ -170,7 +170,7 @@ class TestDefaultValues:
         """Test overriding default values."""
         _, captures = render_component(
             '<include:default-component title="Custom" count="10">Content</include:default-component>',
-            use=["default-component"]
+            use=["default-component"],
         )
         data = first_capture(captures, "default-component")
         assert data["title"] == "Custom"
@@ -181,8 +181,8 @@ class TestDefaultValues:
         # This would require setting up context variables
         # For now, test the concept exists
         _, captures = render_component(
-            '<include:variable-defaults>Content</include:variable-defaults>',
-            use=["variable-defaults"]
+            "<include:variable-defaults>Content</include:variable-defaults>",
+            use=["variable-defaults"],
         )
         data = first_capture(captures, "variable-defaults")
         # Should resolve template variable defaults
@@ -196,7 +196,7 @@ class TestMultiChoiceAdvanced:
         """Test that MultiChoice generates boolean flags."""
         _, captures = render_component(
             '<include:multichoice-flags variant="primary danger">Content</include:multichoice-flags>',
-            use=["multichoice-flags"]
+            use=["multichoice-flags"],
         )
         data = first_capture(captures, "multichoice-flags")
         assert data["variant"] == "primary danger"
@@ -209,7 +209,7 @@ class TestMultiChoiceAdvanced:
         """Test MultiChoice flags with hyphenated values."""
         _, captures = render_component(
             '<include:multichoice-hyphen theme="dark-mode">Content</include:multichoice-hyphen>',
-            use=["multichoice-hyphen"]
+            use=["multichoice-hyphen"],
         )
         data = first_capture(captures, "multichoice-hyphen")
         # Should convert dark-mode to darkMode flag
@@ -219,8 +219,8 @@ class TestMultiChoiceAdvanced:
     def test_multichoice_empty_value(self) -> None:
         """Test MultiChoice with empty value."""
         _, captures = render_component(
-            '<include:multichoice-empty>Content</include:multichoice-empty>',
-            use=["multichoice-empty"]
+            "<include:multichoice-empty>Content</include:multichoice-empty>",
+            use=["multichoice-empty"],
         )
         data = first_capture(captures, "multichoice-empty")
         # All flags should be False
@@ -235,7 +235,7 @@ class TestTypeCoercion:
         """Test automatic string to integer coercion."""
         _, captures = render_component(
             '<include:coercion-test age="30" count="0" score="-10">Content</include:coercion-test>',
-            use=["coercion-test"]
+            use=["coercion-test"],
         )
         data = first_capture(captures, "coercion-test")
         assert data["age"] == 30
@@ -246,7 +246,7 @@ class TestTypeCoercion:
         """Test automatic string to boolean coercion."""
         _, captures = render_component(
             '<include:boolean-coercion active="true" disabled="false">Content</include:boolean-coercion>',
-            use=["boolean-coercion"]
+            use=["boolean-coercion"],
         )
         data = first_capture(captures, "boolean-coercion")
         assert data["active"] is True
@@ -256,7 +256,7 @@ class TestTypeCoercion:
         """Test automatic string to list coercion."""
         _, captures = render_component(
             '<include:list-coercion tags="python,django,jinja2">Content</include:list-coercion>',
-            use=["list-coercion"]
+            use=["list-coercion"],
         )
         data = first_capture(captures, "list-coercion")
         assert data["tags"] == ["python", "django", "jinja2"]
@@ -265,7 +265,7 @@ class TestTypeCoercion:
         """Test coercion handles whitespace correctly."""
         _, captures = render_component(
             '<include:whitespace-coercion tags="python, django , jinja2">Content</include:whitespace-coercion>',
-            use=["whitespace-coercion"]
+            use=["whitespace-coercion"],
         )
         data = first_capture(captures, "whitespace-coercion")
         assert data["tags"] == ["python", "django", "jinja2"]
@@ -278,42 +278,42 @@ class TestErrorHandling:
         """Test error when required prop is missing."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
-                '<include:required-props>Content</include:required-props>',
-                use=["required-props"]
+                "<include:required-props>Content</include:required-props>",
+                use=["required-props"],
             )
         error_msg = str(exc.value)
-        assert 'required' in error_msg.lower() or 'missing' in error_msg.lower()
+        assert "required" in error_msg.lower() or "missing" in error_msg.lower()
 
     def test_invalid_prop_value_error(self) -> None:
         """Test error when prop value is invalid."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:validated-props email="invalid">Content</include:validated-props>',
-                use=["validated-props"]
+                use=["validated-props"],
             )
         error_msg = str(exc.value)
-        assert 'invalid' in error_msg.lower() or 'email' in error_msg.lower()
+        assert "invalid" in error_msg.lower() or "email" in error_msg.lower()
 
     def test_type_coercion_error(self) -> None:
         """Test error when type coercion fails."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:integer-props count="not-a-number">Content</include:integer-props>',
-                use=["integer-props"]
+                use=["integer-props"],
             )
         error_msg = str(exc.value)
-        assert 'convert' in error_msg.lower() or 'invalid' in error_msg.lower()
+        assert "convert" in error_msg.lower() or "invalid" in error_msg.lower()
 
     def test_enum_validation_error_includes_suggestions(self) -> None:
         """Test that enum validation errors include helpful suggestions."""
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:button variant="primari">Content</include:button>',  # typo
-                use=["button"]
+                use=["button"],
             )
         error_msg = str(exc.value)
         # Should suggest correct value
-        assert 'primary' in error_msg or 'did you mean' in error_msg.lower()
+        assert "primary" in error_msg or "did you mean" in error_msg.lower()
 
 
 class TestOptionalProps:
@@ -323,7 +323,7 @@ class TestOptionalProps:
         """Test optional props that can be None."""
         _, captures = render_component(
             '<include:optional-component title="Test">Content</include:optional-component>',
-            use=["optional-component"]
+            use=["optional-component"],
         )
         data = first_capture(captures, "optional-component")
         assert data["title"] == "Test"
@@ -333,8 +333,7 @@ class TestOptionalProps:
     def test_all_optional_props(self) -> None:
         """Test component with all optional props."""
         _, captures = render_component(
-            '<include:all-optional>Content</include:all-optional>',
-            use=["all-optional"]
+            "<include:all-optional>Content</include:all-optional>", use=["all-optional"]
         )
         data = first_capture(captures, "all-optional")
         # Should render successfully with all defaults
@@ -346,14 +345,14 @@ class TestComplexScenarios:
     def test_mixed_prop_types(self) -> None:
         """Test component with mixed prop types."""
         _, captures = render_component(
-            '<include:mixed-props '
+            "<include:mixed-props "
             'title="Test" '
             'count="10" '
             'active="true" '
             'tags="python,django" '
             'variant="primary secondary"'
-            '>Content</include:mixed-props>',
-            use=["mixed-props"]
+            ">Content</include:mixed-props>",
+            use=["mixed-props"],
         )
         data = first_capture(captures, "mixed-props")
         assert data["title"] == "Test"
@@ -365,10 +364,10 @@ class TestComplexScenarios:
     def test_nested_component_props(self) -> None:
         """Test props in nested components."""
         _, captures = render_component(
-            '<include:parent-component>'
+            "<include:parent-component>"
             '<include:child-component title="Nested">Child Content</include:child-component>'
-            '</include:parent-component>',
-            use=["parent-component", "child-component"]
+            "</include:parent-component>",
+            use=["parent-component", "child-component"],
         )
         # Should handle nested component props correctly
         parent_data = first_capture(captures, "parent-component")
@@ -380,7 +379,7 @@ class TestComplexScenarios:
         # Valid case
         _, captures = render_component(
             '<include:custom-validation start="1" end="10">Content</include:custom-validation>',
-            use=["custom-validation"]
+            use=["custom-validation"],
         )
         data = first_capture(captures, "custom-validation")
         assert data["start"] == 1
@@ -390,7 +389,7 @@ class TestComplexScenarios:
         with pytest.raises(TemplateRuntimeError) as exc:
             render_component(
                 '<include:custom-validation start="10" end="1">Content</include:custom-validation>',
-                use=["custom-validation"]
+                use=["custom-validation"],
             )
         # Should have custom validation error
 
@@ -403,7 +402,7 @@ class TestUndefinedVariables:
         # This tests Jinja2-specific behavior
         _, captures = render_component(
             '<include:undefined-test title="{{ undefined_var }}">Content</include:undefined-test>',
-            use=["undefined-test"]
+            use=["undefined-test"],
         )
         data = first_capture(captures, "undefined-test")
         # Jinja2 should handle undefined variables gracefully
@@ -412,8 +411,8 @@ class TestUndefinedVariables:
     def test_undefined_in_default_values(self) -> None:
         """Test undefined variables in default value expressions."""
         _, captures = render_component(
-            '<include:undefined-defaults>Content</include:undefined-defaults>',
-            use=["undefined-defaults"]
+            "<include:undefined-defaults>Content</include:undefined-defaults>",
+            use=["undefined-defaults"],
         )
         data = first_capture(captures, "undefined-defaults")
         # Should handle undefined variables in defaults
@@ -427,7 +426,7 @@ class TestJinja2Specifics:
         _, captures = render_component(
             '<include:filter-props title="{{ name | upper }}">Content</include:filter-props>',
             use=["filter-props"],
-            context={"name": "test"}
+            context={"name": "test"},
         )
         data = first_capture(captures, "filter-props")
         assert data["title"] == "TEST"
@@ -435,9 +434,9 @@ class TestJinja2Specifics:
     def test_jinja2_expressions_in_defaults(self) -> None:
         """Test Jinja2 expressions in default values."""
         _, captures = render_component(
-            '<include:expression-defaults>Content</include:expression-defaults>',
+            "<include:expression-defaults>Content</include:expression-defaults>",
             use=["expression-defaults"],
-            context={"user": {"name": "Alice"}}
+            context={"user": {"name": "Alice"}},
         )
         data = first_capture(captures, "expression-defaults")
         # Should resolve Jinja2 expressions in defaults
@@ -445,9 +444,9 @@ class TestJinja2Specifics:
     def test_jinja2_context_inheritance(self) -> None:
         """Test how Jinja2 context is handled in components."""
         _, captures = render_component(
-            '<include:context-test>Content</include:context-test>',
+            "<include:context-test>Content</include:context-test>",
             use=["context-test"],
-            context={"global_var": "value"}
+            context={"global_var": "value"},
         )
         data = first_capture(captures, "context-test")
         # Test context isolation vs inheritance behavior

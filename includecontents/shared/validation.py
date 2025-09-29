@@ -183,6 +183,7 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
 
         # Check Literal types (including Choice)
         from typing import Literal
+
         origin = get_origin(type_hint)
         if origin is Literal:
             allowed = get_args(type_hint)
@@ -215,14 +216,14 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
         exc = TemplateSyntaxError(f"Props validation failed: {'; '.join(errors)}")
 
         # Enhance with contextual information
-        component_name = getattr(props_class, '_template_path', None)
-        props_class_name = getattr(props_class, '__name__', 'Unknown')
+        component_name = getattr(props_class, "_template_path", None)
+        props_class_name = getattr(props_class, "__name__", "Unknown")
 
         enhance_validation_error(
             exc,
             component_name=component_name,
             props_class_name=props_class_name,
-            field_errors=errors
+            field_errors=errors,
         )
 
         raise exc
@@ -246,14 +247,14 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
             exc = TemplateSyntaxError(f"Props validation failed: {msg}")
 
             # Enhance with contextual information
-            component_name = getattr(props_class, '_template_path', None)
-            props_class_name = getattr(props_class, '__name__', 'Unknown')
+            component_name = getattr(props_class, "_template_path", None)
+            props_class_name = getattr(props_class, "__name__", "Unknown")
 
             enhance_validation_error(
                 exc,
                 component_name=component_name,
                 props_class_name=props_class_name,
-                field_errors=[msg]
+                field_errors=[msg],
             )
 
             raise exc

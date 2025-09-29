@@ -7,19 +7,21 @@ from includecontents.django.base import Template
 def test_url_tag_in_href():
     """Test {% url %} tag within href attribute."""
     # Create a simple test that doesn't require actual URL resolution
-    template_code = '''<include:test-button href="/test/">Click me</include:test-button>'''
-    
+    template_code = (
+        """<include:test-button href="/test/">Click me</include:test-button>"""
+    )
+
     template = Template(template_code)
     result = template.render(Context())
-    
+
     # The key test is that it compiles without error and preserves the href
-    assert 'onclick="location.href=\'/test/\'"' in result
+    assert "onclick=\"location.href='/test/'\"" in result
 
 
 def test_variable_in_attribute():
     """Test {{ variable }} syntax within attributes."""
-    template_code = '''<include:button class="btn {{ variant }}" href="{{ link_url }}">Submit</include:button>'''
-    
+    template_code = """<include:button class="btn {{ variant }}" href="{{ link_url }}">Submit</include:button>"""
+
     try:
         template = Template(template_code)
         # Test compilation - this should not raise an error
@@ -32,8 +34,8 @@ def test_variable_in_attribute():
 
 def test_if_tag_in_class():
     """Test {% if %} tag within class attribute."""
-    template_code = '''<include:button class="btn {% if primary %}btn-primary{% endif %}">Button</include:button>'''
-    
+    template_code = """<include:button class="btn {% if primary %}btn-primary{% endif %}">Button</include:button>"""
+
     try:
         template = Template(template_code)
         nodelist = template.compile_nodelist()
@@ -45,8 +47,8 @@ def test_if_tag_in_class():
 
 def test_multiple_template_tags():
     """Test multiple template tags in the same attribute."""
-    template_code = '''<include:link href="{% url 'detail' id=object.id %}" class="link {% if active %}active{% endif %}">Link</include:link>'''
-    
+    template_code = """<include:link href="{% url 'detail' id=object.id %}" class="link {% if active %}active{% endif %}">Link</include:link>"""
+
     try:
         template = Template(template_code)
         nodelist = template.compile_nodelist()
@@ -58,8 +60,10 @@ def test_multiple_template_tags():
 
 def test_nested_quotes():
     """Test template tags with simpler nested quotes."""
-    template_code = '''<include:button data-message="{% trans 'Hello' %}">Alert</include:button>'''
-    
+    template_code = (
+        """<include:button data-message="{% trans 'Hello' %}">Alert</include:button>"""
+    )
+
     try:
         template = Template(template_code)
         nodelist = template.compile_nodelist()
@@ -71,33 +75,32 @@ def test_nested_quotes():
 
 def test_tokenization_output():
     """Test that tokenization produces the expected output."""
-    template_code = '''<include:button href="{% url 'home' %}" class="btn-primary">Click</include:button>'''
-    
+    template_code = """<include:button href="{% url 'home' %}" class="btn-primary">Click</include:button>"""
+
     template = Template(template_code)
-    
+
     # Check the tokens produced
     from includecontents.django.base import Lexer
+
     lexer = Lexer(template_code)
     tokens = lexer.tokenize()
-    
+
     # Should have: component token, text content, closing tag
     assert len(tokens) >= 2
-    
+
     # First token should be the includecontents block
     first_token = tokens[0]
-    assert first_token.token_type.name == 'BLOCK'
-    assert 'includecontents' in first_token.contents
-    assert 'href="{% url \'home\' %}"' in first_token.contents
-    
+    assert first_token.token_type.name == "BLOCK"
+    assert "includecontents" in first_token.contents
+    assert "href=\"{% url 'home' %}\"" in first_token.contents
+
     print(f"✓ Tokenization output: {first_token.contents}")
-
-
 
 
 def test_backwards_compatibility():
     """Test that existing syntax still works."""
-    template_code = '''<include:button class="btn-primary" href="/static/">Old Style</include:button>'''
-    
+    template_code = """<include:button class="btn-primary" href="/static/">Old Style</include:button>"""
+
     try:
         template = Template(template_code)
         nodelist = template.compile_nodelist()
@@ -107,14 +110,14 @@ def test_backwards_compatibility():
         pytest.fail(f"Backwards compatibility broken: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import django
     import os
-    
+
     # Set up Django
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
     django.setup()
-    
+
     # Run tests
     test_url_tag_in_href()
     test_variable_in_attribute()
@@ -123,5 +126,5 @@ if __name__ == '__main__':
     test_nested_quotes()
     test_tokenization_output()
     test_backwards_compatibility()
-    
+
     print("✅ All template tag tests passed!")

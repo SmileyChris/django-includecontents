@@ -21,7 +21,7 @@ def enhance_error(exc: Exception, note: str) -> Exception:
     Returns:
         The enhanced exception (same instance)
     """
-    if hasattr(exc, 'add_note'):
+    if hasattr(exc, "add_note"):
         # Python 3.11+ - use native add_note() method
         exc.add_note(note)
     else:
@@ -36,8 +36,12 @@ def enhance_error(exc: Exception, note: str) -> Exception:
     return exc
 
 
-def enhance_validation_error(exc: Exception, component_name: str = None,
-                           props_class_name: str = None, field_errors: list = None) -> Exception:
+def enhance_validation_error(
+    exc: Exception,
+    component_name: str = None,
+    props_class_name: str = None,
+    field_errors: list = None,
+) -> Exception:
     """
     Add comprehensive validation context to an exception.
 
@@ -67,8 +71,9 @@ def enhance_validation_error(exc: Exception, component_name: str = None,
     return exc
 
 
-def enhance_coercion_error(exc: Exception, field_name: str, value, expected_type,
-                          hint: str = None) -> Exception:
+def enhance_coercion_error(
+    exc: Exception, field_name: str, value, expected_type, hint: str = None
+) -> Exception:
     """
     Add type coercion context to an exception.
 
@@ -83,7 +88,9 @@ def enhance_coercion_error(exc: Exception, field_name: str, value, expected_type
         The enhanced exception (same instance)
     """
     enhance_error(exc, f"Field: {field_name}")
-    enhance_error(exc, f"Expected type: {getattr(expected_type, '__name__', str(expected_type))}")
+    enhance_error(
+        exc, f"Expected type: {getattr(expected_type, '__name__', str(expected_type))}"
+    )
     enhance_error(exc, f"Received value: {value!r} (type: {type(value).__name__})")
 
     if hint:
@@ -93,6 +100,8 @@ def enhance_coercion_error(exc: Exception, field_name: str, value, expected_type
     elif expected_type is float:
         enhance_error(exc, "Hint: Ensure the value is a valid number")
     elif expected_type is bool:
-        enhance_error(exc, "Hint: Valid boolean values are: true, false, 1, 0, yes, no, on, off")
+        enhance_error(
+            exc, "Hint: Valid boolean values are: true, false, 1, 0, yes, no, on, off"
+        )
 
     return exc

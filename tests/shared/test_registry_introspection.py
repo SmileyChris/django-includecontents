@@ -14,7 +14,7 @@ from includecontents.shared.typed_props import (
     list_registered_components,
     resolve_props_class_for,
     clear_registry,
-    get_props_class
+    get_props_class,
 )
 
 
@@ -27,12 +27,13 @@ class TestRegistryIntrospection:
 
     def test_clear_registry(self):
         """Test that clear_registry removes all registered components."""
-        @component('components/test1.html')
+
+        @component("components/test1.html")
         @dataclass
         class Test1Props:
             title: str
 
-        @component('components/test2.html')
+        @component("components/test2.html")
         @dataclass
         class Test2Props:
             name: str
@@ -52,75 +53,80 @@ class TestRegistryIntrospection:
 
     def test_list_registered_components_with_data(self):
         """Test list_registered_components returns all registered paths."""
-        @component('components/card.html')
+
+        @component("components/card.html")
         @dataclass
         class CardProps:
             title: str
 
-        @component('components/forms/input.html')
+        @component("components/forms/input.html")
         @dataclass
         class InputProps:
             name: str
-            type: str = 'text'
+            type: str = "text"
 
-        @component('shared/header.html')
+        @component("shared/header.html")
         @dataclass
         class HeaderProps:
             brand: str
 
         components = list_registered_components()
         assert len(components) == 3
-        assert 'components/card.html' in components
-        assert 'components/forms/input.html' in components
-        assert 'shared/header.html' in components
+        assert "components/card.html" in components
+        assert "components/forms/input.html" in components
+        assert "shared/header.html" in components
 
     def test_resolve_props_class_for_exact_match(self):
         """Test resolve_props_class_for with exact path match."""
-        @component('components/exact.html')
+
+        @component("components/exact.html")
         @dataclass
         class ExactProps:
             value: str
 
-        result = resolve_props_class_for('components/exact.html')
+        result = resolve_props_class_for("components/exact.html")
         assert result is ExactProps
 
     def test_resolve_props_class_for_absolute_to_relative(self):
         """Test resolve_props_class_for converts absolute paths to relative."""
-        @component('components/button.html')
+
+        @component("components/button.html")
         @dataclass
         class ButtonProps:
             text: str
 
         # Should find the component by stripping leading slash
-        result = resolve_props_class_for('/components/button.html')
+        result = resolve_props_class_for("/components/button.html")
         assert result is ButtonProps
 
     def test_resolve_props_class_for_templates_prefix(self):
         """Test resolve_props_class_for handles templates/ prefix."""
-        @component('components/nav.html')
+
+        @component("components/nav.html")
         @dataclass
         class NavProps:
             items: list
 
         # Should find the component by removing templates/ prefix
-        result = resolve_props_class_for('/path/to/templates/components/nav.html')
+        result = resolve_props_class_for("/path/to/templates/components/nav.html")
         assert result is NavProps
 
-        result = resolve_props_class_for('templates/components/nav.html')
+        result = resolve_props_class_for("templates/components/nav.html")
         assert result is NavProps
 
     def test_resolve_props_class_for_complex_absolute_path(self):
         """Test resolve_props_class_for with complex absolute paths."""
-        @component('components/widget.html')
+
+        @component("components/widget.html")
         @dataclass
         class WidgetProps:
             id: str
 
         # Should handle various absolute path formats
         test_paths = [
-            '/home/project/templates/components/widget.html',
-            '/usr/src/app/myapp/templates/components/widget.html',
-            'C:\\project\\templates\\components\\widget.html',  # Windows path
+            "/home/project/templates/components/widget.html",
+            "/usr/src/app/myapp/templates/components/widget.html",
+            "C:\\project\\templates\\components\\widget.html",  # Windows path
         ]
 
         for path in test_paths:
@@ -129,31 +135,36 @@ class TestRegistryIntrospection:
 
     def test_resolve_props_class_for_not_found(self):
         """Test resolve_props_class_for returns None for unregistered paths."""
-        @component('components/existing.html')
+
+        @component("components/existing.html")
         @dataclass
         class ExistingProps:
             data: str
 
         # Should return None for non-existent components
-        assert resolve_props_class_for('components/missing.html') is None
-        assert resolve_props_class_for('/path/to/templates/components/missing.html') is None
-        assert resolve_props_class_for('totally/different/path.html') is None
+        assert resolve_props_class_for("components/missing.html") is None
+        assert (
+            resolve_props_class_for("/path/to/templates/components/missing.html")
+            is None
+        )
+        assert resolve_props_class_for("totally/different/path.html") is None
 
     def test_resolve_props_class_for_edge_cases(self):
         """Test resolve_props_class_for with edge cases."""
-        @component('simple.html')
+
+        @component("simple.html")
         @dataclass
         class SimpleProps:
             text: str
 
         # Should handle simple template names
-        assert resolve_props_class_for('simple.html') is SimpleProps
-        assert resolve_props_class_for('/simple.html') is SimpleProps
-        assert resolve_props_class_for('templates/simple.html') is SimpleProps
+        assert resolve_props_class_for("simple.html") is SimpleProps
+        assert resolve_props_class_for("/simple.html") is SimpleProps
+        assert resolve_props_class_for("templates/simple.html") is SimpleProps
 
         # Should handle empty/None paths gracefully
-        assert resolve_props_class_for('') is None
-        assert resolve_props_class_for('/') is None
+        assert resolve_props_class_for("") is None
+        assert resolve_props_class_for("/") is None
 
 
 class TestRegistryCollisionWarnings:
@@ -165,8 +176,9 @@ class TestRegistryCollisionWarnings:
 
     def test_registry_collision_warning(self):
         """Test that registry collisions generate warnings."""
-        with patch('includecontents.shared.typed_props.logger') as mock_logger:
-            @component('components/collision.html')
+        with patch("includecontents.shared.typed_props.logger") as mock_logger:
+
+            @component("components/collision.html")
             @dataclass
             class FirstProps:
                 first: str
@@ -174,7 +186,7 @@ class TestRegistryCollisionWarnings:
             # No warning on first registration
             mock_logger.warning.assert_not_called()
 
-            @component('components/collision.html')
+            @component("components/collision.html")
             @dataclass
             class SecondProps:
                 second: str
@@ -182,42 +194,44 @@ class TestRegistryCollisionWarnings:
             # Should warn on collision
             mock_logger.warning.assert_called_once()
             call_args = mock_logger.warning.call_args[0]
-            assert 'already registered' in call_args[0]
-            assert 'components/collision.html' in call_args[1]
-            assert 'FirstProps' in call_args[2]
-            assert 'SecondProps' in call_args[3]
+            assert "already registered" in call_args[0]
+            assert "components/collision.html" in call_args[1]
+            assert "FirstProps" in call_args[2]
+            assert "SecondProps" in call_args[3]
 
     def test_registry_collision_keeps_first(self):
         """Test that registry collisions keep the first registration."""
-        @component('components/keeper.html')
+
+        @component("components/keeper.html")
         @dataclass
         class KeepProps:
             keep: str
 
-        @component('components/keeper.html')
+        @component("components/keeper.html")
         @dataclass
         class DiscardProps:
             discard: str
 
         # Should keep the first registration
-        result = get_props_class('components/keeper.html')
+        result = get_props_class("components/keeper.html")
         assert result is KeepProps
         assert result is not DiscardProps
 
     def test_multiple_collisions(self):
         """Test multiple collisions on the same path."""
-        with patch('includecontents.shared.typed_props.logger') as mock_logger:
-            @component('components/multi.html')
+        with patch("includecontents.shared.typed_props.logger") as mock_logger:
+
+            @component("components/multi.html")
             @dataclass
             class First:
                 first: str
 
-            @component('components/multi.html')
+            @component("components/multi.html")
             @dataclass
             class Second:
                 second: str
 
-            @component('components/multi.html')
+            @component("components/multi.html")
             @dataclass
             class Third:
                 third: str
@@ -226,7 +240,7 @@ class TestRegistryCollisionWarnings:
             assert mock_logger.warning.call_count == 2
 
             # Should still keep the first
-            result = get_props_class('components/multi.html')
+            result = get_props_class("components/multi.html")
             assert result is First
 
 
@@ -239,7 +253,8 @@ class TestRegistryThreadSafety:
 
     def test_registry_read_operations_safe(self):
         """Test that read operations are safe and don't modify state."""
-        @component('components/readonly.html')
+
+        @component("components/readonly.html")
         @dataclass
         class ReadOnlyProps:
             data: str
@@ -250,8 +265,8 @@ class TestRegistryThreadSafety:
         # Multiple read operations shouldn't change registry
         for _ in range(10):
             list_registered_components()
-            get_props_class('components/readonly.html')
-            resolve_props_class_for('components/readonly.html')
+            get_props_class("components/readonly.html")
+            resolve_props_class_for("components/readonly.html")
 
         final_components = list_registered_components()
         assert len(final_components) == initial_count
@@ -259,7 +274,8 @@ class TestRegistryThreadSafety:
 
     def test_registry_immutability_from_list(self):
         """Test that modifying the returned list doesn't affect registry."""
-        @component('components/immutable.html')
+
+        @component("components/immutable.html")
         @dataclass
         class ImmutableProps:
             value: str
@@ -268,14 +284,14 @@ class TestRegistryThreadSafety:
         original_length = len(components)
 
         # Modifying returned list shouldn't affect registry
-        components.append('fake/component.html')
+        components.append("fake/component.html")
         components.clear()
 
         # Registry should be unchanged
         new_components = list_registered_components()
         assert len(new_components) == original_length
-        assert 'components/immutable.html' in new_components
-        assert 'fake/component.html' not in new_components
+        assert "components/immutable.html" in new_components
+        assert "fake/component.html" not in new_components
 
 
 class TestRegistryDebugging:
@@ -287,12 +303,13 @@ class TestRegistryDebugging:
 
     def test_debug_logging_captures_registry_state(self):
         """Test that debug logging provides useful registry information."""
-        @component('components/debug1.html')
+
+        @component("components/debug1.html")
         @dataclass
         class Debug1Props:
             value1: str
 
-        @component('components/debug2.html')
+        @component("components/debug2.html")
         @dataclass
         class Debug2Props:
             value2: str
@@ -301,8 +318,8 @@ class TestRegistryDebugging:
 
         # Should have useful debugging information
         assert len(components) == 2
-        assert all('components/' in comp for comp in components)
-        assert all('.html' in comp for comp in components)
+        assert all("components/" in comp for comp in components)
+        assert all(".html" in comp for comp in components)
 
     def test_empty_registry_debugging(self):
         """Test debugging with empty registry."""
@@ -310,5 +327,5 @@ class TestRegistryDebugging:
         assert components == []
 
         # Should handle empty registry gracefully
-        result = resolve_props_class_for('any/path.html')
+        result = resolve_props_class_for("any/path.html")
         assert result is None

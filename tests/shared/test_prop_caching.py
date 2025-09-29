@@ -34,16 +34,16 @@ active:bool=true
 </div>"""
 
         # Create template directory
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'cached-test.html'
+        template_file = template_dir / "cached-test.html"
         template_file.write_text(template_content)
 
         # Create test template that uses the component
         test_content = """<include:cached-test />"""
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
-        test_file = test_dir / 'test.html'
+        test_file = test_dir / "test.html"
         test_file.write_text(test_content)
 
         # Render the first time
@@ -67,15 +67,15 @@ name:str=Test
 #}
 <p>{{ name }}</p>"""
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'cache-instance-test.html'
+        template_file = template_dir / "cache-instance-test.html"
         template_file.write_text(template_content)
 
         test_content = """<include:cache-instance-test />"""
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
-        test_file = test_dir / 'instance.html'
+        test_file = test_dir / "instance.html"
         test_file.write_text(test_content)
 
         # First render should create cache
@@ -84,6 +84,7 @@ name:str=Test
         # Check that the template instance has the cache attribute
         # We'll need to access the internal template to check this
         from django.template import loader
+
         template = loader.get_template("test_caching/instance.html")
 
         # The component template should have been cached
@@ -103,26 +104,26 @@ heading:str="Template 2"
 #}
 <h2>{{ heading }}</h2>"""
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
 
-        template1_file = template_dir / 'cache-test-1.html'
+        template1_file = template_dir / "cache-test-1.html"
         template1_file.write_text(template1_content)
 
-        template2_file = template_dir / 'cache-test-2.html'
+        template2_file = template_dir / "cache-test-2.html"
         template2_file.write_text(template2_content)
 
         # Create test templates
         test_content1 = """<include:cache-test-1 />"""
         test_content2 = """<include:cache-test-2 />"""
 
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
 
-        test_file1 = test_dir / 'separate1.html'
+        test_file1 = test_dir / "separate1.html"
         test_file1.write_text(test_content1)
 
-        test_file2 = test_dir / 'separate2.html'
+        test_file2 = test_dir / "separate2.html"
         test_file2.write_text(test_content2)
 
         # Render both templates
@@ -144,15 +145,15 @@ message:str="Hello World"
 #}
 <p>{{ message }}</p>"""
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'cache-key-test.html'
+        template_file = template_dir / "cache-key-test.html"
         template_file.write_text(template_content)
 
         test_content = """<include:cache-key-test />"""
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
-        test_file = test_dir / 'key.html'
+        test_file = test_dir / "key.html"
         test_file.write_text(test_content)
 
         # First render
@@ -178,15 +179,15 @@ items:list[str]=[item1,item2,item3]
     </ul>
 </div>"""
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'cache-complex-test.html'
+        template_file = template_dir / "cache-complex-test.html"
         template_file.write_text(template_content)
 
         test_content = """<include:cache-complex-test />"""
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
-        test_file = test_dir / 'complex.html'
+        test_file = test_dir / "complex.html"
         test_file.write_text(test_content)
 
         # Render multiple times with different contexts
@@ -210,19 +211,21 @@ test:str="Debug Test"
 #}
 <p>{{ test }}</p>"""
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'cache-debug-test.html'
+        template_file = template_dir / "cache-debug-test.html"
         template_file.write_text(template_content)
 
         test_content = """<include:cache-debug-test />"""
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
-        test_file = test_dir / 'debug.html'
+        test_file = test_dir / "debug.html"
         test_file.write_text(test_content)
 
         # Enable debug logging
-        with caplog.at_level(logging.DEBUG, logger='includecontents.templatetags.includecontents'):
+        with caplog.at_level(
+            logging.DEBUG, logger="includecontents.templatetags.includecontents"
+        ):
             # First render should cache
             render_to_string("test_caching/debug.html")
 
@@ -231,7 +234,7 @@ test:str="Debug Test"
 
         # Check for cache-related log messages
         log_messages = [record.message for record in caplog.records]
-        cache_messages = [msg for msg in log_messages if 'cache' in msg.lower()]
+        cache_messages = [msg for msg in log_messages if "cache" in msg.lower()]
 
         # We should have at least one cache storage message and one cache hit message
         assert len(cache_messages) >= 2
@@ -244,15 +247,15 @@ fallback:str="Fallback Test"
 #}
 <p>{{ fallback }}</p>"""
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'cache-fallback-test.html'
+        template_file = template_dir / "cache-fallback-test.html"
         template_file.write_text(template_content)
 
         test_content = """<include:cache-fallback-test />"""
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
-        test_file = test_dir / 'fallback.html'
+        test_file = test_dir / "fallback.html"
         test_file.write_text(test_content)
 
         # Mock to simulate cache failure by patching setattr instead of hasattr
@@ -260,11 +263,11 @@ fallback:str="Fallback Test"
         original_setattr = setattr
 
         def failing_setattr(obj, name, value):
-            if name == '_includecontents_props_cache':
+            if name == "_includecontents_props_cache":
                 raise Exception("Cache storage error")
             return original_setattr(obj, name, value)
 
-        with patch('builtins.setattr', side_effect=failing_setattr):
+        with patch("builtins.setattr", side_effect=failing_setattr):
             # Should still work despite cache error
             output = render_to_string("test_caching/fallback.html")
             assert "Fallback Test" in output
@@ -287,15 +290,15 @@ prop10:str=final
 #}
 <div>Complex template with many props</div>"""
 
-        template_dir = Path('tests/templates/components')
+        template_dir = Path("tests/templates/components")
         template_dir.mkdir(parents=True, exist_ok=True)
-        template_file = template_dir / 'cache-perf-test.html'
+        template_file = template_dir / "cache-perf-test.html"
         template_file.write_text(template_content)
 
         test_content = """<include:cache-perf-test />"""
-        test_dir = Path('tests/templates/test_caching')
+        test_dir = Path("tests/templates/test_caching")
         test_dir.mkdir(parents=True, exist_ok=True)
-        test_file = test_dir / 'perf.html'
+        test_file = test_dir / "perf.html"
         test_file.write_text(test_content)
 
         # Time the first render (should cache)
@@ -315,23 +318,25 @@ prop10:str=final
         # Cached renders should generally be faster
         # Note: This is a rough check as template rendering involves many factors
         # The main benefit of caching is avoiding prop parsing, not total render time
-        print(f"First render: {first_render_time:.4f}s, Avg cached: {avg_cached_time:.4f}s")
+        print(
+            f"First render: {first_render_time:.4f}s, Avg cached: {avg_cached_time:.4f}s"
+        )
 
     def teardown_method(self):
         """Clean up test templates."""
         import shutil
 
         test_paths = [
-            'tests/templates/components/cached-test.html',
-            'tests/templates/components/cache-instance-test.html',
-            'tests/templates/components/cache-test-1.html',
-            'tests/templates/components/cache-test-2.html',
-            'tests/templates/components/cache-key-test.html',
-            'tests/templates/components/cache-complex-test.html',
-            'tests/templates/components/cache-debug-test.html',
-            'tests/templates/components/cache-fallback-test.html',
-            'tests/templates/components/cache-perf-test.html',
-            'tests/templates/test_caching'
+            "tests/templates/components/cached-test.html",
+            "tests/templates/components/cache-instance-test.html",
+            "tests/templates/components/cache-test-1.html",
+            "tests/templates/components/cache-test-2.html",
+            "tests/templates/components/cache-key-test.html",
+            "tests/templates/components/cache-complex-test.html",
+            "tests/templates/components/cache-debug-test.html",
+            "tests/templates/components/cache-fallback-test.html",
+            "tests/templates/components/cache-perf-test.html",
+            "tests/templates/test_caching",
         ]
 
         for test_path in test_paths:

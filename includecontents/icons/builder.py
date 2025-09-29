@@ -30,7 +30,7 @@ from .cache import sprite_cache
 def find_source_svg(path: str) -> Optional[str]:
     """
     Find a source SVG file using Django's staticfiles finders.
-    
+
     Uses standard Django staticfiles finders but ensures we get actual
     source SVG files, not generated sprites.
 
@@ -41,14 +41,14 @@ def find_source_svg(path: str) -> Optional[str]:
         Absolute path to the found file, or None if not found
     """
     from django.contrib.staticfiles import finders
-    
+
     # First try standard Django finder
     result = finders.find(path)
-    
+
     # Handle case where find() returns a list (shouldn't happen but be safe)
     if isinstance(result, list):
         result = result[0] if result else None
-    
+
     # Verify it's not a generated sprite file
     if result and os.path.basename(result).startswith("sprite-"):
         # This is a generated sprite, look for the actual source
@@ -64,7 +64,7 @@ def find_source_svg(path: str) -> Optional[str]:
             except Exception:
                 continue
         return None
-    
+
     return result
 
 
@@ -298,29 +298,31 @@ def load_local_svg(svg_path: str) -> Dict[str, str]:
         raise IconBuildError(f"Invalid SVG content in {svg_path}: {e}")
 
 
-def get_cached_iconify_icon(prefix: str, icon_name: str, cache_static_path: str) -> Optional[Dict[str, str]]:
+def get_cached_iconify_icon(
+    prefix: str, icon_name: str, cache_static_path: str
+) -> Optional[Dict[str, str]]:
     """
     Try to load a cached Iconify icon from static files.
-    
+
     Args:
         prefix: Icon prefix (e.g., "mdi", "tabler")
         icon_name: Icon name without prefix (e.g., "home")
         cache_static_path: Static files path for cache (e.g., ".icon_cache")
-    
+
     Returns:
         Icon data dictionary or None if not cached
     """
     if not cache_static_path:
         return None
-    
+
     # Build cache file path: .icon_cache/mdi/home.json
     cache_file = f"{cache_static_path}/{prefix}/{icon_name}.json"
-    
+
     # Try to find in static files
     cached_file = find_source_svg(cache_file)
     if not cached_file:
         return None
-    
+
     try:
         with open(cached_file, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -329,10 +331,12 @@ def get_cached_iconify_icon(prefix: str, icon_name: str, cache_static_path: str)
         return None
 
 
-def save_iconify_icon_to_cache(prefix: str, icon_name: str, icon_data: Dict[str, str], cache_root: str) -> None:
+def save_iconify_icon_to_cache(
+    prefix: str, icon_name: str, icon_data: Dict[str, str], cache_root: str
+) -> None:
     """
     Save an Iconify icon to the filesystem cache.
-    
+
     Args:
         prefix: Icon prefix (e.g., "mdi", "tabler")
         icon_name: Icon name without prefix (e.g., "home")
@@ -341,16 +345,16 @@ def save_iconify_icon_to_cache(prefix: str, icon_name: str, icon_data: Dict[str,
     """
     if not cache_root:
         return
-    
+
     from pathlib import Path
-    
+
     # Build cache file path
     cache_dir = Path(cache_root) / prefix
     cache_file = cache_dir / f"{icon_name}.json"
-    
+
     # Create directory if it doesn't exist
     cache_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Write icon data to cache
     try:
         with open(cache_file, "w", encoding="utf-8") as f:
@@ -361,7 +365,11 @@ def save_iconify_icon_to_cache(prefix: str, icon_name: str, icon_data: Dict[str,
 
 
 def fetch_iconify_icons(
-    prefix: str, icon_names: List[str], api_base: str, cache_root: Optional[str] = None, cache_static_path: Optional[str] = None
+    prefix: str,
+    icon_names: List[str],
+    api_base: str,
+    cache_root: Optional[str] = None,
+    cache_static_path: Optional[str] = None,
 ) -> Dict[str, str]:
     """
     Fetch icon data from Iconify API for a specific prefix, using cache when available.
@@ -382,7 +390,7 @@ def fetch_iconify_icons(
     """
     icon_data = {}
     icons_to_fetch = []
-    
+
     # First, check cache for each icon
     for icon_name in icon_names:
         if cache_static_path:
@@ -390,14 +398,14 @@ def fetch_iconify_icons(
             if cached_icon:
                 icon_data[icon_name] = cached_icon
                 continue
-        
+
         # Icon not in cache, need to fetch it
         icons_to_fetch.append(icon_name)
-    
+
     # If all icons were cached, return early
     if not icons_to_fetch:
         return icon_data
-    
+
     # Build API URL for missing icons
     icons_param = ",".join(icons_to_fetch)
     url = urljoin(api_base.rstrip("/") + "/", f"{prefix}.json?icons={icons_param}")
@@ -407,7 +415,7 @@ def fetch_iconify_icons(
             data = json.loads(response.read().decode("utf-8"))
     except (URLError, json.JSONDecodeError) as e:
         raise IconAPIError(f"Failed to fetch icons from {url}: {e}")
-    
+
     # Handle case where API returns just an error code (e.g., 404 for invalid prefix)
     if not isinstance(data, dict):
         # Invalid prefix returns just an integer like 404
@@ -415,22 +423,28 @@ def fetch_iconify_icons(
             # All requested icons are not found for this invalid prefix
             missing_icons = [f"{prefix}:{name}" for name in icons_to_fetch]
             if len(missing_icons) == 1:
-                raise IconNotFoundError(f"Icon '{missing_icons[0]}' not found (invalid icon prefix '{prefix}')")
+                raise IconNotFoundError(
+                    f"Icon '{missing_icons[0]}' not found (invalid icon prefix '{prefix}')"
+                )
             else:
                 icons_list = ", ".join(f"'{icon}'" for icon in missing_icons)
-                raise IconNotFoundError(f"Icons not found (invalid icon prefix '{prefix}'): {icons_list}")
+                raise IconNotFoundError(
+                    f"Icons not found (invalid icon prefix '{prefix}'): {icons_list}"
+                )
         else:
-            raise IconAPIError(f"Invalid API response from {url}: expected JSON object, got {type(data).__name__}")
+            raise IconAPIError(
+                f"Invalid API response from {url}: expected JSON object, got {type(data).__name__}"
+            )
 
     if "icons" not in data:
         raise IconAPIError(f"Invalid API response from {url}: missing 'icons' field")
 
     icons = data["icons"]
-    
+
     # Track missing icons to report them all at once
     missing_icons = []
     icons_without_body = []
-    
+
     # Check for icons explicitly marked as not found by the API
     not_found_list = data.get("not_found", [])
     if not_found_list:
@@ -441,7 +455,7 @@ def fetch_iconify_icons(
         # Skip if already marked as not found
         if icon_name in not_found_list:
             continue
-            
+
         if icon_name not in icons:
             # Only add to missing if not already in not_found list
             full_name = f"{prefix}:{icon_name}"
@@ -467,30 +481,32 @@ def fetch_iconify_icons(
             "width": icon_info.get("width", 24),
             "height": icon_info.get("height", 24),
         }
-        
+
         # Store in result
         icon_data[icon_name] = single_icon_data
-        
+
         # Save to cache if configured
         if cache_root:
             save_iconify_icon_to_cache(prefix, icon_name, single_icon_data, cache_root)
-    
+
     # Report all missing icons at once for better developer experience
     errors = []
     if missing_icons:
         if len(missing_icons) == 1:
-            errors.append(f"Icon '{missing_icons[0]}' not found in Iconify API response")
+            errors.append(
+                f"Icon '{missing_icons[0]}' not found in Iconify API response"
+            )
         else:
             icons_list = ", ".join(f"'{icon}'" for icon in missing_icons)
             errors.append(f"Icons not found in Iconify API response: {icons_list}")
-    
+
     if icons_without_body:
         if len(icons_without_body) == 1:
             errors.append(f"Icon '{icons_without_body[0]}' has no body in API response")
         else:
             icons_list = ", ".join(f"'{icon}'" for icon in icons_without_body)
             errors.append(f"Icons without body in API response: {icons_list}")
-    
+
     if errors:
         raise IconNotFoundError("; ".join(errors))
 
@@ -506,8 +522,6 @@ def is_local_svg_path(icon_name: str) -> bool:
 
     # If no colon, check if it looks like a file path
     return icon_name.endswith(".svg") or "/" in icon_name
-
-
 
 
 def build_sprite(
@@ -536,10 +550,11 @@ def build_sprite(
     """
     if not icons:
         return '<svg style="display:none"></svg>'
-    
+
     # If no component map provided, generate one from the icon names
     if component_map is None:
         from .utils import normalize_icon_definition
+
         component_map = {}
         for icon in icons:
             try:
@@ -548,6 +563,7 @@ def build_sprite(
             except ValueError:
                 # If normalization fails, fall back to sanitized name
                 from .utils import icon_name_to_symbol_id
+
                 component_map[icon_name_to_symbol_id(icon)] = icon
 
     # Separate icons by type (Iconify vs local)
@@ -573,7 +589,9 @@ def build_sprite(
     # Fetch Iconify icon data - fail fast on any errors
     all_icon_data = {}
     for prefix, names in iconify_groups.items():
-        icon_data = fetch_iconify_icons(prefix, names, api_base, cache_root, cache_static_path)
+        icon_data = fetch_iconify_icons(
+            prefix, names, api_base, cache_root, cache_static_path
+        )
         for name, data in icon_data.items():
             full_name = f"{prefix}:{name}"
             all_icon_data[full_name] = data
@@ -589,14 +607,16 @@ def build_sprite(
     for icon in sorted(icons):  # Sort for deterministic output
         if icon not in all_icon_data:
             missing_icons.append(icon)
-    
+
     if missing_icons:
         if len(missing_icons) == 1:
-            raise IconNotFoundError(f"Icon '{missing_icons[0]}' not found in fetched data")
+            raise IconNotFoundError(
+                f"Icon '{missing_icons[0]}' not found in fetched data"
+            )
         else:
             icons_list = ", ".join(f"'{icon}'" for icon in missing_icons)
             raise IconNotFoundError(f"Icons not found in fetched data: {icons_list}")
-    
+
     # Now build the symbols
     symbols = []
     for icon in sorted(icons):
@@ -609,7 +629,7 @@ def build_sprite(
             if icon_name == icon:
                 symbol_id = component_name
                 break
-        
+
         # This should always find a match since we built the map from these icons
         if symbol_id is None:
             raise IconBuildError(f"Icon '{icon}' not found in component map")
@@ -700,11 +720,11 @@ def get_sprite_settings() -> Dict:
         try:
             parse_icon_definitions(icon_definitions)
         except ValueError as e:
-            raise IconConfigurationError(f"Invalid INCLUDECONTENTS_ICONS configuration: {e}")
+            raise IconConfigurationError(
+                f"Invalid INCLUDECONTENTS_ICONS configuration: {e}"
+            )
 
     return merged_settings
-
-
 
 
 def get_sprite_hash() -> str:
@@ -792,6 +812,8 @@ def get_or_create_sprite() -> Tuple[str, str]:
     except Exception as e:
         # Fail loudly - a broken sprite build is a serious configuration error
         # that should be fixed immediately, not silently ignored
-        if isinstance(e, (IconNotFoundError, IconBuildError, IconConfigurationError, IconAPIError)):
+        if isinstance(
+            e, (IconNotFoundError, IconBuildError, IconConfigurationError, IconAPIError)
+        ):
             raise  # Re-raise our custom exceptions as-is
         raise IconBuildError(f"Failed to build icon sprite: {e}") from e
