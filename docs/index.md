@@ -1,6 +1,6 @@
 # Django IncludeContents
 
-A powerful Django package that brings component-like functionality to Django templates through enhanced template tags and optional HTML component syntax.
+A powerful Django package that brings component-like functionality to Django (and Jinja2) templates through enhanced template tags and optional HTML component syntax.
 
 ## What is Django IncludeContents?
 
