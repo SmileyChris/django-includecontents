@@ -2396,13 +2396,18 @@
 <p>This log shows interesting changes that happen for each release of <code>django-includecontents</code>.</p>
 <!-- towncrier release notes start -->
 
+<h1 id="version-40-2025-09-29">Version 4.0 (2025-09-29)<a class="headerlink" href="#version-40-2025-09-29" title="Permanent link">&para;</a></h1>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Add comprehensive Jinja2 template engine support with full Django template parity for HTML component syntax, including JavaScript framework attributes (@click, v-model, x-data), nested attributes, HTML content blocks, CSRF token handling, consistent escaping behavior, and proper undefined variable rendering</li>
+</ul>
 <h1 id="version-312-2025-08-14">Version 3.1.2 (2025-08-14)<a class="headerlink" href="#version-312-2025-08-14" title="Permanent link">&para;</a></h1>
 <h3 id="bugfixes">Bugfixes<a class="headerlink" href="#bugfixes" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Fix WrapIfNode to properly handle node traversal for Django's template debugging tools. The node now correctly implements get_nodes_by_type() to traverse all dynamic content blocks within wrapif tags.</li>
 </ul>
 <h1 id="version-311-2025-08-06">Version 3.1.1 (2025-08-06)<a class="headerlink" href="#version-311-2025-08-06" title="Permanent link">&para;</a></h1>
-<h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
+<h3 id="features_1">Features<a class="headerlink" href="#features_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Improved icon error reporting to show all missing or invalid icons at once, making it easier for developers to fix configuration issues in a single pass</li>
 </ul>
@@ -2411,13 +2416,13 @@
 <li>Fixed compatibility issue with Django 5.2 where invalid icons could cause a TypeError in static file serving instead of returning a proper 404 error</li>
 </ul>
 <h1 id="version-31-2025-08-06">Version 3.1 (2025-08-06)<a class="headerlink" href="#version-31-2025-08-06" title="Permanent link">&para;</a></h1>
-<h3 id="features_1">Features<a class="headerlink" href="#features_1" title="Permanent link">&para;</a></h3>
+<h3 id="features_2">Features<a class="headerlink" href="#features_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add file-based caching system for Iconify API responses to improve performance and enable offline development. Icons fetched from the Iconify API can now be cached locally and reused in subsequent builds, configured via <code>api_cache_root</code> and <code>api_cache_static_path</code> settings.</li>
 <li>Icon sprites now preserve <code>style</code> attributes containing CSS variables (e.g., <code>style="fill: var(--icon-color)"</code>), enabling advanced theming and interactive hover effects that work across the shadow DOM boundary. See the new <a href="https://django-includecontents.readthedocs.io/en/latest/icons/styling-with-css-variables/">Styling with CSS Variables</a> documentation for examples.</li>
 </ul>
 <h1 id="version-301-2025-08-06">Version 3.0.1 (2025-08-06)<a class="headerlink" href="#version-301-2025-08-06" title="Permanent link">&para;</a></h1>
-<h3 id="features_2">Features<a class="headerlink" href="#features_2" title="Permanent link">&para;</a></h3>
+<h3 id="features_3">Features<a class="headerlink" href="#features_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Icon sprite build failures now fail loudly with clear error messages instead of silently returning empty SVGs. This makes configuration errors, missing files, and API failures immediately visible during development and deployment.</li>
 </ul>
@@ -2434,7 +2439,7 @@
 <li>Simplified icon system architecture by removing 1,360+ lines of code. Sprites are now cached in memory during development and served from STATIC_ROOT in production via standard Django static files, eliminating the need for complex storage configuration.</li>
 </ul>
 <h1 id="version-30-2025-08-06">Version 3.0 (2025-08-06)<a class="headerlink" href="#version-30-2025-08-06" title="Permanent link">&para;</a></h1>
-<h3 id="features_3">Features<a class="headerlink" href="#features_3" title="Permanent link">&para;</a></h3>
+<h3 id="features_4">Features<a class="headerlink" href="#features_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add icon system with automatic SVG sprite generation. Features <code>{% icon %}</code> template tag and <code>&lt;icon:name&gt;</code> HTML syntax support.</li>
 </ul>
@@ -2449,7 +2454,7 @@
 <li>Fix JavaScript event modifiers like @click.stop not being passed to child components</li>
 </ul>
 <h1 id="version-25-2025-07-25">Version 2.5 (2025-07-25)<a class="headerlink" href="#version-25-2025-07-25" title="Permanent link">&para;</a></h1>
-<h3 id="features_4">Features<a class="headerlink" href="#features_4" title="Permanent link">&para;</a></h3>
+<h3 id="features_5">Features<a class="headerlink" href="#features_5" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add <code>...attrs</code> spread syntax to forward undefined attributes from parent to child components</li>
 </ul>
@@ -2459,19 +2464,19 @@
 <li>Fix object passing in component attributes to preserve actual objects instead of string representations when using pure variable syntax like <code>deck="{{ deck }}"</code>.</li>
 </ul>
 <h1 id="version-24-2025-07-24">Version 2.4 (2025-07-24)<a class="headerlink" href="#version-24-2025-07-24" title="Permanent link">&para;</a></h1>
-<h3 id="features_5">Features<a class="headerlink" href="#features_5" title="Permanent link">&para;</a></h3>
+<h3 id="features_6">Features<a class="headerlink" href="#features_6" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add support for JavaScript framework event attributes like <code>@click</code>, <code>v-on:</code>, <code>x-on:</code>, and <code>:</code> (binding shorthand) in component attributes</li>
 <li>Add support for mixed content in component attributes, allowing combinations of static text and Django template syntax (e.g., <code>class="btn {{ variant }}"</code>, <code>href="/products/{{ id }}/"</code>, and even template tags like <code>class="{% if active %}active{% endif %}"</code>).</li>
 </ul>
 <h1 id="version-23-2025-07-23">Version 2.3 (2025-07-23)<a class="headerlink" href="#version-23-2025-07-23" title="Permanent link">&para;</a></h1>
-<h3 id="features_6">Features<a class="headerlink" href="#features_6" title="Permanent link">&para;</a></h3>
+<h3 id="features_7">Features<a class="headerlink" href="#features_7" title="Permanent link">&para;</a></h3>
 <ul>
 <li>HTML-based components now have access to all context variables provided by context processors, not just the request object and CSRF token</li>
 </ul>
 <p>This ensures consistent behavior between HTML components and regular Django templates.</p>
 <h1 id="version-22-2025-07-22">Version 2.2 (2025-07-22)<a class="headerlink" href="#version-22-2025-07-22" title="Permanent link">&para;</a></h1>
-<h3 id="features_7">Features<a class="headerlink" href="#features_7" title="Permanent link">&para;</a></h3>
+<h3 id="features_8">Features<a class="headerlink" href="#features_8" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Support multiple space-separated values in enum props (e.g., <code>variant="primary icon"</code>) to enable combining visual modifiers.</li>
 </ul>
@@ -2485,7 +2490,7 @@
 <li>Fixed self-closing component tags within nested components incorrectly incrementing the nesting level, causing "Unclosed tag" errors.</li>
 </ul>
 <h1 id="version-21-2025-07-02">Version 2.1 (2025-07-02)<a class="headerlink" href="#version-21-2025-07-02" title="Permanent link">&para;</a></h1>
-<h3 id="features_8">Features<a class="headerlink" href="#features_8" title="Permanent link">&para;</a></h3>
+<h3 id="features_9">Features<a class="headerlink" href="#features_9" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add Django template tag support in component attributes. Component attributes now fully support Django template syntax including <code>{% url %}</code>, <code>{{ variables }}</code>, <code>{% if %}</code> conditionals, and all other template tags.</li>
 </ul>
@@ -2502,7 +2507,7 @@
 <li>Fix duplicate content block names error when nesting components with same named content blocks</li>
 </ul>
 <h1 id="version-20-2025-07-01">Version 2.0 (2025-07-01)<a class="headerlink" href="#version-20-2025-07-01" title="Permanent link">&para;</a></h1>
-<h3 id="features_9">Features<a class="headerlink" href="#features_9" title="Permanent link">&para;</a></h3>
+<h3 id="features_10">Features<a class="headerlink" href="#features_10" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add HTML-style <code>&lt;content:name&gt;</code> syntax for named content blocks in components. This provides a more HTML-consistent alternative to <code>{% contents %}</code> tags while maintaining full backwards compatibility.</li>
 <li>Add class prepend syntax for component attrs.</li>
@@ -2539,7 +2544,7 @@
 <li>Make csrf_token work from within components</li>
 </ul>
 <h1 id="version-12-2024-11-12">Version 1.2 (2024-11-12)<a class="headerlink" href="#version-12-2024-11-12" title="Permanent link">&para;</a></h1>
-<h3 id="features_10">Features<a class="headerlink" href="#features_10" title="Permanent link">&para;</a></h3>
+<h3 id="features_11">Features<a class="headerlink" href="#features_11" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Added support for Django-style template variables in component attributes: <code>title="{{ myTitle }}"</code>. The old style <code>title={myTitle}</code> is still supported but will be deprecated in a future version.</li>
 </ul>
@@ -2558,7 +2563,7 @@
 <li>Allow attributes with dashes which don't have values. For example, <code>&lt;include:foo x-data /&gt;</code>. (<a href="https://github.com/SmileyChris/django-includecontents/issues/1">1</a>)</li>
 </ul>
 <h1 id="version-10-2024-05-16">Version 1.0 (2024-05-16)<a class="headerlink" href="#version-10-2024-05-16" title="Permanent link">&para;</a></h1>
-<h3 id="features_11">Features<a class="headerlink" href="#features_11" title="Permanent link">&para;</a></h3>
+<h3 id="features_12">Features<a class="headerlink" href="#features_12" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Update the template engine location so that it will be picked up as the standard Django engine when replaced.</li>
 </ul>
@@ -2579,7 +2584,7 @@
 </span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="p">]</span>
 </span></code></pre></div>
 <h1 id="version-08-2024-05-09">Version 0.8 (2024-05-09)<a class="headerlink" href="#version-08-2024-05-09" title="Permanent link">&para;</a></h1>
-<h3 id="features_12">Features<a class="headerlink" href="#features_12" title="Permanent link">&para;</a></h3>
+<h3 id="features_13">Features<a class="headerlink" href="#features_13" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add shorthand attribute syntax (<code>&lt;include:foo {title}&gt;</code>).</li>
 </ul>
@@ -2588,7 +2593,7 @@
 <li>Fix component context isolation.</li>
 </ul>
 <h1 id="version-07-2024-05-01">Version 0.7 (2024-05-01)<a class="headerlink" href="#version-07-2024-05-01" title="Permanent link">&para;</a></h1>
-<h3 id="features_13">Features<a class="headerlink" href="#features_13" title="Permanent link">&para;</a></h3>
+<h3 id="features_14">Features<a class="headerlink" href="#features_14" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Allow self-closing tags. For example, <code>&lt;include:foo /&gt;</code>.</li>
 <li>Handle &gt; inside <code>&lt;include:</code> tags.</li>
