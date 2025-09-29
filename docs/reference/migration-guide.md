@@ -444,7 +444,7 @@ If you're currently using Jinja2 and want to adopt Django IncludeContents, you'l
 Instead of migrating from Jinja2, consider:
 1. **Dual template setup**: Use Django templates for components, Jinja2 for main templates
 2. **Macro-based approach**: Implement component-like functionality with Jinja2 macros
-3. **Custom Jinja2 extension**: See [Jinja2 Support Analysis](../future/jinja2-support.md) for implementation details
+3. **Custom Jinja2 extension**: See the [Jinja2 Setup Guide](../getting-started/jinja2-setup.md) for implementation details
 
 ### Considerations for Mixed Environments
 
@@ -473,7 +473,7 @@ Use Django's `render_to_string()` from within Jinja2 templates to render Django 
 {{ django_component('components/card.html', title='Hello', content=content_var) }}
 ```
 
-For detailed implementation, see [Jinja2 Support Analysis](../future/jinja2-support.md).
+For detailed implementation, see the [Jinja2 Setup Guide](../getting-started/jinja2-setup.md).
 
 ## Getting Help
 
@@ -482,7 +482,7 @@ If you encounter issues during migration:
 1. **Check the [Troubleshooting Guide](troubleshooting.md)**
 2. **Review component examples in the documentation**
 3. **Test with minimal examples first**
-4. **For Jinja2 questions, see [Jinja2 Support Analysis](../future/jinja2-support.md)**
+4. **For Jinja2 questions, see the [Jinja2 Setup Guide](../getting-started/jinja2-setup.md)**
 5. **Ask for help on GitHub Issues**
 
 ## Next Steps
