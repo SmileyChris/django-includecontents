@@ -11,13 +11,8 @@ from django.template import TemplateSyntaxError
 from django.core.exceptions import ValidationError
 
 from includecontents.django.prop_types import (
-    Text,
-    Integer,
     Email,
     Url,
-    MinMax,
-    Decimal,
-    Color,
     CssClass,
 )
 from includecontents.shared.validation import validate_props
@@ -27,11 +22,13 @@ class TestDjangoValidators:
     """Test Django validator integration."""
 
     def test_text_with_django_validators(self):
-        """Test Text prop type with Django length validators."""
+        """Test string with Django length validators using Annotated."""
+        from typing import Annotated
+        from django.core.validators import MaxLengthValidator, MinLengthValidator
 
         @dataclass
         class TextProps:
-            name: Text[{"max_length": 10, "min_length": 2}]
+            name: Annotated[str, MaxLengthValidator(10), MinLengthValidator(2)]
 
         # Valid length
         result = validate_props(TextProps, {"name": "Alice"})
@@ -48,11 +45,13 @@ class TestDjangoValidators:
         assert "at most 10 characters" in str(exc_info.value).lower()
 
     def test_text_with_regex_pattern(self):
-        """Test Text prop type with Django regex validator."""
+        """Test string with Django regex validator using Annotated."""
+        from typing import Annotated
+        from django.core.validators import RegexValidator
 
         @dataclass
         class PatternProps:
-            code: Text[{"pattern": r"^[A-Z]{3}-\d{3}$"}]
+            code: Annotated[str, RegexValidator(r"^[A-Z]{3}-\d{3}$")]
 
         # Valid pattern
         result = validate_props(PatternProps, {"code": "ABC-123"})
@@ -64,11 +63,13 @@ class TestDjangoValidators:
         assert "valid value" in str(exc_info.value).lower()
 
     def test_integer_with_django_bounds(self):
-        """Test Integer prop type with Django min/max validators."""
+        """Test integer with Django min/max validators using Annotated."""
+        from typing import Annotated
+        from django.core.validators import MinValueValidator, MaxValueValidator
 
         @dataclass
         class BoundedProps:
-            age: Integer[{"min": 18, "max": 120}]
+            age: Annotated[int, MinValueValidator(18), MaxValueValidator(120)]
 
         # Valid value
         result = validate_props(BoundedProps, {"age": "25"})
@@ -121,17 +122,18 @@ class TestDjangoSpecificTypes:
     """Test Django-specific prop types."""
 
     def test_decimal_type(self):
-        """Test Decimal prop type with Django DecimalValidator."""
+        """Test Decimal with Django DecimalValidator using Annotated."""
+        from typing import Annotated
+        from decimal import Decimal as DecimalType
+        from django.core.validators import DecimalValidator
 
         @dataclass
         class DecimalProps:
-            price: Decimal[{"max_digits": 10, "decimal_places": 2}]
+            price: Annotated[DecimalType, DecimalValidator(10, 2)]
 
         # Valid decimal
         result = validate_props(DecimalProps, {"price": "19.99"})
         # May be string or Decimal object (coercion converts to Decimal)
-        from decimal import Decimal as DecimalType
-
         assert result["price"] == DecimalType("19.99")
 
         # Invalid decimal format
@@ -156,10 +158,15 @@ class TestDjangoSpecificTypes:
 
     def test_color_type(self):
         """Test Color prop type validation."""
+        from typing import Annotated
+        from django.core.validators import RegexValidator
+
+        # Hex color validation
+        HexColor = Annotated[str, RegexValidator(r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$", "Invalid hex color")]
 
         @dataclass
         class ColorProps:
-            color: Color["hex"]  # Specify hex format for validation
+            color: HexColor  # Specify hex format for validation
 
         # Valid hex color
         result = validate_props(ColorProps, {"color": "#ff0000"})
@@ -172,10 +179,13 @@ class TestDjangoSpecificTypes:
 
     def test_minmax_helper(self):
         """Test MinMax helper for integer bounds."""
+        from includecontents.django.prop_types import MinMax
+
+        ScoreType = MinMax(0, 100)
 
         @dataclass
         class MinMaxProps:
-            score: MinMax(0, 100)
+            score: ScoreType
 
         # Valid value
         result = validate_props(MinMaxProps, {"score": "75"})
@@ -197,11 +207,13 @@ class TestDjangoValidatorMessages:
 
     def test_custom_validator_message(self):
         """Test custom validator error messages."""
+        from typing import Annotated
+        from django.core.validators import MinLengthValidator
 
         @dataclass
         class CustomMessageProps:
-            username: Text[
-                {"min_length": 3, "message": "Username must be at least 3 characters"}
+            username: Annotated[
+                str, MinLengthValidator(3, message="Username must be at least 3 characters")
             ]
 
         # This tests that custom messages can be integrated
@@ -212,11 +224,15 @@ class TestDjangoValidatorMessages:
 
     def test_multiple_validator_errors(self):
         """Test handling of multiple Django validator errors."""
+        from typing import Annotated
+        from django.core.validators import MinValueValidator, MaxValueValidator
+
+        AgeType = Annotated[int, MinValueValidator(18), MaxValueValidator(120)]
 
         @dataclass
         class MultiValidatorProps:
             email: Email
-            age: MinMax(18, 120)
+            age: AgeType
 
         # Multiple validation failures
         with pytest.raises(TemplateSyntaxError) as exc_info:
@@ -227,10 +243,12 @@ class TestDjangoValidatorMessages:
 
     def test_validator_error_enhancement(self):
         """Test Django validator error enhancement."""
+        from typing import Annotated
+        from django.core.validators import RegexValidator
 
         @dataclass
         class EnhancedErrorProps:
-            phone: Text[{"pattern": r"^\+?1?\d{9,15}$"}]
+            phone: Annotated[str, RegexValidator(r"^\+?1?\d{9,15}$")]
 
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(EnhancedErrorProps, {"phone": "invalid"})

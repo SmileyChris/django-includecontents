@@ -3,9 +3,9 @@ Integration tests for prop validation with actual template rendering.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Literal, Optional
 
-from includecontents.django.prop_types import Email, Text, Integer, Choice
+from includecontents.django.prop_types import Email
 from includecontents.shared.typed_props import component
 
 
@@ -31,14 +31,16 @@ def test_typed_props_in_template(tmp_path):
 
 def test_python_props_class():
     """Test Python-defined props class with validation."""
+    from typing import Annotated
+    from django.core.validators import MaxLengthValidator
 
     @component("components/user-profile.html")
     @dataclass
     class UserProfileProps:
-        name: Text(max_length=100)
+        name: Annotated[str, MaxLengthValidator(100)]
         email: Email
-        role: Choice["admin", "user", "guest"]
-        bio: Optional[Text] = None
+        role: Literal["admin", "user", "guest"]
+        bio: Optional[str] = None
 
     # Verify the class is properly set up
     assert hasattr(UserProfileProps, "_is_component_props")
@@ -83,15 +85,21 @@ def test_optional_props_syntax():
 
 def test_complex_validation_example():
     """Test a complex validation scenario."""
+    from typing import Annotated
+    from django.core.validators import MinLengthValidator, MaxLengthValidator, MinValueValidator, MaxValueValidator
+
+    NameType = Annotated[str, MinLengthValidator(2), MaxLengthValidator(100)]
+    AgeType = Annotated[int, MinValueValidator(13), MaxValueValidator(120)]
+    MessageType = Annotated[str, MinLengthValidator(10)]
 
     @component("components/contact-form.html")
     @dataclass
     class ContactFormProps:
-        name: Text(min_length=2, max_length=100)
+        name: NameType
         email: Email
-        age: Integer(min=13, max=120)
-        subject: Choice["support", "sales", "other"]
-        message: Text(min_length=10)
+        age: AgeType
+        subject: Literal["support", "sales", "other"]
+        message: MessageType
         newsletter: bool = False
 
         def clean(self):
@@ -120,15 +128,20 @@ def test_complex_validation_example():
 
 def test_html_and_css_prop_types():
     """Test component-specific prop types."""
-    from includecontents.django.prop_types import Html, CssClass, IconName, Color
+    from typing import Annotated
+    from django.core.validators import RegexValidator
+    from includecontents.django.prop_types import Html, CssClass, IconName
+
+    # For custom color format, use Annotated directly
+    HexColor = Annotated[str, RegexValidator(r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$", "Invalid hex color")]
 
     @component("components/styled-content.html")
     @dataclass
     class StyledContentProps:
         content: Html  # Will be marked safe
-        class_name: CssClass()
-        icon: IconName()
-        background: Color(format="hex")
+        class_name: CssClass  # Pre-configured CSS class validator
+        icon: IconName  # Pre-configured icon name validator
+        background: HexColor  # Custom hex color validator
 
     # These are specialized types for UI components
     assert StyledContentProps.__annotations__["content"] is Html

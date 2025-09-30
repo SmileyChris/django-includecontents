@@ -10,14 +10,10 @@ from django.core.exceptions import ValidationError
 from django.template import TemplateSyntaxError
 
 from includecontents.django.prop_types import (
-    Choice,
-    Color,
     CssClass,
-    Decimal,
     Email,
-    Integer,
-    MinMax,
-    Text,
+    HexColor,
+    RgbColor,
     Url,
 )
 from includecontents.shared.template_parser import parse_type_spec
@@ -36,92 +32,98 @@ class TestPropTypes:
     """Test the prop_types module."""
 
     def test_text_type(self):
-        """Test Text prop type with validation."""
+        """Test text type with validation via Annotated."""
+        from typing import Annotated
+        from django.core.validators import MaxLengthValidator, MinLengthValidator, RegexValidator
+
         # Basic text
-        text_type = Text()
+        text_type = str
         assert text_type is str
 
-        # Text with max length using square brackets
-        text_type = Text[{"max_length": 10}]
+        # Text with max length
+        text_type = Annotated[str, MaxLengthValidator(10)]
         assert_has_metadata(text_type, 1)
 
-        # Text with multiple validators using square brackets
-        text_type = Text[{"max_length": 10, "min_length": 2, "pattern": r"^[A-Z]"}]
+        # Text with multiple validators
+        text_type = Annotated[str, MaxLengthValidator(10), MinLengthValidator(2), RegexValidator(r"^[A-Z]")]
         assert_has_metadata(text_type, 3)
 
     def test_integer_type(self):
-        """Test Integer prop type with bounds."""
+        """Test integer type with bounds via Annotated."""
+        from typing import Annotated
+        from django.core.validators import MinValueValidator, MaxValueValidator
+
         # Basic integer
-        int_type = Integer()
+        int_type = int
         assert int_type is int
 
-        # Integer with min using square brackets
-        int_type = Integer[{"min": 18}]
+        # Integer with min
+        int_type = Annotated[int, MinValueValidator(18)]
         assert_has_metadata(int_type, 1)
 
-        # Integer with min and max using square brackets
-        int_type = Integer[{"min": 18, "max": 120}]
+        # Integer with min and max
+        int_type = Annotated[int, MinValueValidator(18), MaxValueValidator(120)]
         assert_has_metadata(int_type, 2)
 
     def test_decimal_type(self):
-        """Test Decimal prop type with validation."""
+        """Test Decimal type with validation via Annotated."""
+        from typing import Annotated
+        from django.core.validators import MinValueValidator, MaxValueValidator, DecimalValidator
         import decimal
 
         # Basic decimal
-        decimal_type = Decimal()
+        decimal_type = decimal.Decimal
         assert decimal_type is decimal.Decimal
 
-        # Decimal with bounds using square brackets
-        decimal_type = Decimal[{"min": 0, "max": 999.99}]
+        # Decimal with bounds
+        decimal_type = Annotated[decimal.Decimal, MinValueValidator(0), MaxValueValidator(999.99)]
         assert_has_metadata(decimal_type, 2)
 
-        # Decimal with precision using square brackets
-        decimal_type = Decimal[{"max_digits": 10, "decimal_places": 2}]
+        # Decimal with precision
+        decimal_type = Annotated[decimal.Decimal, DecimalValidator(10, 2)]
         assert_has_metadata(decimal_type, 1)
 
     def test_choice_type(self):
-        """Test Choice prop type."""
+        """Test Literal type for choices (previously Choice)."""
         # Single choice
-        choice_type = Choice["admin"]
+        choice_type = Literal["admin"]
         assert choice_type == Literal["admin"]
 
         # Multiple choices
-        choice_type = Choice["admin", "user", "guest"]
+        choice_type = Literal["admin", "user", "guest"]
         assert choice_type == Literal["admin", "user", "guest"]
 
     def test_color_type(self):
-        """Test Color prop type with format validation."""
-        # Basic color (any format)
-        color_type = Color()
-        assert color_type is str
+        """Test color validators - HexColor, RgbColor, RgbaColor."""
+        # Pre-configured color validators
+        assert_has_metadata(HexColor)
+        assert_has_metadata(RgbColor)
 
-        # Color with hex format using square brackets
-        color_type = Color["hex"]
-        assert_has_metadata(color_type)
+        # Can also create custom color validators
+        from typing import Annotated
+        from django.core.validators import RegexValidator
 
-        # Color with rgb format using square brackets
-        color_type = Color["rgb"]
-        assert_has_metadata(color_type)
-
-        # Color with rgba format using square brackets
-        color_type = Color["rgba"]
-        assert_has_metadata(color_type)
+        rgba_color = Annotated[str, RegexValidator(r"^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$")]
+        assert_has_metadata(rgba_color)
 
     def test_predefined_types(self):
         """Test predefined prop types."""
         assert_has_metadata(Email)
         assert_has_metadata(Url)
 
-        # CssClass with default pattern
-        css_type = CssClass()
-        assert_has_metadata(css_type)
+        # CssClass with default pattern - now just Annotated[str, validator]
+        assert_has_metadata(CssClass)
 
-        # CssClass with custom pattern using square brackets
-        css_type = CssClass[{"pattern": r"^custom-pattern$"}]
-        assert_has_metadata(css_type)
+        # For custom patterns, use Annotated directly
+        from typing import Annotated
+        from django.core.validators import RegexValidator
+        custom_css = Annotated[str, RegexValidator(r"^custom-pattern$", "Invalid CSS class name")]
+        assert_has_metadata(custom_css)
 
-        # MinMax helper
-        age_type = MinMax(0, 100)
+        # MinMax equivalent using Annotated
+        from typing import Annotated
+        from django.core.validators import MinValueValidator, MaxValueValidator
+        age_type = Annotated[int, MinValueValidator(0), MaxValueValidator(100)]
         assert_has_metadata(age_type, 2)
 
 
@@ -153,11 +155,15 @@ class TestPropsValidation:
 
     def test_typed_props_validation(self):
         """Test props with type validation."""
+        from typing import Annotated
+        from django.core.validators import MinValueValidator, MaxValueValidator
+
+        AgeType = Annotated[int, MinValueValidator(18), MaxValueValidator(120)]
 
         @dataclass
         class TypedProps:
             email: Email
-            age: MinMax(18, 120)
+            age: AgeType
             website: Optional[Url] = None
 
         # Valid data
@@ -181,7 +187,7 @@ class TestPropsValidation:
 
         @dataclass
         class ChoiceProps:
-            role: Choice["admin", "user", "guest"]
+            role: Literal["admin", "user", "guest"]
             size: Literal["sm", "md", "lg"] = "md"
 
         # Valid choice
@@ -276,7 +282,7 @@ class TestPropsValidation:
             required_name: str
             optional_email: Optional[Email] = None
             optional_age: Optional[int] = None
-            optional_role: Optional[Choice["admin", "user"]] = None
+            optional_role: Optional[Literal["admin", "user"]] = None
 
         # Test with only required prop
         result = validate_props(OptionalProps, {"required_name": "John"})
@@ -316,7 +322,7 @@ class TestPropsValidation:
         class ListProps:
             tags: List[str]
             numbers: List[int]
-            flags: List[bool] = None
+            flags: Optional[List[bool]] = None
 
         # Test comma-separated string -> List[str]
         result = validate_props(

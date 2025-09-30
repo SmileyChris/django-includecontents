@@ -2,6 +2,7 @@
 
 import pytest
 from dataclasses import dataclass
+from typing import Literal
 from django.template import Template, Context
 from django.test import TestCase
 
@@ -19,7 +20,7 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary", "large", "small"]
+            variant: MultiChoice[Literal["primary", "secondary", "large", "small"]]
 
         # Test single value
         result = validate_props(ButtonProps, {"variant": "primary"})
@@ -38,7 +39,7 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary", "large", "small"]
+            variant: MultiChoice[Literal["primary", "secondary", "large", "small"]]
 
         with pytest.raises(Exception) as exc_info:
             validate_props(ButtonProps, {"variant": "invalid"})
@@ -51,7 +52,7 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary", "dark-mode", "extra-large"]
+            variant: MultiChoice[Literal["primary", "secondary", "dark-mode", "extra-large"]]
 
         # Test hyphenated values get converted to camelCase
         result = validate_props(ButtonProps, {"variant": "dark-mode extra-large"})
@@ -69,7 +70,7 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary", "large", "small"] = "primary"
+            variant: MultiChoice[Literal["primary", "secondary", "large", "small"]] = "primary"
 
         # Test with provided value
         result = validate_props(ButtonProps, {"variant": "secondary"})
@@ -87,7 +88,7 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary"] = ""
+            variant: MultiChoice[Literal["primary", "secondary"]] = ""
 
         result = validate_props(ButtonProps, {})
         self.assertEqual(result["variant"], "")
@@ -102,7 +103,7 @@ class TestMultiChoiceType(TestCase):
         @dataclass
         class CardProps:
             title: str
-            variant: MultiChoice["primary", "secondary"]
+            variant: MultiChoice[Literal["primary", "secondary"]]
             active: bool = False
 
         result = validate_props(
@@ -120,7 +121,7 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary", "large"]
+            variant: MultiChoice[Literal["primary", "secondary", "large"]]
 
         # Test multiple spaces
         result = validate_props(ButtonProps, {"variant": "  primary   large  "})
@@ -134,7 +135,7 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary"]
+            variant: MultiChoice[Literal["primary", "secondary"]]
             # This would collide if user defined variantPrimary explicitly
             variant_primary_override: bool = False
 
@@ -157,7 +158,7 @@ class TestMultiChoiceTemplateIntegration(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary", "large"]
+            variant: MultiChoice[Literal["primary", "secondary", "large"]]
 
         # This would be set up in the template tag, but we'll simulate
         props_data = validate_props(ButtonProps, {"variant": "primary large"})
@@ -185,7 +186,7 @@ class TestMultiChoiceTemplateIntegration(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice["primary", "secondary", "large", "small"]
+            variant: MultiChoice[Literal["primary", "secondary", "large", "small"]]
 
         result = validate_props(ButtonProps, {"variant": "primary large"})
 
