@@ -34,7 +34,11 @@ class TestPropTypes:
     def test_text_type(self):
         """Test text type with validation via Annotated."""
         from typing import Annotated
-        from django.core.validators import MaxLengthValidator, MinLengthValidator, RegexValidator
+        from django.core.validators import (
+            MaxLengthValidator,
+            MinLengthValidator,
+            RegexValidator,
+        )
 
         # Basic text
         text_type = str
@@ -45,7 +49,12 @@ class TestPropTypes:
         assert_has_metadata(text_type, 1)
 
         # Text with multiple validators
-        text_type = Annotated[str, MaxLengthValidator(10), MinLengthValidator(2), RegexValidator(r"^[A-Z]")]
+        text_type = Annotated[
+            str,
+            MaxLengthValidator(10),
+            MinLengthValidator(2),
+            RegexValidator(r"^[A-Z]"),
+        ]
         assert_has_metadata(text_type, 3)
 
     def test_integer_type(self):
@@ -68,7 +77,11 @@ class TestPropTypes:
     def test_decimal_type(self):
         """Test Decimal type with validation via Annotated."""
         from typing import Annotated
-        from django.core.validators import MinValueValidator, MaxValueValidator, DecimalValidator
+        from django.core.validators import (
+            MinValueValidator,
+            MaxValueValidator,
+            DecimalValidator,
+        )
         import decimal
 
         # Basic decimal
@@ -76,7 +89,9 @@ class TestPropTypes:
         assert decimal_type is decimal.Decimal
 
         # Decimal with bounds
-        decimal_type = Annotated[decimal.Decimal, MinValueValidator(0), MaxValueValidator(999.99)]
+        decimal_type = Annotated[
+            decimal.Decimal, MinValueValidator(0), MaxValueValidator(999.99)
+        ]
         assert_has_metadata(decimal_type, 2)
 
         # Decimal with precision
@@ -103,7 +118,12 @@ class TestPropTypes:
         from typing import Annotated
         from django.core.validators import RegexValidator
 
-        rgba_color = Annotated[str, RegexValidator(r"^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$")]
+        rgba_color = Annotated[
+            str,
+            RegexValidator(
+                r"^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[01]?\.?\d*\s*\)$"
+            ),
+        ]
         assert_has_metadata(rgba_color)
 
     def test_predefined_types(self):
@@ -117,12 +137,16 @@ class TestPropTypes:
         # For custom patterns, use Annotated directly
         from typing import Annotated
         from django.core.validators import RegexValidator
-        custom_css = Annotated[str, RegexValidator(r"^custom-pattern$", "Invalid CSS class name")]
+
+        custom_css = Annotated[
+            str, RegexValidator(r"^custom-pattern$", "Invalid CSS class name")
+        ]
         assert_has_metadata(custom_css)
 
         # MinMax equivalent using Annotated
         from typing import Annotated
         from django.core.validators import MinValueValidator, MaxValueValidator
+
         age_type = Annotated[int, MinValueValidator(0), MaxValueValidator(100)]
         assert_has_metadata(age_type, 2)
 
@@ -371,27 +395,22 @@ class TestParseTypeSpec:
     def test_parameterized_types(self):
         """Test parsing types with parameters."""
         # Integer with min
-        int_type = parse_type_spec("int(min=18)")
+        int_type = parse_type_spec("int[min=18]")
         assert_has_metadata(int_type)
 
         # Integer with min and max
-        int_type = parse_type_spec("int(min=18,max=120)")
+        int_type = parse_type_spec("int[min=18,max=120]")
         assert_has_metadata(int_type, 2)
 
         # Text with max_length
-        text_type = parse_type_spec("text(max_length=100)")
+        text_type = parse_type_spec("text[max_length=100]")
         assert_has_metadata(text_type)
 
     def test_choice_parsing(self):
         """Test parsing choice types."""
-        # Test parentheses syntax (backward compatibility)
-        choice_type = parse_type_spec("choice(admin,user,guest)")
         from typing import get_args, get_origin
 
-        assert get_origin(choice_type) is Literal
-        assert get_args(choice_type) == ("admin", "user", "guest")
-
-        # Test square bracket syntax (preferred)
+        # Test square bracket syntax
         choice_type = parse_type_spec("choice[admin,user,guest]")
         assert get_origin(choice_type) is Literal
         assert get_args(choice_type) == ("admin", "user", "guest")
@@ -401,15 +420,15 @@ class TestParseTypeSpec:
         from typing import get_args, get_origin
 
         # List with type parameter
-        list_type = parse_type_spec("list(str)")
+        list_type = parse_type_spec("list[str]")
         assert get_origin(list_type) is list
-        # Text() returns str, so list(str) should have str as its type
+        # str type should be preserved
         assert get_args(list_type)[0] is str
 
         # List with int type
-        list_type = parse_type_spec("list(int)")
+        list_type = parse_type_spec("list[int]")
         assert get_origin(list_type) is list
-        # Integer() returns int, so list(int) should have int as its type
+        # int type should be preserved
         assert get_args(list_type)[0] is int
 
         # List without type defaults to str
@@ -418,9 +437,9 @@ class TestParseTypeSpec:
         assert get_args(list_type) == (str,)
 
         # List with text type
-        list_type = parse_type_spec("list(text)")
+        list_type = parse_type_spec("list[text]")
         assert get_origin(list_type) is list
-        # Text() returns str
+        # text becomes str
         assert get_args(list_type)[0] is str
 
     def test_square_bracket_syntax(self):

@@ -218,15 +218,11 @@ User = Annotated[object, _validate_user]
 # Pre-configured types with validators
 CssClass = Annotated[
     str,
-    RegexValidator(
-        r"^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$", "Invalid CSS class name"
-    ),
+    RegexValidator(r"^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$", "Invalid CSS class name"),
 ]
 
 # Icon name with basic format validation
-IconName = Annotated[
-    str, RegexValidator(r"^[a-zA-Z0-9][\w:-]*$", "Invalid icon name")
-]
+IconName = Annotated[str, RegexValidator(r"^[a-zA-Z0-9][\w:-]*$", "Invalid icon name")]
 
 # Color validators - pre-configured for common color formats
 HexColor = Annotated[
@@ -396,8 +392,12 @@ TYPE_BUILDERS = {
     "float": _build_decimal_type,
     "css_class": lambda params: _build_css_class_type(params),
     "color": lambda params: _build_color_type(params),
-    "model": lambda params: Model[params.get("model_path")] if params and "model_path" in params else Model(),
-    "queryset": lambda params: QuerySet[params.get("model_path")] if params and "model_path" in params else QuerySet(),
+    "model": lambda params: Model[params.get("model_path")]
+    if params and "model_path" in params
+    else Model(),
+    "queryset": lambda params: QuerySet[params.get("model_path")]
+    if params and "model_path" in params
+    else QuerySet(),
     "multichoice": lambda params: MultiChoice,  # MultiChoice handled separately
 }
 

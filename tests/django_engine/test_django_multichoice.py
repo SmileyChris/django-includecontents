@@ -52,7 +52,9 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice[Literal["primary", "secondary", "dark-mode", "extra-large"]]
+            variant: MultiChoice[
+                Literal["primary", "secondary", "dark-mode", "extra-large"]
+            ]
 
         # Test hyphenated values get converted to camelCase
         result = validate_props(ButtonProps, {"variant": "dark-mode extra-large"})
@@ -70,7 +72,9 @@ class TestMultiChoiceType(TestCase):
         @component("components/button.html")
         @dataclass
         class ButtonProps:
-            variant: MultiChoice[Literal["primary", "secondary", "large", "small"]] = "primary"
+            variant: MultiChoice[Literal["primary", "secondary", "large", "small"]] = (
+                "primary"
+            )
 
         # Test with provided value
         result = validate_props(ButtonProps, {"variant": "secondary"})

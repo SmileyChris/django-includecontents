@@ -162,7 +162,10 @@ class TestDjangoSpecificTypes:
         from django.core.validators import RegexValidator
 
         # Hex color validation
-        HexColor = Annotated[str, RegexValidator(r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$", "Invalid hex color")]
+        HexColor = Annotated[
+            str,
+            RegexValidator(r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$", "Invalid hex color"),
+        ]
 
         @dataclass
         class ColorProps:
@@ -213,7 +216,8 @@ class TestDjangoValidatorMessages:
         @dataclass
         class CustomMessageProps:
             username: Annotated[
-                str, MinLengthValidator(3, message="Username must be at least 3 characters")
+                str,
+                MinLengthValidator(3, message="Username must be at least 3 characters"),
             ]
 
         # This tests that custom messages can be integrated

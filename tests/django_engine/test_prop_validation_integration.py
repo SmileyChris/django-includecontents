@@ -12,7 +12,7 @@ from includecontents.shared.typed_props import component
 def test_typed_props_in_template(tmp_path):
     """Test using typed props syntax in template comments."""
     # Create a test template with typed props
-    template_content = """{# props name:text email:email age:int(min=18,max=120) #}
+    template_content = """{# props name:text email:email age:int[min=18,max=120] #}
 <div class="user-card">
     <h3>{{ name }}</h3>
     <p>Email: {{ email }}</p>
@@ -26,7 +26,7 @@ def test_typed_props_in_template(tmp_path):
     # For now, just verify the syntax is valid
     assert "name:text" in template_content
     assert "email:email" in template_content
-    assert "age:int(min=18,max=120)" in template_content
+    assert "age:int[min=18,max=120]" in template_content
 
 
 def test_python_props_class():
@@ -56,13 +56,13 @@ def test_python_props_class():
 
 def test_choice_props_in_template():
     """Test choice/enum props in template syntax."""
-    template_content = """{# props variant:choice(primary,secondary,danger)=primary size:choice(sm,md,lg)=md #}
+    template_content = """{# props variant:choice[primary,secondary,danger]=primary size:choice[sm,md,lg]=md #}
 <button class="btn btn-{{ variant }} btn-{{ size }}">
     {{ contents }}
 </button>"""
 
     # Verify the choice syntax
-    assert "choice(primary,secondary,danger)" in template_content
+    assert "choice[primary,secondary,danger]" in template_content
     assert "=primary" in template_content  # default value
 
 
@@ -86,7 +86,12 @@ def test_optional_props_syntax():
 def test_complex_validation_example():
     """Test a complex validation scenario."""
     from typing import Annotated
-    from django.core.validators import MinLengthValidator, MaxLengthValidator, MinValueValidator, MaxValueValidator
+    from django.core.validators import (
+        MinLengthValidator,
+        MaxLengthValidator,
+        MinValueValidator,
+        MaxValueValidator,
+    )
 
     NameType = Annotated[str, MinLengthValidator(2), MaxLengthValidator(100)]
     AgeType = Annotated[int, MinValueValidator(13), MaxValueValidator(120)]
@@ -133,7 +138,9 @@ def test_html_and_css_prop_types():
     from includecontents.prop_types import Html, CssClass, IconName
 
     # For custom color format, use Annotated directly
-    HexColor = Annotated[str, RegexValidator(r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$", "Invalid hex color")]
+    HexColor = Annotated[
+        str, RegexValidator(r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$", "Invalid hex color")
+    ]
 
     @component("components/styled-content.html")
     @dataclass

@@ -203,6 +203,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         try:
             from includecontents.prop_types import Model
             from django.db import models
+
             return Model[models.Model]
         except ImportError:
             return object
@@ -211,6 +212,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         try:
             from includecontents.prop_types import QuerySet
             from django.db import models
+
             return QuerySet[models.Model]
         except ImportError:
             return object
