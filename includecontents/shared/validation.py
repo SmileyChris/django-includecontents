@@ -79,24 +79,6 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
         if field_name.startswith("_"):
             continue
 
-        # Special handling for Model, QuerySet, and Html classes used directly
-        try:
-            from includecontents.django.prop_types import (
-                Html as HtmlClass,
-                Model as ModelClass,
-                QuerySet as QuerySetClass,
-            )
-
-            if type_hint is ModelClass:
-                type_hint = ModelClass()
-            elif type_hint is QuerySetClass:
-                type_hint = QuerySetClass()
-            elif type_hint is HtmlClass:
-                type_hint = HtmlClass()
-        except ImportError:
-            # Django-specific types not available, skip this handling
-            pass
-
         # Get the value or use default
         if field_name in values:
             value = values[field_name]

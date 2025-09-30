@@ -61,24 +61,25 @@ Props classes should be placed where they'll be automatically imported when Djan
 ```python
 # myapp/props.py
 from dataclasses import dataclass
-from typing import Optional
-from includecontents.prop_types import Text, Email, Integer, Choice
+from typing import Annotated, Literal, Optional
+from django.core.validators import MaxLengthValidator, MinValueValidator, MaxValueValidator
+from includecontents.prop_types import Email, Url
 from includecontents.props import component
 
 @component('components/user-profile.html')
 @dataclass
 class UserProfileProps:
-    # Required props
-    name: Text[{'max_length': 100}]
+    # Required props with validators
+    name: Annotated[str, MaxLengthValidator(100)]
     email: Email
-    age: Integer[{'min': 18, 'max': 120}]
-    role: Choice['admin', 'editor', 'viewer']
-    
+    age: Annotated[int, MinValueValidator(18), MaxValueValidator(120)]
+    role: Literal['admin', 'editor', 'viewer']
+
     # Optional props
-    bio: Optional[Text] = None
+    bio: Optional[str] = None
     website: Optional[Url] = None
     verified: bool = False
-    
+
     def clean(self):
         """Custom validation logic."""
         from django.core.exceptions import ValidationError
@@ -99,10 +100,10 @@ The `includecontents.prop_types` module provides component-focused types that le
 | `int` | `age:int` | `age: int` | Integer values |
 | `bool` | `active:bool` | `active: bool` | Boolean values |
 | `decimal`/`float` | `price:decimal` | `price: Decimal` | Decimal numbers |
-| **Parameterized Basic Types** |
-| `Text` | `name:text[max_length=100]` | `name: Text[max_length=100]` | String with validation |
-| `Integer` | `age:int[min=18,max=120]` | `age: Integer[min=18, max=120]` | Integer with bounds |
-| `Decimal` | `price:decimal[min=0,max=999.99]` | `price: Decimal[min=0, max=999.99]` | Decimal with bounds/precision |
+| **Validated Basic Types** |
+| String with validation | `name:text[max_length=100]` | `name: Annotated[str, MaxLengthValidator(100)]` | String with max length |
+| Integer with bounds | `age:int[min=18,max=120]` | `age: Annotated[int, MinValueValidator(18), MaxValueValidator(120)]` | Integer with min/max |
+| Decimal with bounds | `price:decimal[min=0,max=999.99]` | `price: Annotated[Decimal, MinValueValidator(0), MaxValueValidator(Decimal('999.99'))]` | Decimal with bounds |
 | **Validated String Types** |
 | `Email` | `email:email` | `email: Email` | Email address validation |
 | `Url` | `website:url` | `website: Url` | URL validation |
@@ -111,28 +112,34 @@ The `includecontents.prop_types` module provides component-focused types that le
 | `IPAddress` | `server:ip` | `server: IPAddress` | IPv4 address validation |
 | `IPv6Address` | `server:ipv6` | `server: IPv6Address` | IPv6 address validation |
 | **Component-Specific Types** |
-| `CssClass` | `css:css_class` | `css: CssClass` | CSS class name validation |
-| `Color` | `color:color` | `color: Color` | CSS color validation |
+| `CssClass` | `css:css_class` | `css: CssClass` | CSS class validation |
 | `IconName` | `icon:icon` | `icon: IconName` | Icon name validation |
+| `HexColor`, `RgbColor`, `RgbaColor` | `color:color[hex]` | `primary: HexColor` | Color validation |
 | `Html` | `content:html` | `content: Html` | HTML content (marked safe) |
 | `Json` | `data:json` | `data: Json` | JSON string validation |
 | **Choice Types** |
-| `Choice` | `role:choice[admin,user,guest]` | `role: Choice['admin', 'user', 'guest']` | Restricted choices |
-| `MultiChoice` | `variant:multichoice[primary,large]` | `variant: MultiChoice['primary', 'large']` | Multiple choices with flags |
+| `Literal` | `role:choice[admin,user,guest]` | `role: Literal['admin', 'user', 'guest']` | Restricted choices |
+| `MultiChoice` | `variant:multichoice[primary,large]` | `variant: MultiChoice[Literal['primary', 'large']]` | Multiple choices with flags |
 | **Django-Specific Types** |
-| `Model` | `author:model[auth.User]` | `author: Model['auth.User']` | Django model instance |
-| `QuerySet` | `posts:queryset[blog.Post]` | `posts: QuerySet['blog.Post']` | Django QuerySet |
+| `Model` | `author:model[auth.User]` | `author: Model[User]` | Django model instance (use actual class) |
+| `QuerySet` | `posts:queryset[blog.Post]` | `posts: QuerySet[Article]` | Django QuerySet (use actual class) |
 | `User` | `owner:user` | `owner: User` | Project user model |
+
+!!! note "Model and QuerySet Type References"
+    For `Model` and `QuerySet` types in Python code, **prefer using actual model classes** (e.g., `Model[User]`) over string references (e.g., `Model['auth.User']`). String references are available for forward references when needed, but actual classes provide better type safety and IDE support.
 
 ### Basic Types
 
-#### `Text` - String with Validation
+#### String with Validation
 ```python
-# Python usage
-name: Text                              # Basic string
-title: Text[max_length=100]            # With max length
-username: Text[min_length=3, max_length=20]  # Min and max length
-code: Text[pattern=r'^[A-Z]{3}-\d{3}$'] # With regex pattern
+# Python usage - use Annotated with Django validators
+from typing import Annotated
+from django.core.validators import MaxLengthValidator, MinLengthValidator, RegexValidator
+
+name: str                                                          # Basic string, no validation
+title: Annotated[str, MaxLengthValidator(100)]                    # With max length
+username: Annotated[str, MinLengthValidator(3), MaxLengthValidator(20)]  # Min and max length
+code: Annotated[str, RegexValidator(r'^[A-Z]{3}-\d{3}$')]        # With regex pattern
 ```
 
 ```django
@@ -140,12 +147,15 @@ code: Text[pattern=r'^[A-Z]{3}-\d{3}$'] # With regex pattern
 {# props name:text title:text[max_length=100] username:text[min_length=3,max_length=20] #}
 ```
 
-#### `Integer` - Integer with Bounds
+#### Integer with Bounds
 ```python
-# Python usage
-age: Integer                    # Any integer
-year: Integer[min=1900]        # Minimum value
-score: Integer[min=0, max=100] # Min and max bounds
+# Python usage - use Annotated with Django validators
+from typing import Annotated
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+age: int                                                          # Any integer, no validation
+year: Annotated[int, MinValueValidator(1900)]                    # Minimum value
+score: Annotated[int, MinValueValidator(0), MaxValueValidator(100)]  # Min and max bounds
 ```
 
 ```django
@@ -153,12 +163,16 @@ score: Integer[min=0, max=100] # Min and max bounds
 {# props age:int year:int[min=1900] score:int[min=0,max=100] #}
 ```
 
-#### `Decimal` - Precise Decimal Numbers
+#### Decimal - Precise Decimal Numbers
 ```python
-# Python usage
-price: Decimal                                      # Any decimal
-amount: Decimal[min=0, max=999.99]                 # With bounds
-precise: Decimal[max_digits=10, decimal_places=2]  # With precision
+# Python usage - use Annotated with Django validators
+from typing import Annotated
+from decimal import Decimal
+from django.core.validators import MinValueValidator, MaxValueValidator, DecimalValidator
+
+price: Decimal                                                    # Any decimal, no validation
+amount: Annotated[Decimal, MinValueValidator(0), MaxValueValidator(Decimal('999.99'))]  # With bounds
+precise: Annotated[Decimal, DecimalValidator(10, 2)]             # With precision (max_digits, decimal_places)
 ```
 
 ```django
@@ -189,9 +203,16 @@ server_v6: IPv6Address  # IPv6 address validator
 
 #### `CssClass` - CSS Class Validation
 ```python
-# Python usage
-css: CssClass                                    # Default pattern: ^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$
-custom: CssClass[pattern=r'^btn-\w+$']          # Custom pattern
+# Python usage - pre-configured Annotated type
+from includecontents.prop_types import CssClass
+
+css: CssClass  # Default pattern: ^[a-zA-Z][\w-]*(\s+[a-zA-Z][\w-]*)*$
+
+# For custom patterns, use Annotated directly
+from typing import Annotated
+from django.core.validators import RegexValidator
+
+custom: Annotated[str, RegexValidator(r'^btn-\w+$', "Invalid CSS class")]
 ```
 
 ```django
@@ -199,24 +220,33 @@ custom: CssClass[pattern=r'^btn-\w+$']          # Custom pattern
 {# props css:css_class #}
 ```
 
-#### `Color` - CSS Color Validation
+#### Color Validators - CSS Color Validation
 ```python
-# Python usage
-background: Color           # Any color format
-primary: Color['hex']       # Hex colors only (#ff0000)
-accent: Color['rgb']        # RGB format only (rgb(255,0,0))
-overlay: Color['rgba']      # RGBA format only (rgba(255,0,0,0.5))
+# Python usage - pre-configured color validators
+from includecontents.prop_types import HexColor, RgbColor, RgbaColor
+
+primary: HexColor    # Validates hex format (#fff, #ffffff)
+accent: RgbColor     # Validates RGB format (rgb(255, 0, 0))
+shadow: RgbaColor    # Validates RGBA format (rgba(0, 0, 0, 0.5))
+
+# For custom validation, use Annotated directly
+from typing import Annotated
+from django.core.validators import RegexValidator
+
+custom: Annotated[str, RegexValidator(r'^custom-pattern$', "Invalid color")]
 ```
 
 ```django
 {# Template usage #}
-{# props background:color primary:color[hex] accent:color[rgb] #}
+{# props primary:color[hex] accent:color[rgb] shadow:color[rgba] #}
 ```
 
 #### `IconName` - Icon Name Validation
 ```python
-# Python usage
-icon: IconName     # Validates icon name format (^[a-zA-Z0-9][\w:-]*$)
+# Python usage - pre-configured Annotated type
+from includecontents.prop_types import IconName
+
+icon: IconName  # Validates icon name format (^[a-zA-Z0-9][\w:-]*$)
 ```
 
 ```django
@@ -248,11 +278,11 @@ config: Json       # Validates JSON format
 
 ### Choice Types
 
-#### `Choice` - Restricted String Choices
+#### `Literal` - Restricted String Choices
 ```python
-# Python usage (equivalent to Literal)
-role: Choice['admin', 'user', 'guest']
-size: Choice['sm', 'md', 'lg'] = 'md'
+# Python usage
+role: Literal['admin', 'user', 'guest']
+size: Literal['sm', 'md', 'lg'] = 'md'
 ```
 
 ```django
@@ -260,11 +290,13 @@ size: Choice['sm', 'md', 'lg'] = 'md'
 {# props role:choice[admin,user,guest] size:choice[sm,md,lg]=md #}
 ```
 
+**Note:** In Python code, use `Literal` from `typing`. In template comments, use `choice[...]` syntax.
+
 #### `MultiChoice` - Multiple Choices with Boolean Flags
 ```python
 # Python usage
-variant: MultiChoice['primary', 'secondary', 'large', 'small']
-features: MultiChoice['shadow', 'border', 'hover'] = 'shadow border'
+variant: MultiChoice[Literal['primary', 'secondary', 'large', 'small']]
+features: MultiChoice[Literal['shadow', 'border', 'hover']] = 'shadow border'
 ```
 
 ```django
@@ -281,27 +313,37 @@ features: MultiChoice['shadow', 'border', 'hover'] = 'shadow border'
 #### `Model` - Django Model Instance Validation
 ```python
 # Python usage
-author: Model                    # Any Django model instance
-user: Model['auth.User']        # Specific model by string
+from django.contrib.auth import get_user_model
+from django.db import models
+
+User = get_user_model()
+
+any_model: Model[models.Model]  # Any Django model instance
+user: Model[User]               # Specific model by class (preferred)
 article: Model[Article]         # Specific model by class
 ```
 
 ```django
 {# Template usage #}
-{# props author:model user:model[auth.User] #}
+{# props user:model[auth.User] #}
 ```
 
 #### `QuerySet` - Django QuerySet Validation
 ```python
 # Python usage
-items: QuerySet                     # Any QuerySet
-posts: QuerySet['blog.Post']       # QuerySet of specific model
-articles: QuerySet[Article]        # QuerySet of model class
+from django.contrib.auth import get_user_model
+from django.db import models
+
+User = get_user_model()
+
+any_queryset: QuerySet[models.Model]  # Any QuerySet
+users: QuerySet[User]                 # QuerySet of specific model (preferred)
+articles: QuerySet[Article]           # QuerySet of model class
 ```
 
 ```django
 {# Template usage #}
-{# props items:queryset posts:queryset[blog.Post] #}
+{# props posts:queryset[blog.Post] #}
 ```
 
 #### `User` - Project User Model
@@ -317,26 +359,36 @@ owner: User        # Validates against AUTH_USER_MODEL
 
 ### Helper Functions
 
+For convenience, several helper functions are available to create commonly-used validated types:
+
 #### `Pattern(regex, message)` - Custom Regex Validation
 ```python
 # Python usage
+from includecontents.prop_types import Pattern
+
 ProductCode = Pattern(r'^[A-Z]{3}-\d{3}$', 'Invalid product code format')
-product_code: ProductCode
+product_code: ProductCode  # Equivalent to Annotated[str, RegexValidator(...)]
 ```
 
 #### `MinMax(min_val, max_val)` - Integer Bounds
 ```python
 # Python usage
+from includecontents.prop_types import MinMax
+
 Age18Plus = MinMax(18, 120)
-age: Age18Plus
+age: Age18Plus  # Equivalent to Annotated[int, MinValueValidator(18), MaxValueValidator(120)]
 ```
 
-#### `MinMaxDecimal(min_val, max_val, max_digits=10, decimal_places=2)` - Decimal Bounds
+#### `MinMaxDecimal(min_val, max_val, max_digits, decimal_places)` - Decimal Bounds
 ```python
 # Python usage
+from includecontents.prop_types import MinMaxDecimal
+
 Price = MinMaxDecimal(0, 999.99, max_digits=6, decimal_places=2)
-price: Price
+price: Price  # Equivalent to Annotated[Decimal, ...]
 ```
+
+**Note:** While these helper functions are convenient, you can also use `Annotated` directly with Django validators for more flexibility.
 
 ### Type Coercion
 
@@ -402,32 +454,6 @@ The original enum syntax supports optional values by starting with an empty choi
 {# props size?:choice[small,medium,large] #}  {# ? marker = optional #}
 {# props size:choice[small,medium,large]="" #}  {# Empty default = optional #}
 ```
-
-### Template Parser Type Mapping
-
-These type names are available in template `{# props #}` syntax:
-
-| Template Name | Maps To | Description |
-|--------------|---------|-------------|
-| `text`, `str`, `string` | `Text()` | String type |
-| `int`, `integer` | `Integer()` | Integer type |
-| `decimal`, `float` | `Decimal()` | Decimal type |
-| `bool`, `boolean` | `bool` | Boolean type |
-| `email` | `Email` | Email validation |
-| `url` | `Url` | URL validation |
-| `slug` | `Slug` | Slug validation |
-| `unicode_slug` | `UnicodeSlug` | Unicode slug validation |
-| `ip`, `ipv4` | `IPAddress` | IPv4 validation |
-| `ipv6` | `IPv6Address` | IPv6 validation |
-| `css_class` | `CssClass()` | CSS class validation |
-| `color` | `Color()` | Color validation |
-| `icon` | `IconName()` | Icon name validation |
-| `html` | `Html()` | HTML content marker |
-| `json` | `Json()` | JSON validation |
-| `model` | `Model()` | Any model instance |
-| `queryset` | `QuerySet()` | Any QuerySet |
-| `user` | `User` | Project user model |
-| `multichoice` | `MultiChoice` | Multiple choice type |
 
 ## Template Props Syntax
 
@@ -578,7 +604,7 @@ from includecontents.prop_types import MultiChoice
 @component('components/button.html')
 @dataclass
 class ButtonProps:
-    variant: MultiChoice['primary', 'secondary', 'large', 'small'] = 'primary'
+    variant: MultiChoice[Literal['primary', 'secondary', 'large', 'small']] = 'primary'
 ```
 
 #### Template Syntax
@@ -618,7 +644,7 @@ When a MultiChoice value is set, boolean flags are automatically generated in th
 Hyphenated values are automatically converted to camelCase for flag generation:
 
 ```python
-variant: MultiChoice['dark-mode', 'extra-large', 'light-theme']
+variant: MultiChoice[Literal['dark-mode', 'extra-large', 'light-theme']]
 ```
 
 ```django
@@ -636,8 +662,8 @@ variant: MultiChoice['dark-mode', 'extra-large', 'light-theme']
 @dataclass
 class ButtonProps:
     label: str
-    variant: MultiChoice['primary', 'secondary', 'outline'] = 'primary'
-    size: MultiChoice['sm', 'md', 'lg'] = 'md'
+    variant: MultiChoice[Literal['primary', 'secondary', 'outline']] = 'primary'
+    size: MultiChoice[Literal['sm', 'md', 'lg']] = 'md'
     disabled: bool = False
 ```
 
@@ -708,7 +734,7 @@ To migrate from legacy enum syntax to MultiChoice:
    @component('components/your-component.html')
    @dataclass
    class YourComponentProps:
-       variant: MultiChoice['primary', 'secondary', 'large']
+       variant: MultiChoice[Literal['primary', 'secondary', 'large']]
    ```
 
 3. **Template usage remains the same** - all camelCase flags continue to work identically.
@@ -720,9 +746,9 @@ To migrate from legacy enum syntax to MultiChoice:
 @dataclass  
 class CardProps:
     title: str
-    variant: MultiChoice['primary', 'secondary', 'outline'] = 'primary'
-    features: MultiChoice['shadow', 'border', 'hover-effect'] = 'shadow border'
-    size: MultiChoice['sm', 'md', 'lg'] = 'md'
+    variant: MultiChoice[Literal['primary', 'secondary', 'outline']] = 'primary'
+    features: MultiChoice[Literal['shadow', 'border', 'hover-effect']] = 'shadow border'
+    size: MultiChoice[Literal['sm', 'md', 'lg']] = 'md'
 ```
 
 ```django
@@ -738,14 +764,15 @@ class CardProps:
 
 ```python
 from dataclasses import dataclass
-from typing import Optional
-from includecontents.prop_types import Text, Email
+from typing import Annotated, Optional
+from django.core.validators import MinLengthValidator
+from includecontents.prop_types import Email
 from includecontents.props import component
 
 @component('components/contact-card.html')
 @dataclass
 class ContactCardProps:
-    name: Text[{'min_length': 2}]
+    name: Annotated[str, MinLengthValidator(2)]
     email: Email
     phone: Optional[str] = None
 ```
@@ -753,14 +780,18 @@ class ContactCardProps:
 ### With Custom Validation
 
 ```python
+from typing import Annotated
+from django.core.validators import MinLengthValidator
+
 @component('components/password-form.html')
 @dataclass
 class PasswordFormProps:
-    password: Text[{'min_length': 8}]
-    confirm_password: Text[{'min_length': 8}]
-    
+    password: Annotated[str, MinLengthValidator(8)]
+    confirm_password: Annotated[str, MinLengthValidator(8)]
+
     def clean(self):
         """Cross-field validation."""
+        from django.core.exceptions import ValidationError
         if self.password != self.confirm_password:
             raise ValidationError("Passwords don't match")
 ```
@@ -786,11 +817,13 @@ class AuthorArticlesProps:
 Or with more flexibility:
 
 ```python
+from django.db import models
+
 @component('components/content-list.html')
 @dataclass
 class ContentListProps:
-    items: QuerySet  # Any QuerySet
-    owner: Model  # Any Django model instance
+    items: QuerySet[models.Model]  # Any QuerySet
+    owner: Model[models.Model]  # Any Django model instance
     featured: Model['blog.Article']  # Specific model type
 ```
 
@@ -861,7 +894,7 @@ Make certain props required based on the value of other props:
 @component('components/notification.html')
 @dataclass
 class NotificationProps:
-    type: Choice['info', 'warning', 'error', 'custom']
+    type: Literal['info', 'warning', 'error', 'custom']
     message: str
     custom_icon: Optional[str] = None
     custom_color: Optional[str] = None
@@ -997,8 +1030,8 @@ Props classes work with the spread syntax:
 @component('components/button.html')
 @dataclass
 class ButtonProps:
-    label: Text
-    variant: Choice['primary', 'secondary'] = 'primary'
+    label: str
+    variant: Literal['primary', 'secondary'] = 'primary'
     # Extra attrs will be collected in template's {{ attrs }}
 ```
 
@@ -1007,7 +1040,7 @@ class ButtonProps:
 Use Optional types for conditional rendering:
 
 ```python
-footer: Optional[Text] = None  # Only render footer if provided
+footer: Optional[str] = None  # Only render footer if provided
 ```
 
 ### Complex Types

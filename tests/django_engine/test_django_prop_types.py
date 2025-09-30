@@ -32,7 +32,7 @@ class TestModelType:
 
         @dataclass
         class UserProps:
-            user: Model["auth.User"]
+            user: Model[UserModel]
 
         # Valid user instance
         result = validate_props(UserProps, {"user": user})
@@ -59,13 +59,37 @@ class TestModelType:
         result = validate_props(UserProps, {"user": user})
         assert result["user"] == user
 
+    @pytest.mark.django_db
+    def test_model_with_string(self):
+        """Test Model with string reference (for future annotations compatibility)."""
+        from django.contrib.auth import get_user_model
+
+        UserModel = get_user_model()
+        user = UserModel.objects.create_user(username="testuser_string")
+
+        @dataclass
+        class UserProps:
+            user: Model["auth.User"]  # noqa: F821
+
+        # Valid user instance with string reference
+        result = validate_props(UserProps, {"user": user})
+        assert result["user"] == user
+
+        # Invalid type should fail
+        with pytest.raises(TemplateSyntaxError) as exc_info:
+            validate_props(UserProps, {"user": "not a user"})
+        assert "Expected instance of" in str(exc_info.value)
+
     def test_model_none_allowed(self):
         """Test that None is allowed for optional Model."""
         from typing import Optional
+        from django.contrib.auth import get_user_model
+
+        UserModel = get_user_model()
 
         @dataclass
         class OptionalUserProps:
-            user: Optional[Model["auth.User"]] = None
+            user: Optional[Model[UserModel]] = None
 
         # None should be valid
         result = validate_props(OptionalUserProps, {})
@@ -97,18 +121,10 @@ class TestModelType:
 
         @dataclass
         class ContentTypeProps:
-            content: Model["contenttypes.ContentType"]
+            content: Model[ContentType]
 
         # Valid ContentType instance
         result = validate_props(ContentTypeProps, {"content": ct})
-        assert result["content"] == ct
-
-        # Test with Model class directly
-        @dataclass
-        class ContentTypeProps2:
-            content: Model[ContentType]
-
-        result = validate_props(ContentTypeProps2, {"content": ct})
         assert result["content"] == ct
 
         # Invalid type should fail
@@ -122,8 +138,9 @@ class TestQuerySetType:
 
     @pytest.mark.django_db
     def test_queryset_validation(self):
-        """Test that QuerySet validates Django QuerySets."""
+        """Test that QuerySet validates Django QuerySets with base model."""
         from django.contrib.auth import get_user_model
+        from django.db import models
 
         User = get_user_model()
         User.objects.create_user(username="user1")
@@ -132,7 +149,7 @@ class TestQuerySetType:
 
         @dataclass
         class UsersProps:
-            users: QuerySet
+            users: QuerySet[models.Model]
 
         # Valid QuerySet
         result = validate_props(UsersProps, {"users": users_qs})
@@ -141,7 +158,7 @@ class TestQuerySetType:
         # Invalid type (not a QuerySet)
         with pytest.raises(TemplateSyntaxError) as exc_info:
             validate_props(UsersProps, {"users": [1, 2, 3]})
-        assert "Expected a QuerySet" in str(exc_info.value)
+        assert "Expected QuerySet" in str(exc_info.value)
 
     @pytest.mark.django_db
     def test_queryset_with_model(self):
@@ -153,7 +170,7 @@ class TestQuerySetType:
 
         @dataclass
         class UserQueryProps:
-            users: QuerySet["auth.User"]
+            users: QuerySet[UserModel]
 
         # Valid QuerySet of correct model
         result = validate_props(UserQueryProps, {"users": users_qs})
@@ -161,7 +178,7 @@ class TestQuerySetType:
 
         # Test with wrong model would require another model to test against
         # For now, just ensure the validator is created correctly
-        validator = QuerySet["auth.User"]
+        validator = QuerySet[UserModel]
         assert hasattr(validator, "__metadata__")
 
     @pytest.mark.django_db
@@ -173,18 +190,35 @@ class TestQuerySetType:
 
         @dataclass
         class ContentTypeQueryProps:
-            types: QuerySet["contenttypes.ContentType"]
+            types: QuerySet[ContentType]
 
         # Valid QuerySet of ContentType
         result = validate_props(ContentTypeQueryProps, {"types": ct_qs})
         assert result["types"] == ct_qs
 
-        # Test with class directly
-        @dataclass
-        class ContentTypeQueryProps2:
-            types: QuerySet[ContentType]
+        # Wrong model QuerySet should fail
+        from django.contrib.auth import get_user_model
 
-        result = validate_props(ContentTypeQueryProps2, {"types": ct_qs})
+        UserModel = get_user_model()
+        users_qs = UserModel.objects.all()
+
+        with pytest.raises(TemplateSyntaxError) as exc_info:
+            validate_props(ContentTypeQueryProps, {"types": users_qs})
+        assert "Expected QuerySet of ContentType" in str(exc_info.value)
+
+    @pytest.mark.django_db
+    def test_queryset_with_string(self):
+        """Test QuerySet with string reference (for future annotations compatibility)."""
+        from django.contrib.contenttypes.models import ContentType
+
+        ct_qs = ContentType.objects.all()
+
+        @dataclass
+        class ContentTypeQueryProps:
+            types: QuerySet["contenttypes.ContentType"]  # noqa: F821
+
+        # Valid QuerySet with string reference
+        result = validate_props(ContentTypeQueryProps, {"types": ct_qs})
         assert result["types"] == ct_qs
 
         # Wrong model QuerySet should fail

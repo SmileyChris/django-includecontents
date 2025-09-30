@@ -680,7 +680,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
     Examples:
         'text' -> Text
         'int(min=18,max=120)' -> Integer(min=18, max=120)
-        'choice[admin,user,guest]' -> Choice['admin', 'user', 'guest']
+        'choice[admin,user,guest]' -> Literal['admin', 'user', 'guest']
         'model[auth.User]' -> Model['auth.User']
         'queryset[blog.Article]' -> QuerySet['blog.Article']
         'list[str]' -> List[str]
@@ -704,9 +704,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         # Handle choice with square brackets
         if type_name == "choice":
             choices = [c.strip().strip("\"'") for c in params_str.split(",")]
-            from .prop_types import Choice
-
-            return Choice[tuple(choices)]
+            return Literal[tuple(choices)]
 
         # Handle list with square brackets
         if type_name == "list":
@@ -722,22 +720,26 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         # Handle model with square brackets
         if type_name == "model":
             from .prop_types import Model
+            from django.db import models
 
             if params_str:
                 model_path = params_str.strip().strip("\"'")
                 return Model[model_path]
             else:
-                return Model()
+                # Bare model requires subscripting - use models.Model for "any model"
+                return Model[models.Model]
 
         # Handle queryset with square brackets
         if type_name == "queryset":
             from .prop_types import QuerySet
+            from django.db import models
 
             if params_str:
                 model_path = params_str.strip().strip("\"'")
                 return QuerySet[model_path]
             else:
-                return QuerySet()
+                # Bare queryset requires subscripting - use models.Model for "any queryset"
+                return QuerySet[models.Model]
 
         # Handle parameterized types like text[max_length=100], int[min=18,max=120]
         if type_name in TYPE_CLASSES:
@@ -764,13 +766,6 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
             # Use the square bracket syntax with params dict
             return type_class[params] if params else type_class()
 
-        # Handle Color with format like color[hex]
-        if type_name == "color":
-            from .prop_types import Color
-
-            # params_str could be a format like 'hex', 'rgb', 'rgba'
-            return Color[params_str.strip().strip("\"'")]
-
     # Check for parameterized type with parentheses
     if "(" in type_spec and type_spec.endswith(")"):
         type_name, params_str = type_spec[:-1].split("(", 1)
@@ -779,9 +774,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         if type_name == "choice":
             # Parse comma-separated choices
             choices = [c.strip().strip("\"'") for c in params_str.split(",")]
-            from .prop_types import Choice
-
-            return Choice[tuple(choices)]
+            return Literal[tuple(choices)]
 
         # Special handling for list types
         if type_name == "list":
@@ -822,10 +815,11 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
 
                     return Annotated[object, validate_model]
                 else:
-                    # Return the annotated type for bare Model
+                    # Bare model requires subscripting - use models.Model for "any model"
                     from .prop_types import Model
+                    from django.db import models
 
-                    return Model()
+                    return Model[models.Model]
             else:
                 if model_path:
                     # Create validator for specific queryset
@@ -854,10 +848,11 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
 
                     return Annotated[object, validate_queryset]
                 else:
-                    # Return the annotated type for bare QuerySet
+                    # Bare queryset requires subscripting - use models.Model for "any queryset"
                     from .prop_types import QuerySet
+                    from django.db import models
 
-                    return QuerySet()
+                    return QuerySet[models.Model]
 
         # Parse key=value parameters
         params = {}
@@ -878,11 +873,11 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
                             pass  # Keep as string
                     params[key] = value
 
-        # Check if we have a class that supports parameterization
+        # Check if we have a builder function that supports parameterization
         if type_name in TYPE_CLASSES:
-            type_class = TYPE_CLASSES[type_name]
-            # Use the square bracket syntax with params dict
-            return type_class[params] if params else type_class()
+            builder_func = TYPE_CLASSES[type_name]
+            # Call the builder function with params dict
+            return builder_func(params) if params else builder_func({})
 
         # Fall back to the default type map
         type_obj = type_map.get(type_name)

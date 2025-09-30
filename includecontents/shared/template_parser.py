@@ -16,7 +16,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
     Examples:
         'text' -> Text
         'int(min=18,max=120)' -> Integer(min=18, max=120)
-        'choice[admin,user,guest]' -> Choice['admin', 'user', 'guest']
+        'choice[admin,user,guest]' -> Literal['admin', 'user', 'guest']
         'model[auth.User]' -> Model['auth.User']
         'queryset[blog.Article]' -> QuerySet['blog.Article']
         'list[str]' -> List[str]
@@ -54,12 +54,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         # Handle choice with square brackets
         if type_name == "choice":
             choices = [c.strip().strip("\"'") for c in params_str.split(",")]
-            try:
-                from includecontents.django.prop_types import Choice
-
-                return Choice[tuple(choices)]
-            except ImportError:
-                return Literal[tuple(choices)]
+            return Literal[tuple(choices)]
 
         # Handle list with square brackets
         if type_name == "list":
@@ -74,12 +69,14 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         if type_name == "model":
             try:
                 from includecontents.django.prop_types import Model
+                from django.db import models
 
                 if params_str:
                     model_path = params_str.strip().strip("\"'")
                     return Model[model_path]
                 else:
-                    return Model()
+                    # Bare model requires subscripting - use models.Model for "any model"
+                    return Model[models.Model]
             except ImportError:
                 return object  # Fallback for non-Django environments
 
@@ -87,12 +84,14 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         if type_name == "queryset":
             try:
                 from includecontents.django.prop_types import QuerySet
+                from django.db import models
 
                 if params_str:
                     model_path = params_str.strip().strip("\"'")
                     return QuerySet[model_path]
                 else:
-                    return QuerySet()
+                    # Bare queryset requires subscripting - use models.Model for "any queryset"
+                    return QuerySet[models.Model]
             except ImportError:
                 return object  # Fallback for non-Django environments
 
@@ -118,18 +117,8 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
                         params[key] = value
 
             type_class = TYPE_CLASSES[type_name]
-            # Use the square bracket syntax with params dict
-            return type_class[params] if params else type_class()
-
-        # Handle Color with format like color[hex]
-        if type_name == "color":
-            try:
-                from includecontents.django.prop_types import Color
-
-                # params_str could be a format like 'hex', 'rgb', 'rgba'
-                return Color[params_str.strip().strip("\"'")]
-            except ImportError:
-                return str
+            # Builder functions expect a dict parameter
+            return type_class(params) if params else type_class({})
 
     # Check for parameterized type with parentheses
     if "(" in type_spec and type_spec.endswith(")"):
@@ -139,12 +128,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         if type_name == "choice":
             # Parse comma-separated choices
             choices = [c.strip().strip("\"'") for c in params_str.split(",")]
-            try:
-                from includecontents.django.prop_types import Choice
-
-                return Choice[tuple(choices)]
-            except ImportError:
-                return Literal[tuple(choices)]
+            return Literal[tuple(choices)]
 
         # Special handling for list types
         if type_name == "list":
@@ -166,22 +150,26 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
             if type_name == "model":
                 try:
                     from includecontents.django.prop_types import Model
+                    from django.db import models
 
                     if model_path:
                         return Model[model_path]
                     else:
-                        return Model()
+                        # Bare model requires subscripting - use models.Model for "any model"
+                        return Model[models.Model]
                 except ImportError:
                     return object
 
             else:  # queryset
                 try:
                     from includecontents.django.prop_types import QuerySet
+                    from django.db import models
 
                     if model_path:
                         return QuerySet[model_path]
                     else:
-                        return QuerySet()
+                        # Bare queryset requires subscripting - use models.Model for "any queryset"
+                        return QuerySet[models.Model]
                 except ImportError:
                     return object
 
@@ -207,7 +195,25 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
                         params[key] = value
 
             type_class = TYPE_CLASSES[type_name]
-            return type_class(**params) if params else type_class()
+            # Builder functions expect a dict parameter
+            return type_class(params) if params else type_class({})
+
+    # Special handling for bare model and queryset (without brackets or parens)
+    if type_spec == "model":
+        try:
+            from includecontents.django.prop_types import Model
+            from django.db import models
+            return Model[models.Model]
+        except ImportError:
+            return object
+
+    if type_spec == "queryset":
+        try:
+            from includecontents.django.prop_types import QuerySet
+            from django.db import models
+            return QuerySet[models.Model]
+        except ImportError:
+            return object
 
     # Simple type lookup
     if type_spec in type_map:
