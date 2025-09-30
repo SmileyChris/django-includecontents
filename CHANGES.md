@@ -4,6 +4,21 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 4.0.1 (2025-09-30)
+
+## Features
+
+- Django Engine now automatically replaces Django's standard template loaders with includecontents custom loaders, ensuring compatibility with third-party packages like django-template-partials while preserving custom Template class functionality and enhanced error messages.
+
+## Bugfixes
+
+- Fixed Jinja2 props with undefined variables rendering as literal `{{ var }}` instead of empty strings.
+
+## Misc
+
+- Internal refactoring: moved PropDefinition class to shared module for better code reuse between template engines.
+
+
 # Version 4.0 (2025-09-29)
 
 ## Features

@@ -1,1 +1,0 @@
-Internal refactoring: moved PropDefinition class to shared module for better code reuse between template engines.

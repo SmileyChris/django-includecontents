@@ -1,1 +1,0 @@
-Django Engine now automatically replaces Django's standard template loaders with includecontents custom loaders, ensuring compatibility with third-party packages like django-template-partials while preserving custom Template class functionality and enhanced error messages.
