@@ -272,7 +272,7 @@ def is_html_type(type_hint: Any) -> bool:
         if hasattr(type_hint, "__metadata__"):
             # Import here to avoid circular imports
             try:
-                from includecontents.django.prop_types import _HTML_MARKER
+                from includecontents.prop_types import _HTML_MARKER
 
                 if _HTML_MARKER in getattr(type_hint, "__metadata__", ()):
                     return True
@@ -280,7 +280,7 @@ def is_html_type(type_hint: Any) -> bool:
                 pass
         # Bare Html class reference (e.g., nested in containers: list[Html])
         try:
-            from includecontents.django.prop_types import Html as HtmlClass
+            from includecontents.prop_types import Html as HtmlClass
 
             if type_hint is HtmlClass:
                 return True
@@ -297,7 +297,7 @@ def is_multichoice_type(type_hint: Any) -> bool:
         # Direct Annotated MultiChoice marker
         if hasattr(type_hint, "__metadata__"):
             try:
-                from includecontents.django.prop_types import _MULTICHOICE_MARKER
+                from includecontents.prop_types import _MULTICHOICE_MARKER
 
                 if _MULTICHOICE_MARKER in getattr(type_hint, "__metadata__", ()):
                     return True

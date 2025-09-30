@@ -8,7 +8,7 @@ from django.test import TestCase
 
 from includecontents.shared.typed_props import component
 from includecontents.shared.validation import validate_props
-from includecontents.django.prop_types import MultiChoice
+from includecontents.prop_types import MultiChoice
 
 
 class TestMultiChoiceType(TestCase):

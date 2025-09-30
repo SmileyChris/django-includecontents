@@ -9,7 +9,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.template import TemplateSyntaxError
 
-from includecontents.django.prop_types import (
+from includecontents.prop_types import (
     CssClass,
     Email,
     HexColor,

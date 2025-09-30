@@ -6,7 +6,7 @@ import pytest
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeString
 
-from includecontents.django.prop_types import Html
+from includecontents.prop_types import Html
 from includecontents.shared.validation import validate_props
 
 

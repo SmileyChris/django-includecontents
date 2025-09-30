@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from django.template import TemplateSyntaxError
 from django.core.exceptions import ValidationError
 
-from includecontents.django.prop_types import (
+from includecontents.prop_types import (
     Email,
     Url,
     CssClass,
@@ -179,7 +179,7 @@ class TestDjangoSpecificTypes:
 
     def test_minmax_helper(self):
         """Test MinMax helper for integer bounds."""
-        from includecontents.django.prop_types import MinMax
+        from includecontents.prop_types import MinMax
 
         ScoreType = MinMax(0, 100)
 

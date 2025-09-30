@@ -17,7 +17,7 @@ from includecontents.django.errors import (
 )
 from includecontents.shared.typed_props import component, clear_registry
 from includecontents.shared.validation import validate_props
-from includecontents.django.prop_types import Email, MinMax
+from includecontents.prop_types import Email, MinMax
 
 
 class TestErrorEnhancement:

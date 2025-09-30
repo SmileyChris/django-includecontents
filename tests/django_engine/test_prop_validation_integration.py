@@ -5,7 +5,7 @@ Integration tests for prop validation with actual template rendering.
 from dataclasses import dataclass
 from typing import Literal, Optional
 
-from includecontents.django.prop_types import Email
+from includecontents.prop_types import Email
 from includecontents.shared.typed_props import component
 
 
@@ -130,7 +130,7 @@ def test_html_and_css_prop_types():
     """Test component-specific prop types."""
     from typing import Annotated
     from django.core.validators import RegexValidator
-    from includecontents.django.prop_types import Html, CssClass, IconName
+    from includecontents.prop_types import Html, CssClass, IconName
 
     # For custom color format, use Annotated directly
     HexColor = Annotated[str, RegexValidator(r"^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$", "Invalid hex color")]

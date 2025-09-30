@@ -174,6 +174,8 @@ class QuerySet:
 
             # Check the model if specified
             if value is not None:
+                from django.db.models import Model as DjangoBaseModel
+
                 if isinstance(model_spec, str):
                     try:
                         app_label, model_name = model_spec.split(".")
@@ -184,7 +186,8 @@ class QuerySet:
                     model_class = model_spec
 
                 # Check if QuerySet is of the correct model
-                if value.model != model_class:
+                # If model_spec is the base Model class, accept any queryset
+                if model_class is not DjangoBaseModel and value.model != model_class:
                     raise ValidationError(
                         f"Expected QuerySet of {model_class.__name__}, "
                         f"got QuerySet of {value.model.__name__}"

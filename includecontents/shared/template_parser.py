@@ -24,7 +24,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
     """
     # Import Django-specific types here to avoid circular imports
     try:
-        from includecontents.django.prop_types import (
+        from includecontents.prop_types import (
             TYPE_CLASSES,
             TYPE_MAP as DEFAULT_TYPE_MAP,
         )
@@ -68,7 +68,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         # Handle model with square brackets
         if type_name == "model":
             try:
-                from includecontents.django.prop_types import Model
+                from includecontents.prop_types import Model
                 from django.db import models
 
                 if params_str:
@@ -83,7 +83,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
         # Handle queryset with square brackets
         if type_name == "queryset":
             try:
-                from includecontents.django.prop_types import QuerySet
+                from includecontents.prop_types import QuerySet
                 from django.db import models
 
                 if params_str:
@@ -149,7 +149,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
 
             if type_name == "model":
                 try:
-                    from includecontents.django.prop_types import Model
+                    from includecontents.prop_types import Model
                     from django.db import models
 
                     if model_path:
@@ -162,7 +162,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
 
             else:  # queryset
                 try:
-                    from includecontents.django.prop_types import QuerySet
+                    from includecontents.prop_types import QuerySet
                     from django.db import models
 
                     if model_path:
@@ -201,7 +201,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
     # Special handling for bare model and queryset (without brackets or parens)
     if type_spec == "model":
         try:
-            from includecontents.django.prop_types import Model
+            from includecontents.prop_types import Model
             from django.db import models
             return Model[models.Model]
         except ImportError:
@@ -209,7 +209,7 @@ def parse_type_spec(type_spec: str, type_map: Dict[str, Any] = None):
 
     if type_spec == "queryset":
         try:
-            from includecontents.django.prop_types import QuerySet
+            from includecontents.prop_types import QuerySet
             from django.db import models
             return QuerySet[models.Model]
         except ImportError:

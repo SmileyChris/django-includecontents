@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from django.template import TemplateSyntaxError
 from django.conf import settings
 
-from includecontents.django.prop_types import Model, QuerySet, User
+from includecontents.prop_types import Model, QuerySet, User
 from includecontents.shared.validation import validate_props
 from includecontents.shared.template_parser import parse_type_spec
 
