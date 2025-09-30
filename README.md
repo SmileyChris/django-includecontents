@@ -25,37 +25,43 @@ pip install django-includecontents
 
 Choose your template engine:
 
-=== "Django Templates"
+<details open>
+<summary><b>Django Templates</b></summary>
 
-    Replace your Django template backend in `settings.py`:
+Replace your Django template backend in `settings.py`:
 
-    ```python
-    TEMPLATES = [
-        {
-            'BACKEND': 'includecontents.django.DjangoTemplates',
-            # ... rest of your template config
+```python
+TEMPLATES = [
+    {
+        'BACKEND': 'includecontents.django.DjangoTemplates',
+        # ... rest of your template config
+    },
+]
+```
+
+</details>
+
+<details>
+<summary><b>Jinja2</b></summary>
+
+Add the Jinja2 extension in `settings.py`:
+
+```python
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'OPTIONS': {
+            'extensions': [
+                'includecontents.jinja2.IncludeContentsExtension',
+            ],
         },
-    ]
-    ```
+    },
+]
+```
 
-=== "Jinja2"
+See [Jinja2 Setup](https://smileychris.github.io/django-includecontents/getting-started/jinja2-setup/) for complete instructions.
 
-    Add the Jinja2 extension in `settings.py`:
-
-    ```python
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.jinja2.Jinja2',
-            'OPTIONS': {
-                'extensions': [
-                    'includecontents.jinja2.IncludeContentsExtension',
-                ],
-            },
-        },
-    ]
-    ```
-
-    See [Jinja2 Setup](https://smileychris.github.io/django-includecontents/getting-started/jinja2-setup/) for complete instructions.
+</details>
 
 ### Create a Component
 
