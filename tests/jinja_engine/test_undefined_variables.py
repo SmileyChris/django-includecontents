@@ -202,3 +202,29 @@ Component with undefined variables:
         assert "parent_undefined" not in output
         assert "parent_another" not in output
         assert "parent_value" not in output
+
+    def test_undefined_variables_in_props(self) -> None:
+        """Test that undefined variables in prop values render as empty strings."""
+        templates = {
+            "page.html": '<include:test_props title="{{ undefined_var }}" />',
+            "components/test_props.html": """
+{# props title #}
+Title: {{ title }}
+""".strip(),
+        }
+
+        env = Environment(
+            loader=DictLoader(templates),
+            extensions=[IncludeContentsExtension],
+            undefined=DebugUndefined,  # Main environment uses DebugUndefined
+        )
+
+        output = env.get_template("page.html").render()
+        print(f"DEBUG: Props with undefined output: {repr(output)}")
+
+        # Props should use standard Undefined, not DebugUndefined
+        # So undefined variables in props render as empty strings
+        assert "{{ undefined_var }}" not in output  # No literal rendering
+        assert "Title:" in output  # Component renders
+        # The prop value should be empty string
+        assert output.strip() == "Title:"

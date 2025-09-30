@@ -452,6 +452,12 @@ class IncludeContentsExtension(Extension):
         This method evaluates template variables ({{ }}) and control structures ({% %})
         within attribute values to provide Django template parity.
         """
+        # Handle Undefined objects from Jinja2 - convert to empty string
+        # This ensures props with undefined variables render as empty strings
+        # even when the main environment uses DebugUndefined or StrictUndefined
+        if isinstance(value, Undefined):
+            return ""
+
         if not isinstance(value, str):
             return value
 
@@ -460,7 +466,8 @@ class IncludeContentsExtension(Extension):
             try:
                 # Create a mini-template from the value with autoescape enabled
                 # to ensure variables get escaped like in Django
-                env = self.environment.overlay(autoescape=True)
+                # Also use standard Undefined to render undefined vars as empty strings
+                env = self.environment.overlay(autoescape=True, undefined=Undefined)
                 mini_template = env.from_string(value)
                 # Render with the current context variables
                 parent_vars = context.get_all()
