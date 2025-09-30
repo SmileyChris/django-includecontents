@@ -85,7 +85,7 @@ name:str=Test
         # We'll need to access the internal template to check this
         from django.template import loader
 
-        template = loader.get_template("test_caching/instance.html")
+        loader.get_template("test_caching/instance.html")
 
         # The component template should have been cached
         # We can't easily access it directly, but we can verify by counting parsing calls

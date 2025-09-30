@@ -1,6 +1,5 @@
 import re
-from dataclasses import dataclass
-from typing import Any, Dict, Optional, Sequence
+from typing import Dict, Optional
 
 import django.template.base
 from django.utils.text import smart_split

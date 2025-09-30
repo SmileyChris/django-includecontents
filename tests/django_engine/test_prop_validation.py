@@ -2,26 +2,34 @@
 Tests for the prop_types validation system.
 """
 
-import pytest
 from dataclasses import dataclass
-from typing import Optional, Literal
-from django.template import TemplateSyntaxError
+from typing import Literal, Optional
+
+import pytest
 from django.core.exceptions import ValidationError
+from django.template import TemplateSyntaxError
 
 from includecontents.django.prop_types import (
-    Text,
-    Integer,
-    Email,
-    Url,
     Choice,
-    CssClass,
-    MinMax,
-    Decimal,
     Color,
+    CssClass,
+    Decimal,
+    Email,
+    Integer,
+    MinMax,
+    Text,
+    Url,
 )
+from includecontents.shared.template_parser import parse_type_spec
 from includecontents.shared.typed_props import component
 from includecontents.shared.validation import validate_props
-from includecontents.shared.template_parser import parse_type_spec
+
+
+def assert_has_metadata(type_obj, expected_length=None):
+    """Helper to assert a type has metadata and optionally check its length."""
+    assert hasattr(type_obj, "__metadata__")
+    if expected_length is not None:
+        assert len(type_obj.__metadata__) == expected_length
 
 
 class TestPropTypes:
@@ -35,12 +43,11 @@ class TestPropTypes:
 
         # Text with max length using square brackets
         text_type = Text[{"max_length": 10}]
-        assert hasattr(text_type, "__metadata__")
-        assert len(text_type.__metadata__) == 1
+        assert_has_metadata(text_type, 1)
 
         # Text with multiple validators using square brackets
         text_type = Text[{"max_length": 10, "min_length": 2, "pattern": r"^[A-Z]"}]
-        assert len(text_type.__metadata__) == 3
+        assert_has_metadata(text_type, 3)
 
     def test_integer_type(self):
         """Test Integer prop type with bounds."""
@@ -50,12 +57,11 @@ class TestPropTypes:
 
         # Integer with min using square brackets
         int_type = Integer[{"min": 18}]
-        assert hasattr(int_type, "__metadata__")
-        assert len(int_type.__metadata__) == 1
+        assert_has_metadata(int_type, 1)
 
         # Integer with min and max using square brackets
         int_type = Integer[{"min": 18, "max": 120}]
-        assert len(int_type.__metadata__) == 2
+        assert_has_metadata(int_type, 2)
 
     def test_decimal_type(self):
         """Test Decimal prop type with validation."""
@@ -67,13 +73,11 @@ class TestPropTypes:
 
         # Decimal with bounds using square brackets
         decimal_type = Decimal[{"min": 0, "max": 999.99}]
-        assert hasattr(decimal_type, "__metadata__")
-        assert len(decimal_type.__metadata__) == 2
+        assert_has_metadata(decimal_type, 2)
 
         # Decimal with precision using square brackets
         decimal_type = Decimal[{"max_digits": 10, "decimal_places": 2}]
-        assert hasattr(decimal_type, "__metadata__")
-        assert len(decimal_type.__metadata__) == 1
+        assert_has_metadata(decimal_type, 1)
 
     def test_choice_type(self):
         """Test Choice prop type."""
@@ -93,33 +97,32 @@ class TestPropTypes:
 
         # Color with hex format using square brackets
         color_type = Color["hex"]
-        assert hasattr(color_type, "__metadata__")
+        assert_has_metadata(color_type)
 
         # Color with rgb format using square brackets
         color_type = Color["rgb"]
-        assert hasattr(color_type, "__metadata__")
+        assert_has_metadata(color_type)
 
         # Color with rgba format using square brackets
         color_type = Color["rgba"]
-        assert hasattr(color_type, "__metadata__")
+        assert_has_metadata(color_type)
 
     def test_predefined_types(self):
         """Test predefined prop types."""
-        assert hasattr(Email, "__metadata__")
-        assert hasattr(Url, "__metadata__")
+        assert_has_metadata(Email)
+        assert_has_metadata(Url)
 
         # CssClass with default pattern
         css_type = CssClass()
-        assert hasattr(css_type, "__metadata__")
+        assert_has_metadata(css_type)
 
         # CssClass with custom pattern using square brackets
         css_type = CssClass[{"pattern": r"^custom-pattern$"}]
-        assert hasattr(css_type, "__metadata__")
+        assert_has_metadata(css_type)
 
         # MinMax helper
         age_type = MinMax(0, 100)
-        assert hasattr(age_type, "__metadata__")
-        assert len(age_type.__metadata__) == 2
+        assert_has_metadata(age_type, 2)
 
 
 class TestPropsValidation:
@@ -352,33 +355,32 @@ class TestParseTypeSpec:
     def test_simple_types(self):
         """Test parsing simple type names."""
         # Text() returns str
-        assert parse_type_spec("text") == str
+        assert parse_type_spec("text") is str
         # Integer() returns int
-        assert parse_type_spec("int") == int
+        assert parse_type_spec("int") is int
         # Email and Url are pre-configured Annotated types
-        assert parse_type_spec("email") == Email
-        assert parse_type_spec("url") == Url
+        assert parse_type_spec("email") is Email
+        assert parse_type_spec("url") is Url
 
     def test_parameterized_types(self):
         """Test parsing types with parameters."""
         # Integer with min
         int_type = parse_type_spec("int(min=18)")
-        assert hasattr(int_type, "__metadata__")
+        assert_has_metadata(int_type)
 
         # Integer with min and max
         int_type = parse_type_spec("int(min=18,max=120)")
-        assert hasattr(int_type, "__metadata__")
-        assert len(int_type.__metadata__) == 2
+        assert_has_metadata(int_type, 2)
 
         # Text with max_length
         text_type = parse_type_spec("text(max_length=100)")
-        assert hasattr(text_type, "__metadata__")
+        assert_has_metadata(text_type)
 
     def test_choice_parsing(self):
         """Test parsing choice types."""
         # Test parentheses syntax (backward compatibility)
         choice_type = parse_type_spec("choice(admin,user,guest)")
-        from typing import get_origin, get_args
+        from typing import get_args, get_origin
 
         assert get_origin(choice_type) is Literal
         assert get_args(choice_type) == ("admin", "user", "guest")
@@ -390,19 +392,19 @@ class TestParseTypeSpec:
 
     def test_list_type_parsing(self):
         """Test parsing list types from template syntax."""
-        from typing import get_origin, get_args
+        from typing import get_args, get_origin
 
         # List with type parameter
         list_type = parse_type_spec("list(str)")
         assert get_origin(list_type) is list
         # Text() returns str, so list(str) should have str as its type
-        assert get_args(list_type)[0] == str
+        assert get_args(list_type)[0] is str
 
         # List with int type
         list_type = parse_type_spec("list(int)")
         assert get_origin(list_type) is list
         # Integer() returns int, so list(int) should have int as its type
-        assert get_args(list_type)[0] == int
+        assert get_args(list_type)[0] is int
 
         # List without type defaults to str
         list_type = parse_type_spec("list")
@@ -413,33 +415,33 @@ class TestParseTypeSpec:
         list_type = parse_type_spec("list(text)")
         assert get_origin(list_type) is list
         # Text() returns str
-        assert get_args(list_type)[0] == str
+        assert get_args(list_type)[0] is str
 
     def test_square_bracket_syntax(self):
         """Test square bracket syntax for types."""
-        from typing import get_origin, get_args
+        from typing import get_args, get_origin
 
         # Test model with square brackets
         model_type = parse_type_spec("model[auth.User]")
         # Should return Model['auth.User']
-        assert hasattr(model_type, "__metadata__")
+        assert_has_metadata(model_type)
 
         # Test queryset with square brackets
         qs_type = parse_type_spec("queryset[blog.Article]")
         # Should return QuerySet['blog.Article']
-        assert hasattr(qs_type, "__metadata__")
+        assert_has_metadata(qs_type)
 
         # Test list with square brackets
         list_type = parse_type_spec("list[int]")
         assert get_origin(list_type) is list
         # Integer() returns int, so list[int] should have int as its type
-        assert get_args(list_type)[0] == int
+        assert get_args(list_type)[0] is int
 
         # Test nested square brackets
         list_type = parse_type_spec("list[text]")
         assert get_origin(list_type) is list
         # Text() returns str, so list[text] should have str as its type
-        assert get_args(list_type)[0] == str
+        assert get_args(list_type)[0] is str
 
     def test_optional_props_from_template_syntax(self):
         """Test parsing optional props with ? marker."""
@@ -485,7 +487,7 @@ class TestComponentDecorator:
 
     def test_component_registration(self):
         """Test that components are registered correctly."""
-        from includecontents.shared.typed_props import get_props_class, _registry
+        from includecontents.shared.typed_props import _registry, get_props_class
 
         # Clear registry for test
         _registry.clear()
@@ -502,8 +504,9 @@ class TestComponentDecorator:
 
     def test_auto_dataclass_conversion(self):
         """Test that non-dataclasses are converted."""
-        from includecontents.shared.typed_props import _registry
         from dataclasses import is_dataclass
+
+        from includecontents.shared.typed_props import _registry
 
         _registry.clear()
 

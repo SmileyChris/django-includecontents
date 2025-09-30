@@ -114,7 +114,9 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
             # Check if it's Optional
             origin = get_origin(type_hint)
             # Handle both typing.Union and types.UnionType (Python 3.10+ | syntax)
-            if origin is Union or (hasattr(types, 'UnionType') and origin is types.UnionType):
+            if origin is Union or (
+                hasattr(types, "UnionType") and origin is types.UnionType
+            ):
                 # Check if None is in the union (making it Optional)
                 args = get_args(type_hint)
                 if type(None) in args:
@@ -137,7 +139,9 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
             # Unwrap Optional/Union to get actual type
             origin = get_origin(type_hint)
             # Handle both typing.Union and types.UnionType (Python 3.10+ | syntax)
-            if origin is Union or (hasattr(types, 'UnionType') and origin is types.UnionType):
+            if origin is Union or (
+                hasattr(types, "UnionType") and origin is types.UnionType
+            ):
                 args = get_args(type_hint)
                 non_none_types = [arg for arg in args if arg is not type(None)]
                 actual_type = non_none_types[0] if non_none_types else str
@@ -150,7 +154,9 @@ def validate_props(props_class: Type, values: Dict[str, Any]) -> Dict[str, Any]:
                     actual_type = args[0]
 
             # Check for type coercion failures
-            error_msg = _check_coercion_failure(value, coerced_value, actual_type, field_name)
+            error_msg = _check_coercion_failure(
+                value, coerced_value, actual_type, field_name
+            )
             if error_msg:
                 errors.append(error_msg)
                 continue

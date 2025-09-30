@@ -2,10 +2,9 @@ import logging
 import re
 from collections import abc
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, Iterable, NoReturn, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 from django import template
-from django.contrib.gis.measure import D
 from django.template import TemplateDoesNotExist, TemplateSyntaxError, Variable
 from django.template.base import FilterExpression, Node, NodeList, Parser, TokenType
 from django.template.context import Context
@@ -22,6 +21,7 @@ except ImportError:
 
 from includecontents.django.attrs import Attrs as DjangoAttrs
 from includecontents.django.base import Template
+from includecontents.shared.props import PropDefinition
 from includecontents.shared.typed_props import (
     coerce_value,
     get_props_class,
@@ -30,7 +30,6 @@ from includecontents.shared.typed_props import (
 from includecontents.shared.validation import validate_props
 
 logger = logging.getLogger(__name__)
-from includecontents.shared.props import PropDefinition
 
 register = template.Library()
 

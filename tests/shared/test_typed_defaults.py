@@ -149,7 +149,7 @@ class TestTypedDefaults:
         """Test that optional props without defaults are None when not provided."""
         template = Template(
             "{% load includecontents %}"
-            '{% includecontents "typed_defaults/test_optional_no_default.html" %}{% endincludecontents %}'
+            '{% includecontents "test_coercion/test_optional_no_default.html" %}{% endincludecontents %}'
         )
 
         context = Context({})

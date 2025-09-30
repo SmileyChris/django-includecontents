@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from pathlib import Path
 from textwrap import dedent
 from typing import Any, Iterable, Mapping
 
-from jinja2 import DictLoader, Environment
+from jinja2 import ChoiceLoader, DictLoader, Environment, FileSystemLoader
 
 from includecontents.jinja2.extension import IncludeContentsExtension
+
+# Path to test templates directory
+_TEST_TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 
 __all__ = ["render_component", "captures_for", "first_capture"]
 
@@ -298,10 +302,17 @@ def _select_components(names: Iterable[str]) -> dict[str, str]:
     selected: dict[str, str] = {}
     missing: list[str] = []
     for name in names:
-        try:
+        # First check if it's in the library
+        if name in _COMPONENT_LIBRARY:
             selected[name] = _COMPONENT_LIBRARY[name]
-        except KeyError:
-            missing.append(name)
+        else:
+            # Check if a template file exists
+            template_path = _TEST_TEMPLATES_DIR / "components" / f"{name}.html"
+            if template_path.exists():
+                # Don't add to selected - let FileSystemLoader handle it
+                continue
+            else:
+                missing.append(name)
     if missing:
         raise KeyError(f"No component templates registered for: {', '.join(missing)}")
     return selected
@@ -340,8 +351,14 @@ def render_component(
     if extra_extensions:
         extensions.extend(extra_extensions)
 
+    # Use ChoiceLoader to try DictLoader first, then FileSystemLoader for real templates
     env = Environment(
-        loader=DictLoader(templates),
+        loader=ChoiceLoader(
+            [
+                DictLoader(templates),
+                FileSystemLoader(str(_TEST_TEMPLATES_DIR)),
+            ]
+        ),
         extensions=extensions,
         autoescape=autoescape,
     )

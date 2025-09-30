@@ -21,6 +21,8 @@ from typing import (
 
 from django.utils.safestring import mark_safe
 
+from includecontents.prop_types import _HTML_MARKER
+
 # Registry for component props classes
 _registry: Dict[str, Type] = {}
 
@@ -128,7 +130,7 @@ def resolve_props_class_for(path: str) -> Optional[Type]:
     try:
         # Normalize path separators for cross-platform compatibility
         normalized_path = path.replace("\\", "/")
-        path_obj = Path(normalized_path)
+        Path(normalized_path)
 
         # Convert to forward slash notation for consistency
         path_parts = normalized_path.split("/")
@@ -180,7 +182,8 @@ def coerce_value(value: Any, type_hint: Any) -> Any:
     origin = get_origin(type_hint)
     # Handle both typing.Union and types.UnionType (Python 3.10+ | syntax)
     import types
-    if origin is Union or (hasattr(types, 'UnionType') and origin is types.UnionType):
+
+    if origin is Union or (hasattr(types, "UnionType") and origin is types.UnionType):
         args = get_args(type_hint)
         # Filter out None to get the actual type(s)
         non_none_types = [arg for arg in args if arg is not type(None)]
@@ -425,7 +428,7 @@ def mark_html_recursive(value: Any, type_hint: Any) -> Any:
 
     if origin is dict and isinstance(value, dict):
         # Recurse into values only
-        key_type = args[0] if args else Any
+        args[0] if args else Any
         val_type = args[1] if len(args) > 1 else Any
         return {k: mark_html_recursive(v, val_type) for k, v in value.items()}
 

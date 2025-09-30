@@ -131,6 +131,7 @@ class TestDjangoSpecificTypes:
         result = validate_props(DecimalProps, {"price": "19.99"})
         # May be string or Decimal object (coercion converts to Decimal)
         from decimal import Decimal as DecimalType
+
         assert result["price"] == DecimalType("19.99")
 
         # Invalid decimal format
@@ -205,7 +206,7 @@ class TestDjangoValidatorMessages:
 
         # This tests that custom messages can be integrated
         # Actual implementation may vary
-        with pytest.raises(TemplateSyntaxError) as exc_info:
+        with pytest.raises(TemplateSyntaxError):
             validate_props(CustomMessageProps, {"username": "ab"})
         # Should include validation error context
 

@@ -138,7 +138,7 @@ def resolve_props_class_for(path: str) -> Optional[Type]:
     try:
         # Normalize path separators for cross-platform compatibility
         normalized_path = path.replace("\\", "/")
-        path_obj = Path(normalized_path)
+        Path(normalized_path)
 
         # Convert to forward slash notation for consistency
         path_parts = normalized_path.split("/")
@@ -666,7 +666,7 @@ def mark_html_recursive(value: Any, type_hint: Any) -> Any:
 
     if origin is dict and isinstance(value, dict):
         # Recurse into values only
-        key_type = args[0] if args else Any
+        args[0] if args else Any
         val_type = args[1] if len(args) > 1 else Any
         return {k: mark_html_recursive(v, val_type) for k, v in value.items()}
 
