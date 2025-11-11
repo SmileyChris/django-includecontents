@@ -38,6 +38,7 @@ When an enum prop is set, the component receives both the value and boolean flag
 ```
 
 **Context variables created:**
+
 - `variant` - The prop value (`"primary"`)
 - `variantPrimary` - Boolean (`True` when variant="primary")
 - `variantSecondary` - Boolean (`False` when variant="primary")
@@ -109,6 +110,7 @@ You can specify multiple enum values separated by spaces:
 ```
 
 **Context variables created for `variant="primary icon"`:**
+
 - `variant` - The full value (`"primary icon"`)
 - `variantPrimary` - Boolean (`True`)
 - `variantIcon` - Boolean (`True`)

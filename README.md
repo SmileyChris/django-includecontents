@@ -59,7 +59,7 @@ TEMPLATES = [
 ]
 ```
 
-See [Jinja2 Setup](https://smileychris.github.io/django-includecontents/getting-started/jinja2-setup/) for complete instructions.
+See [Jinja2 Setup](https://smileychris.github.io/django-includecontents/latest/getting-started/jinja2-setup/) for complete instructions.
 
 </details>
 
@@ -110,11 +110,11 @@ If you prefer traditional Django template syntax:
 
 📚 **[Full Documentation](https://smileychris.github.io/django-includecontents/)**
 
-- **[Getting Started](https://smileychris.github.io/django-includecontents/getting-started/installation/)** - Installation and setup
-- **[Jinja2 Setup](https://smileychris.github.io/django-includecontents/getting-started/jinja2-setup/)** - Jinja2 template engine setup
-- **[Quick Start Guide](https://smileychris.github.io/django-includecontents/getting-started/quickstart/)** - Get started in 5 minutes
-- **[HTML Components](https://smileychris.github.io/django-includecontents/using-components/html-syntax/)** - Modern component syntax
-- **[Best Practices](https://smileychris.github.io/django-includecontents/building-components/best-practices/)** - Building great components
+- **[Getting Started](https://smileychris.github.io/django-includecontents/latest/getting-started/installation/)** - Installation and setup
+- **[Jinja2 Setup](https://smileychris.github.io/django-includecontents/latest/getting-started/jinja2-setup/)** - Jinja2 template engine setup
+- **[Quick Start Guide](https://smileychris.github.io/django-includecontents/latest/getting-started/quickstart/)** - Get started in 5 minutes
+- **[HTML Components](https://smileychris.github.io/django-includecontents/latest/using-components/html-syntax/)** - Modern component syntax
+- **[Best Practices](https://smileychris.github.io/django-includecontents/latest/building-components/best-practices/)** - Building great components
 
 ## Examples
 
