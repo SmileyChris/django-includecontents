@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from typing import Any, Dict, Iterator, List, Optional
 
 from jinja2 import Environment, nodes, pass_context, Undefined
@@ -76,7 +77,9 @@ class IncludeContentsExtension(Extension):
         self.preprocessor = ComponentPreprocessor()
         self._register_environment_helpers(environment)
         self._props_registry = create_props_registry(environment)
-        self._render_stack: List[Dict[str, Any]] = []
+        self._current_contents: ContextVar = ContextVar(
+            "django_includecontents.current_contents", default=None
+        )
         self.use_context_isolation = True
         self._component_environment: Optional[Environment] = None
 
@@ -195,11 +198,11 @@ class IncludeContentsExtension(Extension):
         **attributes: Any,
     ) -> str:
         state: Dict[str, Any] = {"default": [], "named": {}}
-        self._render_stack.append(state)
+        token = self._current_contents.set(state)
         try:
             body_output = caller() if caller is not None else ""
         finally:
-            self._render_stack.pop()
+            self._current_contents.reset(token)
 
         identifier = self._normalize_template_name(template_name)
         props = self._props_registry.get(identifier)
@@ -362,9 +365,9 @@ class IncludeContentsExtension(Extension):
         **_: Any,
     ) -> str:
         content = caller() if caller is not None else ""
-        if not self._render_stack:
+        state = self._current_contents.get()
+        if state is None:
             return content  # Render as plain text outside components
-        state = self._render_stack[-1]
         key = self._normalize_content_name(name)
         if key is None:
             state["default"].append(content)
