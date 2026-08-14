@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+
 import pytest
 from jinja2 import DictLoader, Environment
 from jinja2.exceptions import TemplateRuntimeError
@@ -413,3 +415,73 @@ def test_subdirectory_component() -> None:
     template = env.from_string("<include:inside:cat />")
     rendered = template.render()
     assert rendered == "Meow"
+
+
+def test_concurrent_renders_do_not_leak_slot_content() -> None:
+    """
+    Regression test for issue #11: slot content must land in the component that captured it, not whichever component
+    happens to be rendering in another thread.
+
+    Interleaving is forced with events rather than sleeps so the test is deterministic:
+
+    1. A pushes its frame and blocks inside its <content:slot> body.
+    2. B pushes its frame, captures its own slot, and blocks. A's frame is no longer on top of the shared stack.
+    3. A finishes its slot body and captures. If the stack was shared, then the write would land in B's frame: A loses
+       its slot, B gets A's content.
+    """
+    env = _environment()
+
+    a_inside_slot = threading.Event()
+    b_frame_pushed = threading.Event()
+    a_finished = threading.Event()
+
+    def gate_a():
+        a_inside_slot.set()
+        assert b_frame_pushed.wait(timeout=10), "B never pushed its frame"
+        return ""
+
+    def gate_b():
+        b_frame_pushed.set()
+        assert a_finished.wait(timeout=10), "A never finished rendering"
+        return ""
+
+    # Make gate_a and gate_b accessible to the templates
+    env.globals.update(gate_a=gate_a, gate_b=gate_b)
+
+    template_a = env.from_string(
+        """
+        <include:modal title="A">
+          <content:header>{{ gate_a() }}A-SLOT</content:header>
+          A-MAIN
+        </include:modal>
+        """
+    )
+    template_b = env.from_string(
+        """
+        <include:modal title="B">
+          <content:header>B-SLOT</content:header>
+          B-MAIN{{ gate_b() }}
+        </include:modal>
+        """
+    )
+
+    results = {}
+
+    def render(key, template):
+        results[key] = template.render()
+
+    thread_a = threading.Thread(target=render, args=("a", template_a))
+    thread_b = threading.Thread(target=render, args=("b", template_b))
+
+    thread_a.start()
+    assert a_inside_slot.wait(timeout=10), "A never reached its slot body"
+    thread_b.start()
+    thread_a.join(timeout=10)
+    a_finished.set()
+    thread_b.join(timeout=10)
+
+    # Remove whitespace for simpler comparisons
+    result_a = "".join(results["a"].split())
+    result_b = "".join(results["b"].split())
+    assert result_a == "<header>A-SLOT</header><main>A-MAIN</main>"
+    assert result_b == "<header>B-SLOT</header><main>B-MAIN</main>"
