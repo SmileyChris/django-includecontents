@@ -201,9 +201,9 @@ def test_fetch_mixed_cache_hit_miss():
 
                 # Verify API was called only for uncached icon
                 mock_urlopen.assert_called_once()
-                call_args = mock_urlopen.call_args[0][0]
-                assert "icons=account" in call_args
-                assert "icons=home" not in call_args
+                requested_url = mock_urlopen.call_args[0][0].full_url
+                assert "icons=account" in requested_url
+                assert "icons=home" not in requested_url
 
 
 def test_build_sprite_with_cache():
