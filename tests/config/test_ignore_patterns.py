@@ -4,7 +4,11 @@ to prevent duplicate serving by other finders.
 """
 
 from unittest.mock import patch
+
+import pytest
 from django.test import override_settings
+
+from includecontents.icons.exceptions import IconBuildError
 from includecontents.icons.finders import IconSpriteFinder
 
 
@@ -178,16 +182,27 @@ def test_empty_configuration_no_ignore_patterns():
     assert len(ignore_patterns) == 0
 
 
-def test_invalid_configuration_doesnt_break():
+@pytest.mark.parametrize(
+    "invalid_setting",
+    [
+        123,
+        ("only-one-element",),
+        None,
+    ],
+    ids=["integer", "wrong-tuple-length", "null"]
+)
+@patch("includecontents.icons.builder.fetch_iconify_icons")
+def test_invalid_configuration_fails_loudly(mock_fetch, invalid_setting):
     """Test that invalid configurations don't break the ignore pattern logic."""
+    mock_fetch.side_effect = mock_iconify_api()
+
     finder = IconSpriteFinder()
     ignore_patterns = []
 
-    # This should not raise an exception even with invalid config
-    list(finder.list(ignore_patterns))
-
-    # ignore_patterns might be empty or have some items, but shouldn't crash
-    assert isinstance(ignore_patterns, list)
+    with override_settings(
+        INCLUDECONTENTS_ICONS={"icons": [invalid_setting]}
+    ), pytest.raises(IconBuildError, match="Failed to generate icon sprite during collectstatic"):
+        list(finder.list(ignore_patterns))
 
 
 @override_settings(

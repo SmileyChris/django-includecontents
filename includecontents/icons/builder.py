@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 from urllib.error import URLError
 from urllib.parse import urljoin
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from xml.etree import ElementTree as ET
 
 from django.conf import settings
@@ -25,6 +25,9 @@ from .exceptions import (
 
 # Import Django cache integration for better caching
 from .cache import sprite_cache
+from .. import __version__
+
+USER_AGENT = f"django-includecontents/{__version__} (+https://github.com/SmileyChris/django-includecontents)"
 
 
 def find_source_svg(path: str) -> Optional[str]:
@@ -411,7 +414,8 @@ def fetch_iconify_icons(
     url = urljoin(api_base.rstrip("/") + "/", f"{prefix}.json?icons={icons_param}")
 
     try:
-        with urlopen(url) as response:
+        request = Request(url, headers={"User-Agent": USER_AGENT})
+        with urlopen(request) as response:
             data = json.loads(response.read().decode("utf-8"))
     except (URLError, json.JSONDecodeError) as e:
         raise IconAPIError(f"Failed to fetch icons from {url}: {e}")
