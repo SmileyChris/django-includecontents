@@ -724,7 +724,7 @@ def get_contents_nodelists(
         if tag_name == "contents" and nesting_level == 0:
             if len(bits) < 2:
                 raise TemplateSyntaxError(
-                    "Unnamed {tag_name!r} tag within {token_name}" % tag_name
+                    f"Unnamed {tag_name!r} tag within {token_name}"
                 )
             if len(bits) > 2:
                 raise TemplateSyntaxError(f"Invalid {tag_name!r} tag format")
