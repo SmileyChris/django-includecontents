@@ -228,7 +228,13 @@ class IncludeContentsExtension(Extension):
             if isinstance(arg, dict):
                 attributes.update(arg)
 
-        default_content = "".join(state["default"]) or body_output
+        # Fall back to the body only when no {% contents %} block captured the
+        # default slot -- an explicit but empty capture must stay empty, so test
+        # whether a capture happened rather than whether it produced anything.
+        if state["default"]:
+            default_content = "".join(state["default"])
+        else:
+            default_content = body_output
         contents = CapturedContents(default_content, state["named"])
 
         attrs_obj = Attrs()

@@ -529,3 +529,18 @@ def test_component_environment_created_once_under_concurrency() -> None:
 
     assert len(overlay_calls) == 1, f"overlay() called {len(overlay_calls)} times"
     assert results["a"] is results["b"]
+
+
+def test_explicitly_empty_default_contents_stays_empty() -> None:
+    """
+    An empty {% contents %} block is an explicit choice to leave the default
+    slot blank, and must not fall back to the text surrounding it.
+    """
+    env = _environment()
+    template = env.from_string(
+        '{% includecontents "section" %}'
+        "surrounding"
+        "{% contents %}{% endcontents %}"
+        "{% endincludecontents %}"
+    )
+    assert template.render() == "<section></section>"
