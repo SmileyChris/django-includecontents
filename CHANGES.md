@@ -4,6 +4,16 @@ This log shows interesting changes that happen for each release of `django-inclu
 
 <!-- towncrier release notes start -->
 
+# Version 4.0.2 (2026-08-23)
+
+## Bugfixes
+
+- Fixed the Jinja extension's render stack being thread-unsafe, which could miss or mix up slot content rendered in `<include:...>` tags from concurrent renders. ([11])
+- Send a `django-includecontents` User-Agent when fetching from the Iconify API. The default `Python-urllib` agent was rejected with a 403, which broke icon sprite generation during `collectstatic`.
+
+[11]: https://github.com/SmileyChris/django-includecontents/issues/11
+
+
 # Version 4.0.1 (2025-09-30)
 
 ## Features
