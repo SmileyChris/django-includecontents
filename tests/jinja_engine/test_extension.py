@@ -125,7 +125,7 @@ def test_html_component_prefix_supported() -> None:
     assert "Hi::Body::False::" in rendered
 
 
-def test_nested_components_share_render_stack() -> None:
+def test_nested_components_capture_own_contents() -> None:
     env = _environment()
     template = env.from_string(
         '{% includecontents "card" title="Outer" %}'
@@ -477,8 +477,10 @@ def test_concurrent_renders_do_not_leak_slot_content() -> None:
     assert a_inside_slot.wait(timeout=10), "A never reached its slot body"
     thread_b.start()
     thread_a.join(timeout=10)
+    assert not thread_a.is_alive(), "A did not finish rendering"
     a_finished.set()
     thread_b.join(timeout=10)
+    assert not thread_b.is_alive(), "B did not finish rendering"
 
     # Remove whitespace for simpler comparisons
     result_a = "".join(results["a"].split())

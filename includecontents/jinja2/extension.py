@@ -22,6 +22,16 @@ from includecontents.shared.enums import (
 )
 from includecontents.shared.props import PropDefinition, build_prop_definition
 
+# The contents captured by the <include:...> currently being rendered.
+#
+# Defined at module level as the contextvars docs require: a ContextVar built
+# per instance would be re-created on every Extension.bind(), so the overlay
+# environment used for component rendering would no longer see the frame
+# pushed by its parent.
+_current_contents: ContextVar = ContextVar(
+    "django_includecontents.current_contents", default=None
+)
+
 
 class _EscapableValue:
     """Wrapper to mark values that came from template expressions and need escaping.
@@ -77,9 +87,6 @@ class IncludeContentsExtension(Extension):
         self.preprocessor = ComponentPreprocessor()
         self._register_environment_helpers(environment)
         self._props_registry = create_props_registry(environment)
-        self._current_contents: ContextVar = ContextVar(
-            "django_includecontents.current_contents", default=None
-        )
         self.use_context_isolation = True
         self._component_environment: Optional[Environment] = None
 
@@ -198,11 +205,11 @@ class IncludeContentsExtension(Extension):
         **attributes: Any,
     ) -> str:
         state: Dict[str, Any] = {"default": [], "named": {}}
-        token = self._current_contents.set(state)
+        token = _current_contents.set(state)
         try:
             body_output = caller() if caller is not None else ""
         finally:
-            self._current_contents.reset(token)
+            _current_contents.reset(token)
 
         identifier = self._normalize_template_name(template_name)
         props = self._props_registry.get(identifier)
@@ -365,7 +372,7 @@ class IncludeContentsExtension(Extension):
         **_: Any,
     ) -> str:
         content = caller() if caller is not None else ""
-        state = self._current_contents.get()
+        state = _current_contents.get()
         if state is None:
             return content  # Render as plain text outside components
         key = self._normalize_content_name(name)
