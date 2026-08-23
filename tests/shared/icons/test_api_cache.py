@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from includecontents.icons.builder import (
+    USER_AGENT,
     fetch_iconify_icons,
     get_cached_iconify_icon,
     save_iconify_icon_to_cache,
@@ -201,9 +202,11 @@ def test_fetch_mixed_cache_hit_miss():
 
                 # Verify API was called only for uncached icon
                 mock_urlopen.assert_called_once()
-                requested_url = mock_urlopen.call_args[0][0].full_url
-                assert "icons=account" in requested_url
-                assert "icons=home" not in requested_url
+                request = mock_urlopen.call_args[0][0]
+                assert "icons=account" in request.full_url
+                assert "icons=home" not in request.full_url
+                # The Iconify API rejects the default Python-urllib agent with a 403
+                assert request.get_header("User-agent") == USER_AGENT
 
 
 def test_build_sprite_with_cache():
