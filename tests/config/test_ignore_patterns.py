@@ -189,19 +189,22 @@ def test_empty_configuration_no_ignore_patterns():
         ("only-one-element",),
         None,
     ],
-    ids=["integer", "wrong-tuple-length", "null"]
+    ids=["integer", "wrong-tuple-length", "null"],
 )
-@patch("includecontents.icons.builder.fetch_iconify_icons")
-def test_invalid_configuration_fails_loudly(mock_fetch, invalid_setting):
-    """Test that invalid configurations don't break the ignore pattern logic."""
-    mock_fetch.side_effect = mock_iconify_api()
+def test_invalid_configuration_fails_loudly(invalid_setting):
+    """Test that invalid configurations raise rather than being silently skipped.
 
+    Configuration is validated before any icon is fetched, so the API is never
+    reached for these inputs.
+    """
     finder = IconSpriteFinder()
     ignore_patterns = []
 
     with override_settings(
         INCLUDECONTENTS_ICONS={"icons": [invalid_setting]}
-    ), pytest.raises(IconBuildError, match="Failed to generate icon sprite during collectstatic"):
+    ), pytest.raises(
+        IconBuildError, match="Failed to generate icon sprite during collectstatic"
+    ):
         list(finder.list(ignore_patterns))
 
 
