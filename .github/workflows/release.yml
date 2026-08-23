@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Required to dispatch publish.yml at the end of this job.
+      actions: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -54,3 +56,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "v$version" --title "$version" --notes-from-tag --verify-tag
+
+      # The release above is created with GITHUB_TOKEN, and events triggered by
+      # GITHUB_TOKEN don't start new workflow runs -- so publish.yml's `release`
+      # trigger never fires. workflow_dispatch is documented as an exception, so
+      # dispatch it explicitly rather than leaving the publish as a manual step.
+      - name: Publish to PyPI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run publish.yml --ref "v$version"
