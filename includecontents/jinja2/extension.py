@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from contextvars import ContextVar
 from typing import Any, Dict, Iterator, List, Optional
 
@@ -89,6 +90,7 @@ class IncludeContentsExtension(Extension):
         self._props_registry = create_props_registry(environment)
         self.use_context_isolation = True
         self._component_environment: Optional[Environment] = None
+        self._component_environment_lock = threading.Lock()
 
     @property
     def component_environment(self) -> Environment:
@@ -101,9 +103,16 @@ class IncludeContentsExtension(Extension):
         Uses Jinja2's overlay() method for efficient environment cloning.
         """
         if self._component_environment is None:
-            # Create overlay environment with standard Undefined behavior
-            # This automatically inherits all settings from parent environment
-            self._component_environment = self.environment.overlay(undefined=Undefined)
+            with self._component_environment_lock:
+                # Re-check inside the lock: another thread may have built it
+                # while this one was waiting.
+                if self._component_environment is None:
+                    # Create overlay environment with standard Undefined behavior
+                    # This automatically inherits all settings from parent
+                    # environment
+                    self._component_environment = self.environment.overlay(
+                        undefined=Undefined
+                    )
         return self._component_environment
 
     # ------------------------------------------------------------------
