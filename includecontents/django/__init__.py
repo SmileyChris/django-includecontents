@@ -12,6 +12,12 @@ class DjangoTemplates(django.template.backends.django.DjangoTemplates):
         options.setdefault("autoescape", True)
         options.setdefault("debug", settings.DEBUG)
         options.setdefault("file_charset", "utf-8")
+        # Ours alone -- Django's Engine would choke on it during super().__init__.
+        params["OPTIONS"] = {
+            key: value
+            for key, value in params["OPTIONS"].items()
+            if key != "cached_loader_unless_debug"
+        }
         super().__init__(params)
         options["libraries"] = self.engine.libraries
         # The Engine class handles all builtin template tag registration
