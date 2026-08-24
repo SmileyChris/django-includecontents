@@ -80,3 +80,13 @@ def test_unnamed_contents_tag_reports_a_template_syntax_error():
     )
     with pytest.raises(TemplateSyntaxError, match="Unnamed 'contents' tag"):
         engines["django"].from_string(source)
+
+
+def test_prop_default_may_contain_spaces():
+    """A quoted prop default containing spaces should render as written."""
+    from django.template import engines
+
+    rendered = engines["django"].from_string(
+        "{% load includecontents %}<include:spaced-default />"
+    ).render({})
+    assert rendered.strip() == "<span>a value with spaces</span>"

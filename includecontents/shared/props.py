@@ -183,11 +183,14 @@ def _parse_prop_token(token: str) -> tuple[str, Any]:
         ):
             # This is likely an enum definition like "primary,secondary,accent"
             value = raw
-        # For strings that look like they should be quoted, provide helpful hint
+        # For strings that look like they should be quoted, provide helpful hint.
+        # A space is not a symptom of that: tokenizing splits on unquoted
+        # whitespace, so a space surviving into a single token means the value
+        # was quoted and is simply a string.
         elif (
             raw
             and not raw.startswith(('"', "'"))
-            and any(c in raw for c in [" ", "(", ")", "[", "]", "{"])
+            and any(c in raw for c in ["(", ")", "[", "]", "{"])
         ):
             raise ValueError(
                 f"Invalid value '{raw}'. Did you forget quotes around a string value?"

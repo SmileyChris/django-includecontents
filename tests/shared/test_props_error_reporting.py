@@ -190,3 +190,24 @@ def test_error_preserves_original_exception_chain():
     assert (
         exc_info.value.__cause__ is not None or exc_info.value.__context__ is not None
     )
+
+
+@pytest.mark.parametrize(
+    "body, expected",
+    [
+        ('key="a value with spaces"', "a value with spaces"),
+        ("key='a value with spaces'", "a value with spaces"),
+        # Surrounding whitespace is trimmed; only interior spaces are kept.
+        ('key="  padded  "', "padded"),
+    ],
+    ids=["double-quoted", "single-quoted", "surrounding-whitespace-trimmed"],
+)
+def test_quoted_default_may_contain_spaces(body, expected):
+    """A quoted default is a string, spaces and all.
+
+    Unquoted whitespace splits props apart, so a value that still holds a space
+    once tokenised can only have been quoted.
+    """
+    specs = parse_props_comment(f"{{# props {body} #}}\n<div>{{{{ key }}}}</div>")
+
+    assert specs["key"].default == expected
