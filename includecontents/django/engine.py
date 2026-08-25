@@ -2,6 +2,7 @@ from pathlib import Path
 
 import django.template.base
 import django.template.engine
+from django.core.exceptions import ImproperlyConfigured
 
 from .base import Template
 
@@ -59,9 +60,26 @@ class Engine(django.template.Engine):
         debug=False,
         loaders=None,
         builtins=None,
+        cached_loader_unless_debug=False,
         *args,
         **kwargs,
     ):
+        # Django 4.1+ always wraps the default loaders in the cached loader, so
+        # template edits don't show up while developing without restarting. This
+        # option opts out of that, but only while debugging.
+        if cached_loader_unless_debug:
+            if loaders is not None:
+                raise ImproperlyConfigured(
+                    "cached_loader_unless_debug must not be set when loaders is "
+                    "defined -- wrap them in the cached loader yourself instead."
+                )
+            if debug:
+                loaders = ["django.template.loaders.filesystem.Loader"]
+                if app_dirs:
+                    loaders += ["django.template.loaders.app_directories.Loader"]
+                # Django refuses app_dirs alongside explicit loaders, and the
+                # app directories loader is already in the list above.
+                app_dirs = False
         # Add all includecontents template tags to builtins so they're automatically available
         if builtins is None:
             builtins = []

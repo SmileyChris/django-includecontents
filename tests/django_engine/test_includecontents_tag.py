@@ -65,3 +65,28 @@ def test_context_only():
 </div>
 """
     )
+
+
+def test_unnamed_contents_tag_reports_a_template_syntax_error():
+    """An unnamed {% contents %} should explain itself, not blow up formatting."""
+    from django.template import engines
+    from django.template.exceptions import TemplateSyntaxError
+
+    source = (
+        "{% load includecontents %}"
+        '{% includecontents "test_tag/basic.html" %}'
+        "{% contents %}oops{% endcontents %}"
+        "{% endincludecontents %}"
+    )
+    with pytest.raises(TemplateSyntaxError, match="Unnamed 'contents' tag"):
+        engines["django"].from_string(source)
+
+
+def test_prop_default_may_contain_spaces():
+    """A quoted prop default containing spaces should render as written."""
+    from django.template import engines
+
+    rendered = engines["django"].from_string(
+        "{% load includecontents %}<include:spaced-default />"
+    ).render({})
+    assert rendered.strip() == "<span>a value with spaces</span>"

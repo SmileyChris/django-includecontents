@@ -50,6 +50,19 @@ TEMPLATES = [
     - Auto-loaded template tags (no need for `{% load includecontents %}`)
     - All standard Django template functionality preserved
 
+#### Seeing template edits without restarting
+
+Since Django 4.1 the cached template loader is always used, even with `DEBUG = True`, so edits to a template don't show up until the server reloads. Set `cached_loader_unless_debug` to skip the cached loader while debugging:
+
+```python
+'OPTIONS': {
+    'cached_loader_unless_debug': True,
+    # ...
+},
+```
+
+Caching still applies whenever `debug` is off, so production is unaffected. The option builds the loader list for you, so it can't be combined with an explicit `loaders` setting — if you configure `loaders` yourself, wrap them in the cached loader as needed.
+
 ### Option 2: Traditional Django Setup
 
 If you prefer to use only the template tags without the HTML syntax, add the app to `INSTALLED_APPS`:

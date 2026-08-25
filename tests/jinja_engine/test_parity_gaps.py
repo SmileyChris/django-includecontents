@@ -5,11 +5,32 @@ This file contains tests that SHOULD work in Jinja but currently don't,
 representing real implementation gaps that need to be addressed.
 """
 
+import time
+
 import pytest
 from jinja2 import Environment, DictLoader, TemplateSyntaxError
 from django.template import Engine
 
 from includecontents.jinja2.extension import IncludeContentsExtension
+
+
+def time_best_of(operation, iterations, rounds=5):
+    """Time ``operation`` repeatedly and return the duration of the fastest round.
+
+    These benchmarks share a machine with the rest of the suite, so a single
+    sample mostly measures whatever ran just before them -- enough that merely
+    adding an unrelated test elsewhere could push the ratio over its threshold.
+    Interference can only ever make a round slower, so the fastest round is the
+    most stable estimate of the real cost.
+    """
+    operation()  # warm up imports, caches and any lazy setup
+    best = float("inf")
+    for _ in range(rounds):
+        start_time = time.perf_counter()
+        for _ in range(iterations):
+            operation()
+        best = min(best, time.perf_counter() - start_time)
+    return best
 
 
 def create_jinja_env_with_templates():
@@ -323,19 +344,12 @@ class TestPerformanceGaps:
         {% endincludecontents %}
         """
 
-        import time
-
-        # Measure Django compilation time
-        start_time = time.perf_counter()
-        for _ in range(50):
-            django_engine.from_string(django_template_source)
-        django_time = time.perf_counter() - start_time
-
-        # Measure Jinja compilation time
-        start_time = time.perf_counter()
-        for _ in range(50):
-            jinja_env.from_string(jinja_template_source)
-        jinja_time = time.perf_counter() - start_time
+        django_time = time_best_of(
+            lambda: django_engine.from_string(django_template_source), 50
+        )
+        jinja_time = time_best_of(
+            lambda: jinja_env.from_string(jinja_template_source), 50
+        )
 
         # Jinja should be within 8x of Django performance
         # (Jinja's regex-based preprocessing adds overhead)
@@ -368,20 +382,10 @@ class TestPerformanceGaps:
         jinja_template = jinja_env.from_string(jinja_template_source)
         django_template = django_engine.from_string(django_template_source)
 
-        import time
         from django.template import Context
 
-        # Measure Django rendering time
-        start_time = time.perf_counter()
-        for _ in range(100):
-            django_template.render(Context())
-        django_time = time.perf_counter() - start_time
-
-        # Measure Jinja rendering time
-        start_time = time.perf_counter()
-        for _ in range(100):
-            jinja_template.render()
-        jinja_time = time.perf_counter() - start_time
+        django_time = time_best_of(lambda: django_template.render(Context()), 100)
+        jinja_time = time_best_of(lambda: jinja_template.render(), 100)
 
         # Jinja should be within 3x of Django performance
         ratio = jinja_time / django_time if django_time > 0 else float('inf')

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from contextvars import ContextVar
 from typing import Any, Dict, Iterator, List, Optional
 
@@ -89,6 +90,9 @@ class IncludeContentsExtension(Extension):
         self._props_registry = create_props_registry(environment)
         self.use_context_isolation = True
         self._component_environment: Optional[Environment] = None
+        self._component_environment_lock = threading.Lock()
+        self._expression_environment: Optional[Environment] = None
+        self._expression_environment_lock = threading.Lock()
 
     @property
     def component_environment(self) -> Environment:
@@ -101,10 +105,34 @@ class IncludeContentsExtension(Extension):
         Uses Jinja2's overlay() method for efficient environment cloning.
         """
         if self._component_environment is None:
-            # Create overlay environment with standard Undefined behavior
-            # This automatically inherits all settings from parent environment
-            self._component_environment = self.environment.overlay(undefined=Undefined)
+            with self._component_environment_lock:
+                # Re-check inside the lock: another thread may have built it
+                # while this one was waiting.
+                if self._component_environment is None:
+                    # Create overlay environment with standard Undefined behavior
+                    # This automatically inherits all settings from parent
+                    # environment
+                    self._component_environment = self.environment.overlay(
+                        undefined=Undefined
+                    )
         return self._component_environment
+
+    @property
+    def expression_environment(self) -> Environment:
+        """Environment for rendering ``{{ ... }}`` inside attribute values.
+
+        Attribute interpolation is always synchronous, so this overlay forces
+        ``enable_async`` off -- otherwise rendering one inside an async
+        environment would call ``asyncio.run()`` from a running event loop.
+        Autoescape and standard ``Undefined`` match Django's behaviour.
+        """
+        if self._expression_environment is None:
+            with self._expression_environment_lock:
+                if self._expression_environment is None:
+                    self._expression_environment = self.environment.overlay(
+                        autoescape=True, undefined=Undefined, enable_async=False
+                    )
+        return self._expression_environment
 
     # ------------------------------------------------------------------
     # Lifecycle hooks
@@ -203,7 +231,18 @@ class IncludeContentsExtension(Extension):
         *args: Any,
         caller: Optional[Any] = None,
         **attributes: Any,
-    ) -> str:
+    ) -> Any:
+        """Render a component.
+
+        In an async environment this returns a coroutine, which Jinja awaits --
+        capturing the body and rendering the component both have to be awaited
+        there, while everything in between is the same either way.
+        """
+        if self.environment.is_async:
+            return self._render_includecontents_async(
+                context, template_name, *args, caller=caller, **attributes
+            )
+
         state: Dict[str, Any] = {"default": [], "named": {}}
         token = _current_contents.set(state)
         try:
@@ -211,6 +250,45 @@ class IncludeContentsExtension(Extension):
         finally:
             _current_contents.reset(token)
 
+        template, component_context = self._build_component(
+            context, template_name, args, attributes, body_output, state
+        )
+        return template.render(component_context)
+
+    async def _render_includecontents_async(
+        self,
+        context: Any,
+        template_name: Any,
+        *args: Any,
+        caller: Optional[Any] = None,
+        **attributes: Any,
+    ) -> str:
+        state: Dict[str, Any] = {"default": [], "named": {}}
+        token = _current_contents.set(state)
+        try:
+            body_output = await caller() if caller is not None else ""
+        finally:
+            _current_contents.reset(token)
+
+        template, component_context = self._build_component(
+            context, template_name, args, attributes, body_output, state
+        )
+        return await template.render_async(component_context)
+
+    def _build_component(
+        self,
+        context: Any,
+        template_name: Any,
+        args: tuple,
+        attributes: Dict[str, Any],
+        body_output: str,
+        state: Dict[str, Any],
+    ) -> tuple:
+        """Resolve props, attrs and contents, and locate the component template.
+
+        Shared by the sync and async render paths -- nothing here awaits.
+        """
+        attributes = dict(attributes)
         identifier = self._normalize_template_name(template_name)
         props = self._props_registry.get(identifier)
 
@@ -219,7 +297,13 @@ class IncludeContentsExtension(Extension):
             if isinstance(arg, dict):
                 attributes.update(arg)
 
-        default_content = "".join(state["default"]) or body_output
+        # Fall back to the body only when no {% contents %} block captured the
+        # default slot -- an explicit but empty capture must stay empty, so test
+        # whether a capture happened rather than whether it produced anything.
+        if state["default"]:
+            default_content = "".join(state["default"])
+        else:
+            default_content = body_output
         contents = CapturedContents(default_content, state["named"])
 
         attrs_obj = Attrs()
@@ -361,7 +445,7 @@ class IncludeContentsExtension(Extension):
 
         component_context["attrs"] = attrs_obj
         component_context["contents"] = contents
-        return template.render(component_context)
+        return template, component_context
 
     @pass_context
     def _capture_contents(
@@ -370,8 +454,24 @@ class IncludeContentsExtension(Extension):
         name: Any,
         caller: Optional[Any] = None,
         **_: Any,
-    ) -> str:
+    ) -> Any:
+        if self.environment.is_async:
+            return self._capture_contents_async(context, name, caller=caller)
+
         content = caller() if caller is not None else ""
+        return self._store_captured_contents(name, content)
+
+    async def _capture_contents_async(
+        self,
+        context: Any,
+        name: Any,
+        caller: Optional[Any] = None,
+        **_: Any,
+    ) -> str:
+        content = await caller() if caller is not None else ""
+        return self._store_captured_contents(name, content)
+
+    def _store_captured_contents(self, name: Any, content: str) -> str:
         state = _current_contents.get()
         if state is None:
             return content  # Render as plain text outside components
@@ -411,7 +511,7 @@ class IncludeContentsExtension(Extension):
                 if isinstance(value, str) and ("{{" in value or "{%" in value):
                     try:
                         # Create and render mini-template for this attribute value
-                        mini_template = self.environment.from_string(value)
+                        mini_template = self.expression_environment.from_string(value)
                         processed_value = mini_template.render(context.get_all())
                         processed_attributes[key] = processed_value
                     except Exception:
@@ -477,8 +577,7 @@ class IncludeContentsExtension(Extension):
                 # Create a mini-template from the value with autoescape enabled
                 # to ensure variables get escaped like in Django
                 # Also use standard Undefined to render undefined vars as empty strings
-                env = self.environment.overlay(autoescape=True, undefined=Undefined)
-                mini_template = env.from_string(value)
+                mini_template = self.expression_environment.from_string(value)
                 # Render with the current context variables
                 parent_vars = context.get_all()
                 result = mini_template.render(parent_vars)

@@ -487,3 +487,60 @@ def test_concurrent_renders_do_not_leak_slot_content() -> None:
     result_b = "".join(results["b"].split())
     assert result_a == "<header>A-SLOT</header><main>A-MAIN</main>"
     assert result_b == "<header>B-SLOT</header><main>B-MAIN</main>"
+
+
+def test_component_environment_created_once_under_concurrency() -> None:
+    """
+    The overlay environment must be built exactly once, even if two threads ask
+    for it simultaneously. An unsynchronised check-then-act lets both threads
+    see None and build their own, leaving them with different template caches.
+    """
+    env = _environment()
+    extension = env.extensions[IncludeContentsExtension.identifier]
+
+    overlay_calls = []
+    real_overlay = env.overlay
+    # Both threads are held inside overlay() to widen the race window. The
+    # timeout means the barrier breaks (rather than deadlocking) once the
+    # initialisation is properly serialised and only one thread gets here.
+    barrier = threading.Barrier(2, timeout=0.5)
+
+    def counting_overlay(**kwargs):
+        overlay_calls.append(kwargs)
+        try:
+            barrier.wait()
+        except threading.BrokenBarrierError:
+            pass
+        return real_overlay(**kwargs)
+
+    env.overlay = counting_overlay
+
+    results = {}
+
+    def fetch(key):
+        results[key] = extension.component_environment
+
+    threads = [threading.Thread(target=fetch, args=(key,)) for key in ("a", "b")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+        assert not thread.is_alive(), "component_environment access hung"
+
+    assert len(overlay_calls) == 1, f"overlay() called {len(overlay_calls)} times"
+    assert results["a"] is results["b"]
+
+
+def test_explicitly_empty_default_contents_stays_empty() -> None:
+    """
+    An empty {% contents %} block is an explicit choice to leave the default
+    slot blank, and must not fall back to the text surrounding it.
+    """
+    env = _environment()
+    template = env.from_string(
+        '{% includecontents "section" %}'
+        "surrounding"
+        "{% contents %}{% endcontents %}"
+        "{% endincludecontents %}"
+    )
+    assert template.render() == "<section></section>"

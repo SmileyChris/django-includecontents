@@ -218,3 +218,59 @@ class TestEngineLoaderIntegration:
             )
         ]
         assert result == expected
+
+
+class TestCachedLoaderUnlessDebug:
+    """The cached_loader_unless_debug option.
+
+    Django 4.1 started wrapping the default loaders in the cached loader
+    unconditionally, so template edits no longer show up without a reload even
+    while developing. This option opts back out, but only while debugging.
+    """
+
+    CACHED = "includecontents.django.loaders.CachedLoader"
+
+    def test_skips_cached_loader_when_debugging(self):
+        engine = Engine(app_dirs=True, debug=True, cached_loader_unless_debug=True)
+
+        assert self.CACHED not in str(engine.loaders)
+        assert "includecontents.django.loaders.AppDirectoriesLoader" in str(
+            engine.loaders
+        )
+
+    def test_keeps_cached_loader_when_not_debugging(self):
+        engine = Engine(app_dirs=True, debug=False, cached_loader_unless_debug=True)
+
+        assert self.CACHED in str(engine.loaders)
+
+    def test_cached_loader_is_the_default_without_the_option(self):
+        engine = Engine(app_dirs=True, debug=True)
+
+        assert self.CACHED in str(engine.loaders)
+
+    def test_rejects_the_option_alongside_explicit_loaders(self):
+        from django.core.exceptions import ImproperlyConfigured
+
+        import pytest
+
+        with pytest.raises(ImproperlyConfigured, match="cached_loader_unless_debug"):
+            Engine(
+                debug=True,
+                cached_loader_unless_debug=True,
+                loaders=["django.template.loaders.filesystem.Loader"],
+            )
+
+    def test_option_can_be_set_through_template_options(self):
+        """The option travels via OPTIONS, so it must not reach Django's Engine."""
+        from includecontents.django import DjangoTemplates
+
+        backend = DjangoTemplates(
+            {
+                "NAME": "django",
+                "DIRS": [],
+                "APP_DIRS": True,
+                "OPTIONS": {"cached_loader_unless_debug": True, "debug": True},
+            }
+        )
+
+        assert self.CACHED not in str(backend.engine.loaders)
