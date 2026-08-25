@@ -676,6 +676,31 @@ def environment(**options):
     return env
 ```
 
+## Async Rendering
+
+Components render correctly in an environment created with `enable_async=True`:
+
+```python
+env = Environment(
+    loader=FileSystemLoader("templates"),
+    extensions=["includecontents.jinja2.IncludeContentsExtension"],
+    enable_async=True,
+)
+
+html = await env.get_template("page.html").render_async(user=user)
+```
+
+!!! warning "Not reachable through Django's `TEMPLATES`"
+    Django has no async template rendering — neither the Django nor the Jinja2
+    backend exposes `render_async`, and there is no async `render_to_string`.
+    Setting `enable_async` in your `TEMPLATES` options therefore gains you
+    nothing, because Django will only ever call the synchronous `render()`.
+
+    Async rendering is only useful when you drive the `Environment` yourself —
+    for example rendering a fragment or an email body from async code. To render
+    a component inside a Django async view, either call the sync path directly or
+    wrap it with `asgiref.sync.sync_to_async`.
+
 ## Next Steps
 
 - Learn about [HTML Component Syntax](../using-components/html-syntax.md) for modern component development
